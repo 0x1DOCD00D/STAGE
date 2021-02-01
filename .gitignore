@@ -10,6 +10,9 @@ out/
 *.ipr
 *.iws
 .idea
+modules.xml
+.idea/misc.xml
+*.ipr
 
 # mac
 .DS_Store
@@ -28,6 +31,3 @@ out/
 
 # CMake
 cmake-build-*/
-
-# File-based project format
-*.iws
