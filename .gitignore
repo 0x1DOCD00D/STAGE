@@ -1,2 +1,33 @@
-*.class
+# sbt
+bin/
+project/
+target/
+build/
+out/
+
 *.log
+*.iml
+*.ipr
+*.iws
+.idea
+
+# mac
+.DS_Store
+
+.history
+.scala_dependencies
+.cache
+.cache-main
+
+*.class
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# CMake
+cmake-build-*/
+
+# File-based project format
+*.iws
