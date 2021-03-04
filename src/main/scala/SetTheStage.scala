@@ -1,3 +1,6 @@
+import akka.actor.typed.{ActorSystem, Behavior}
+import com.typesafe.config.ConfigFactory
+
 /*
  *
  *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
@@ -9,5 +12,19 @@
  */
 
 object SetTheStage {
-
+  def main(args: Array[String]): Unit = {
+    val conf = ConfigFactory.load()
+    println("The answer is: " + conf.getString("simple-app.answer"))
+    val theRootBehavior: Behavior[SystemMessage] = DefaultBehaviors()
+    val stageSystem = ActorSystem(theRootBehavior, "TheStageForActors")
+    stageSystem ! StartSimulation
+    Thread.sleep(2000)
+    stageSystem ! StartSimulation
+    Thread.sleep(2000)
+    stageSystem ! StartSimulation
+    Thread.sleep(2000)
+    stageSystem ! StopSimulation
+    //    Thread.sleep(20000)
+    println("All the world’s a stage")
+  }
 }
