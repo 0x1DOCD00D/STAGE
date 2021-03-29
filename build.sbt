@@ -11,9 +11,9 @@ val guavaVersion = "30.1-jre"
 val akkaVersion = "2.6.13"
 val circeVersion = "0.12.3"
 val typesafeConfigVersion = "1.4.1"
-val monocleVersion = "3.0.0-M3"
+val loggerVersion = "1.2.3"
 
-scalaVersion := dottyLatestNightlyBuild.get
+scalaVersion := "2.13.2" //dottyLatestNightlyBuild.get
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core",
@@ -35,6 +35,9 @@ resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").wi
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
+  "ch.qos.logback" % "logback-classic" % loggerVersion,
+  "org.scala-lang" % "scala-reflect" % "2.13.5",
+  "org.scala-lang" % "scala-compiler" % "2.13.5",
   "org.scalactic" %% "scalactic" % scalacticVersion,
   "org.scalatest" %% "scalatest" % scalacticVersion % Test, //).exclude("org.scalactic", "scalactic_2.13"),
   "org.scalatest" %% "scalatest-featurespec" % scalacticVersion % Test, //.exclude("org.scalactic", "scalactic_2.13")
@@ -48,20 +51,22 @@ libraryDependencies ++= Seq(
   "com.typesafe" % "config" % typesafeConfigVersion,
   "com.google.guava" % "guava" % guavaVersion,
   "commons-io" % "commons-io" % commonIOVersion,
-  "com.github.julien-truffaut" %% "monocle-core" % monocleVersion,
   "org.apache.commons" % "commons-math4" % mathApacheVersion
-).map(_.withDottyCompat(scalaVersion.value))
-
-
-
-
-libraryDependencies ++= Seq(
-  //("com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test).exclude("org.scalactic", "scalactic_2.13"), //excludeAll(ExclusionRule(organization="org.scalactic")),
 )
+/*
+  .map(_.withDottyCompat(scalaVersion.value))
+
 
 scalacOptions ++= {
   if (isDotty.value) Seq("-source:3.0-migration") else Nil
 }
+*/
 
 resolvers += Resolver.url("typesafe", url("https://repo.typesafe.com/typesafe/ivy-releases/"))(Resolver.ivyStylePatterns)
 Test / parallelExecution := false
+
+Compile / PB.targets := Seq(
+  scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
+)
+
+enablePlugins(JavaAppPackaging)

@@ -12,18 +12,18 @@ import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 
 //#definition
-//class AkkaQuickstartSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
-//  //#definition
-//
-//  "A Greeter" must {
-//    //#test
-//    "reply to greeted" in {
-////          val replyProbe = createTestProbe[SystemMessage]()
-////          val underTest = spawn(DefaultBehaviors())
-////          underTest ! StartSimulation
-////          replyProbe.expectMessage(StartSimulation)
-//    }
-//    //#test
-//  }
-//
-//}
+class AkkaQuickstartSpec extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+  //#definition
+
+  "A Greeter" must {
+    //#test
+    "reply to greeted" in {
+      val replyProbe = createTestProbe[SystemMessage]()
+      val underTest = spawn(DefaultBehaviors())
+      underTest ! StartSimulation
+      replyProbe.expectMessage(StartSimulation)
+    }
+    //#test
+  }
+
+}

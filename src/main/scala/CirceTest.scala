@@ -39,6 +39,7 @@ object CirceTest extends App {
     cursor.downField("values").get[Double]("baz")
   // baz2: Decoder.Result[Double] = Right(100.001)
 
+
   val secondQux: Decoder.Result[String] =
     cursor.downField("values").downField("qux").downArray.as[String]
 }
