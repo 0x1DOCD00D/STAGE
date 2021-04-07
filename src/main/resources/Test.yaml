@@ -1,15 +1,25 @@
 ? - Detroit Tigers
   - Chicago cubs
-  :
+:
   - 2001-07-23
 ? [ New York Yankees, Atlanta Braves ]: [ 2001-07-02, 2001-08-12, 2001-08-14 ]
 foo: Hello, World
 bar:
-  one: One Third
+  one: !!str One Third
   two: 33.333333
 baz:
   - Hello
   - World
+
+outerkey:
+  innerkeylist1:
+    - key1: val1
+      ket2: val2
+    - key3: val3
+      key4: val4
+      key5: val5
+  innerkey: true
+
 
 kind: Pod
 
@@ -33,7 +43,7 @@ Sammy Sosa: {
 
 players:
   - [ name        , hr, avg ]
-  - [ Mark McGwire, 65, 0.278 ]
+  - [ Mark McGwire, !!int 65, 0.278 ]
   - [ Sammy Sosa  , 63, 0.288 ]
 
 doit:
@@ -41,8 +51,8 @@ doit:
     hr: 65
     avg: 0.278
     null:
-    booleans: [ true, false ]
-    string: '012345'
+    booleans: [ true, false, !!bool yes ]
+    string: !!str '012345'
   - name: Sammy Sosa
     hr: 63
     avg: 0.288
