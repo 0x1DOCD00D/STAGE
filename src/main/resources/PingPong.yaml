@@ -1,0 +1,12 @@
+messages:
+  - pong: 1
+  - ping:
+      - ballSize: [ small, medium, large ]
+      - direction:
+        type: int
+        values: [ 1,2,3,4,5 ]
+      - force:
+        type: float
+        values:
+          - pdf: uniform
+            range: [ 10,100 ]

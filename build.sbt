@@ -10,8 +10,10 @@ val asmVersion = "9.1"
 val guavaVersion = "30.1-jre"
 val akkaVersion = "2.6.13"
 val circeVersion = "0.12.3"
+val circeYamlVersion = "0.12.0"
 val typesafeConfigVersion = "1.4.1"
 val loggerVersion = "1.2.3"
+val snakeYamlVersion = "1.28"
 
 scalaVersion := "2.13.2" //dottyLatestNightlyBuild.get
 
@@ -20,6 +22,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-generic",
   "io.circe" %% "circe-parser"
 ).map(_ % circeVersion).map(_.withDottyCompat(scalaVersion.value))
+
+libraryDependencies ++= Seq(
+  "io.circe" %% "circe-yaml"
+).map(_ % circeYamlVersion).map(_.withDottyCompat(scalaVersion.value))
 
 
 lazy val root = project
@@ -31,11 +37,14 @@ lazy val root = project
 
 resolvers += ("apache_snapshots" at "http://repository.apache.org/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").withAllowInsecureProtocol(true)
+resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
   "ch.qos.logback" % "logback-classic" % loggerVersion,
+  "org.yaml" % "snakeyaml" % snakeYamlVersion,
+  "com.typesafe.akka" %% "akka-slf4j" % akkaVersion,
   "org.scala-lang" % "scala-reflect" % "2.13.5",
   "org.scala-lang" % "scala-compiler" % "2.13.5",
   "org.scalactic" %% "scalactic" % scalacticVersion,
