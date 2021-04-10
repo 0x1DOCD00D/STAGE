@@ -5,11 +5,13 @@ import org.objectweb.asm.{ClassReader, ClassWriter}
 import scalaz.Scalaz.{ToOrderOps, doubleInstance}
 
 /*
- *   Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
- *   Unless required by applicable law or agreed to in writing, software distributed under 
- *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, 
+ *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ *   
+ *   Unless required by applicable law or agreed to in writing, software distributed under
+ *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
  *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+ *  
  */
 
 import com.github.nscala_time.time.Imports._
@@ -41,30 +43,7 @@ object Main {
   //  user.focus(_.address.streetNumber).get
   // res: Int = 12
 
-  val ud = new UniformContinuousDistribution(0, 1)
-  val pud = ud.inverseCumulativeProbability(0.3)
-  val nd = new NormalDistribution(100, 10)
-  val value = nd.inverseCumulativeProbability(0.9)
-
   val ordering = 2.0 ?|? 3.0
-
-  val c = 3 * 4 * 0.5
-  val mean: Array[Double] = Array(1, 2)
-  val cov: Array[Array[Double]] = Array(Array(9, c), Array(c, 16))
-  val covariance: RealMatrix = MatrixUtils.createRealMatrix(cov)
-
-  // Create (and possibly seed) a PRNG (could use any of the CM-provided generators).
-  val seed = 17399225432L; // Fixed seed means same results every time 
-  val rg = RandomSource.create(RandomSource.MT, seed);
-
-  // Create a GaussianRandomGenerator using "rg" as its source of randomness.
-  val rawGenerator = new GaussianRandomGenerator(rg);
-
-  // Create a CorrelatedRandomVectorGenerator using "rawGenerator" for the components.
-  val generator = new CorrelatedRandomVectorGenerator(mean, covariance, 1.0e-12 * covariance.getNorm(), rawGenerator);
-
-  // Use the generator to generate correlated vectors.
-  val randomVector = generator.nextVector();
 
   val res1 = Apply[Option].apply2(some(1), some(2))((a, b) => a + b)
 
