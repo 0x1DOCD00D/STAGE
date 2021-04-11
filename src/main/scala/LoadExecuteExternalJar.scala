@@ -26,6 +26,6 @@ object LoadExecuteExternalJar extends App {
   param.put("Mark", 1.asInstanceOf[Integer])
   param.put("Tinka", 2.asInstanceOf[Integer])
   //  val instance = classToLoad.newInstance
-  val result = method.invoke(classToLoad.newInstance, param)
+  val result = method.invoke(classToLoad.getDeclaredConstructor().newInstance(), param)
   println(result)
 }
