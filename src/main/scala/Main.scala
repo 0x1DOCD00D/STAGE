@@ -1,3 +1,4 @@
+import HelperUtils.CreateLogger
 
 /*
  *
@@ -8,22 +9,11 @@
  *     
  */
 
-object Main {
+object Main:
+  val logger = CreateLogger(classOf[Main])
 
-  trait Car {
-    def drive: Boolean
-  }
+  @main def runSimulation =
+    logger.info("Constructing a cloud model...")
+    logger.info("Finished cloud simulation...")
 
-  class tesla extends Car {
-    override def drive: Boolean = true
-  }
-
-
-  def main(args: Array[String]): Unit = {
-    println("Hello world!")
-    println(msg)
-  }
-
-  def msg = "I was compiled by dotty :)"
-
-}
+class Main
