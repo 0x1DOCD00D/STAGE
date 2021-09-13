@@ -11,8 +11,16 @@ val sfl4sVersion = "2.0.0-alpha5"
 val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
 val scalacticVersion = "3.2.9"
-val cloudSimPlusVersion = "6.4.3"
+val nscalatimeVersion = "2.28.0"
+val apacheCommonMathVersion = "4.0-SNAPSHOT"
+val asmVersion = "9.2"
+val guavaVersion = "30.1.1-jre"
+val akkaVersion = "2.6.13"
+val catsVersion = "2.6.1"
 
+
+resolvers += ("apache_snapshots" at "http://repository.apache.org/snapshots").withAllowInsecureProtocol(true)
+resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").withAllowInsecureProtocol(true)
 
 lazy val root = (project in file("."))
   .settings(
@@ -20,17 +28,26 @@ lazy val root = (project in file("."))
     scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
     scalacOptions += "-language:experimental.macros",
     description := "Simulation Templatized Agent-based Generation Engine",
+    Test / parallelExecution := false,
     libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
       "ch.qos.logback" % "logback-core" % logbackVersion,
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "org.slf4j" % "slf4j-api" % sfl4sVersion,
       "com.typesafe" % "config" % typesafeConfigVersion,
       "commons-io" % "commons-io" % apacheCommonIOVersion,
+      "org.apache.commons" % "commons-math4" % apacheCommonMathVersion,
+      "org.typelevel" %% "cats-core" % catsVersion,
+      "com.github.nscala-time" %% "nscala-time" % nscalatimeVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalacticVersion % Test,
       "org.scalatest" %% "scalatest-featurespec" % scalacticVersion % Test,
-      "com.typesafe" % "config" % typesafeConfigVersion,
-      "org.cloudsimplus" % "cloudsim-plus" % cloudSimPlusVersion
+      "org.ow2.asm" % "asm" % asmVersion,
+      "org.ow2.asm" % "asm-commons" % asmVersion,
+      "org.ow2.asm" % "asm-util" % asmVersion,
+      "com.google.guava" % "guava" % guavaVersion,
+      "com.typesafe" % "config" % typesafeConfigVersion
     ),
     homepage := Some(url("https://github.com/0x1DOCD00D/STAGE")),
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
