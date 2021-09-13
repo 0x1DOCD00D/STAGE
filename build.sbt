@@ -1,9 +1,8 @@
 ThisBuild / organization := "com.lsc"
 ThisBuild / version := {
   val orig = (ThisBuild / version).value
-  orig
-//  if (orig.endsWith("-SNAPSHOT")) "1.0.A-SNAPSHOT"
-//  else orig
+  if (orig.endsWith("-SNAPSHOT")) "1.0.A-SNAPSHOT"
+  else orig
 }
 ThisBuild / scalaVersion := "3.0.2"
 
@@ -13,17 +12,15 @@ val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
 val scalacticVersion = "3.2.9"
 val nscalatimeVersion = "2.28.0"
-val apacheCommonMathVersion = "4.0-SNAPSHOT"
+//val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
 val guavaVersion = "30.1.1-jre"
 val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
 
 
-//resolvers += ("apache_snapshots" at "http://repository.apache.org/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
-
-//resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").withAllowInsecureProtocol(true)
+resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
 
 lazy val root = (project in file("."))
   .settings(
@@ -40,7 +37,7 @@ lazy val root = (project in file("."))
       "org.slf4j" % "slf4j-api" % sfl4sVersion,
       "com.typesafe" % "config" % typesafeConfigVersion,
       "commons-io" % "commons-io" % apacheCommonIOVersion,
-      "org.apache.commons" % "commons-math4" % apacheCommonMathVersion,
+//      "org.apache.commons" % "commons-math4" % "4.0-SNAPSHOT",
       "org.typelevel" %% "cats-core" % catsVersion,
       "com.github.nscala-time" %% "nscala-time" % nscalatimeVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
