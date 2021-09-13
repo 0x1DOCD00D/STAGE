@@ -1,8 +1,9 @@
 ThisBuild / organization := "com.lsc"
 ThisBuild / version := {
   val orig = (ThisBuild / version).value
-  if (orig.endsWith("-SNAPSHOT")) "1.0.A-SNAPSHOT"
-  else orig
+  orig
+//  if (orig.endsWith("-SNAPSHOT")) "1.0.A-SNAPSHOT"
+//  else orig
 }
 ThisBuild / scalaVersion := "3.0.2"
 
@@ -19,8 +20,10 @@ val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
 
 
-resolvers += ("apache_snapshots" at "http://repository.apache.org/snapshots").withAllowInsecureProtocol(true)
-resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").withAllowInsecureProtocol(true)
+//resolvers += ("apache_snapshots" at "http://repository.apache.org/snapshots").withAllowInsecureProtocol(true)
+resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
+
+//resolvers += ("Artima Maven Repository" at "http://repo.artima.com/releases").withAllowInsecureProtocol(true)
 
 lazy val root = (project in file("."))
   .settings(
@@ -30,8 +33,8 @@ lazy val root = (project in file("."))
     description := "Simulation Templatized Agent-based Generation Engine",
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
-      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
+      ("com.typesafe.akka" %% "akka-actor-typed" % akkaVersion).cross(CrossVersion.for3Use2_13),
+      ("com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test).cross(CrossVersion.for3Use2_13),
       "ch.qos.logback" % "logback-core" % logbackVersion,
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "org.slf4j" % "slf4j-api" % sfl4sVersion,
