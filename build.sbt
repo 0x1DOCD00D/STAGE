@@ -12,7 +12,7 @@ val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
 val scalacticVersion = "3.2.9"
 val nscalatimeVersion = "2.28.0"
-//val apacheCommonMathVersion = "3.6.1"
+val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
 val guavaVersion = "30.1.1-jre"
 val akkaVersion = "2.6.13"
@@ -37,7 +37,8 @@ lazy val root = (project in file("."))
       "org.slf4j" % "slf4j-api" % sfl4sVersion,
       "com.typesafe" % "config" % typesafeConfigVersion,
       "commons-io" % "commons-io" % apacheCommonIOVersion,
-//      "org.apache.commons" % "commons-math4" % "4.0-SNAPSHOT",
+      "org.apache.commons" % "commons-math3" % apacheCommonMathVersion,
+      "org.apache.commons" % "commons-rng-simple" % "1.3",
       "org.typelevel" %% "cats-core" % catsVersion,
       "com.github.nscala-time" %% "nscala-time" % nscalatimeVersion,
       "org.scalactic" %% "scalactic" % scalacticVersion,
