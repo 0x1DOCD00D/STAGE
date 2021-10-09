@@ -17,6 +17,7 @@ val asmVersion = "9.2"
 val guavaVersion = "30.1.1-jre"
 val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
+val snakeYamlVersion = "1.29"
 
 
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
@@ -48,7 +49,8 @@ lazy val root = (project in file("."))
       "org.ow2.asm" % "asm-commons" % asmVersion,
       "org.ow2.asm" % "asm-util" % asmVersion,
       "com.google.guava" % "guava" % guavaVersion,
-      "com.typesafe" % "config" % typesafeConfigVersion
+      "com.typesafe" % "config" % typesafeConfigVersion,
+      "org.yaml" % "snakeyaml" % snakeYamlVersion,
     ),
     homepage := Some(url("https://github.com/0x1DOCD00D/STAGE")),
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
