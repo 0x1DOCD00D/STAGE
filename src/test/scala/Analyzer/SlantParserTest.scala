@@ -14,20 +14,51 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
 import scala.io.Source
+import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
 class SlantParserTest extends AnyFlatSpec with Matchers {
-  behavior of "the Slant parser"
+  behavior of "the Slant parser for single value scalars"
   val basicYamlTemplate = "Template.yaml"
   val illFormedYaml = "IllFormed.yaml"
   val nonexistentYamlFile = "Hades.yaml"
   val singleScalarFloatingPointValueFile = "OneScalarFloatingPointValue.yaml"
   val singleScalarIntValueFile = "OneScalarIntValue.yaml"
   val singleScalarStringValueFile = "OneScalarStringValue.yaml"
+  val singleScalarBooleanValueFile = "OneScalarBooleanValue.yaml"
+  val singleScalarNullValueFile = "OneScalarNULLValue.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
+  val boolScalarValue = false
 
   the[IllegalArgumentException] thrownBy SlantParser(nonexistentYamlFile) should have message s"Error occured when loading input Yaml script $nonexistentYamlFile: $nonexistentYamlFile (No such file or directory)"
+
+  it should "load up and extract the content of the single null entry in yaml" in {
+    val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
+    SlantParser(path) match {
+      case v: Option[_] => None
+      case _ => null
+    }
+    shouldBe None
+  }
+
+  it should "load up and extract the content of the single scalar string value incorrectly treated as boolean" in {
+    val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
+    SlantParser(path) match {
+      case v: Boolean => v
+      case _ => None
+    }
+    shouldBe None
+  }
+
+  it should "load up and extract the content of the single scalar boolean value yaml" in {
+    val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
+    SlantParser(path) match {
+      case v: Boolean => v
+      case _ => null
+    }
+    shouldBe boolScalarValue
+  }
 
   it should "load up and extract the content of the single scalar string value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
@@ -56,11 +87,6 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     shouldBe intScalarValue
   }
 
-  it should "load up and extract the content of the yaml script from a script file" in {
-    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    val parser = SlantParser(path)
-    val k = 0
-  }
 
   it should "throw an exception for ill-formed yaml" in {
     val path = getClass.getClassLoader.getResource(illFormedYaml).getPath
@@ -72,5 +98,48 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
         |""".stripMargin
   }
 
+  behavior of "the Slant parser for lists of values"
+  val seqOfScalarsFile = "SeqOfScalars.yaml"
+  val seqFlowOfScalarsFile = "SeqFlowScalars.yaml"
+  val seqOfSeqOfScalarsFile = "SeqOfSeqOfScalars.yaml"
+
+  it should "load up and extract the content of the sequence of scalars from a yaml file" in {
+    val path = getClass.getClassLoader.getResource(seqOfScalarsFile).getPath
+    val result = SlantParser(path) match {
+      case v: List[_] => v
+      case _ => null
+    }
+    result.asInstanceOf[List[_]] shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
+  }
+
+  it should "load up and extract the content of the flow sequence of scalars from a yaml file" in {
+    val path = getClass.getClassLoader.getResource(seqFlowOfScalarsFile).getPath
+    val result = SlantParser(path) match {
+      case v: List[_] => v
+      case _ => null
+    }
+    result.asInstanceOf[List[_]] shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
+  }
+
+  it should "load up and extract the content of the sequence of flow sequences of scalars from a yaml file" in {
+    val path = getClass.getClassLoader.getResource(seqOfSeqOfScalarsFile).getPath
+    val result = SlantParser(path) match {
+      case v: List[_] => v
+      case _ => null
+    }
+    result should not be null
+    val convResult = result.asInstanceOf[List[_]].toList
+    convResult.length shouldBe 3
+    convResult.head.asInstanceOf[java.util.ArrayList[_]].asScala.toList shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
+  }
+
+  behavior of "the Slant parser for complex yaml scripts"
+
+  it should "load up and extract the content of the yaml script from a script file" in {
+    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
+    val parser = SlantParser(path)
+  }
+
 }
+
 

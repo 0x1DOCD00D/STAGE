@@ -22,6 +22,7 @@ import HelperUtils.ErrorWarningMessages
 import org.slf4j.Logger
 
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
+import scala.runtime.Nothing$
 import scala.util.{Failure, Success, Try}
 
 given logger: Logger = CreateLogger(classOf[SlantParser])
@@ -38,17 +39,19 @@ class SlantParser(content: String):
   }
 
   private def extractParseTree: ReturnTypes =
-    yamlModel.getClass match {
+    if yamlModel == null then Option(null)
+    else yamlModel.getClass match {
       case c if c == classOf[java.util.ArrayList[_]] => yamlModel.asInstanceOf[java.util.ArrayList[_]].asScala.toList
       case c if c == classOf[java.util.LinkedHashMap[_, _]] => yamlModel.asInstanceOf[java.util.LinkedHashMap[_, _]].asScala.toMap
       case c if c == classOf[java.lang.String] => yamlModel.asInstanceOf[String]
       case c if c == classOf[java.lang.Integer] => yamlModel.asInstanceOf[Int]
       case c if c == classOf[java.lang.Double] => yamlModel.asInstanceOf[Double]
+      case c if c == classOf[java.lang.Boolean] => yamlModel.asInstanceOf[Boolean]
       case c => throw new RuntimeException(ErrorWarningMessages.YamlUnexpectedTypeFound(c.getName))
     }
 
 object SlantParser:
-  type ReturnTypes = List[_] | Map[_, _] | String | Int | Double
+  type ReturnTypes = List[_] | Map[_, _] | String | Int | Double | Boolean | Option[_]
 
   def apply(inputPath: String): ReturnTypes =
     Try(Source.fromFile(inputPath).toList.mkString) match {
