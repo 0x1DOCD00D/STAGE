@@ -12,13 +12,12 @@ package Analyzer
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
 class SlantParserTest extends AnyFlatSpec with Matchers {
   behavior of "the Slant parser for single value scalars"
-  val basicYamlTemplate = "Template.yaml"
+  val basicYamlTemplate = "Template_v1.yaml"
   val illFormedYaml = "IllFormed.yaml"
   val nonexistentYamlFile = "Hades.yaml"
   val singleScalarFloatingPointValueFile = "OneScalarFloatingPointValue.yaml"
@@ -35,16 +34,17 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the single null entry in yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Option[_] => None
       case _ => null
     }
     shouldBe None
   }
 
+
   it should "load up and extract the content of the single scalar string value incorrectly treated as boolean" in {
     val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Boolean => v
       case _ => None
     }
@@ -53,16 +53,16 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the single scalar boolean value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Boolean => v
-      case _ => null
+      case _ => !boolScalarValue
     }
     shouldBe boolScalarValue
   }
 
   it should "load up and extract the content of the single scalar string value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: String => v
       case _ => null
     }
@@ -71,18 +71,18 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the single scalar floating point value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarFloatingPointValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Double => v
-      case _ => null
+      case _ => -floatScalarValue
     }
     shouldBe floatScalarValue
   }
 
   it should "load up and extract the content of the single scalar int value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarIntValueFile).getPath
-    SlantParser(path) match {
+    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Int => v
-      case _ => null
+      case _ => -intScalarValue
     }
     shouldBe intScalarValue
   }
@@ -105,7 +105,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the sequence of scalars from a yaml file" in {
     val path = getClass.getClassLoader.getResource(seqOfScalarsFile).getPath
-    val result = SlantParser(path) match {
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: List[_] => v
       case _ => null
     }
@@ -114,7 +114,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the flow sequence of scalars from a yaml file" in {
     val path = getClass.getClassLoader.getResource(seqFlowOfScalarsFile).getPath
-    val result = SlantParser(path) match {
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: List[_] => v
       case _ => null
     }
@@ -123,22 +123,52 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the sequence of flow sequences of scalars from a yaml file" in {
     val path = getClass.getClassLoader.getResource(seqOfSeqOfScalarsFile).getPath
-    val result = SlantParser(path) match {
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: List[_] => v
-      case _ => null
+      case _ => List()
     }
-    result should not be null
+    result should not be List()
     val convResult = result.asInstanceOf[List[_]].toList
     convResult.length shouldBe 3
     convResult.head.asInstanceOf[java.util.ArrayList[_]].asScala.toList shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
   }
 
   behavior of "the Slant parser for complex yaml scripts"
+  val simpleMapFile = "OneSimpleMap.yaml"
+  val keyName = "key"
+  val keyValue = "value"
+  val threeSimpleMapsFile = "ThreeSimpleMaps.yaml"
+
+  it should "load up and extract the content of one simple map from a yaml file" in {
+    val path = getClass.getClassLoader.getResource(simpleMapFile).getPath
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+      case v: Map[_, _] => v
+      case _ => Map()
+    }
+    result should not be null
+    val convResult = result.asInstanceOf[Map[String, String]].toMap
+    convResult.get(keyName) shouldBe Option(keyValue)
+  }
+
+  it should "load up and extract the content of three simple maps from a yaml file" in {
+    val path = getClass.getClassLoader.getResource(threeSimpleMapsFile).getPath
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+      case v: Map[_, _] => v
+      case _ => Map()
+    }
+    result should not be null
+    val convResult = result.asInstanceOf[Map[String, String]].toMap
+    (1 to 3).foreach(iter => {
+      convResult.get(keyName + iter.toString) shouldBe Option(keyValue + iter.toString)
+    })
+  }
+
 
   it should "load up and extract the content of the yaml script from a script file" in {
     val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    val parser = SlantParser(path)
+    //    SlantParser(path).visit
   }
+
 
 }
 

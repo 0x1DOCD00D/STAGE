@@ -1,0 +1,32 @@
+Agents:
+    # an abstraction that represents a logical collection of agents based on some comprehension
+  - Agent 1:
+        property1: v1
+        property2: v2
+
+  - Agent 2:
+        property1: v1
+        property2: v2
+
+  - Groups:
+    - groupName1:
+      Agents: [agent1, agent2]
+      Leader: agentName
+    - groupName2: [Agents: [agent1, agent2], Leader: agentName]
+
+  - Groups: {
+        groupName1: [Agents: [Agent1, Agent2], Leader: agentName],
+        groupName2: [Agents: [Agent1, Agent2], Leader: AgentX],
+    } # an abstraction that represents a logical collection of agents based on some comprehension
+
+  - Behaviors: 2 #each agent can be assigned one or more behaviors which are invoked in response to messages
+
+  - Channels: 3.14 #a channel is represented by some agent that adds behavior to message transmission
+          #a channel connects agents via some other agents, if any thus creating a path.
+
+  - Resources: true # resources exist within agents and behaviors access and manipulate resources.
+
+Messages:
+    subkey: value
+
+Models: false

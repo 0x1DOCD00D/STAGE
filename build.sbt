@@ -10,7 +10,9 @@ val logbackVersion = "1.3.0-alpha10"
 val sfl4sVersion = "2.0.0-alpha5"
 val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
+//noinspection SpellCheckingInspection
 val scalacticVersion = "3.2.9"
+//noinspection SpellCheckingInspection
 val nscalatimeVersion = "2.28.0"
 val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
@@ -23,6 +25,7 @@ val snakeYamlVersion = "1.29"
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
 
+//noinspection SpellCheckingInspection
 lazy val root = (project in file("."))
   .settings(
     name := "STAGE",

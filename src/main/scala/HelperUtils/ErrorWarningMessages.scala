@@ -27,3 +27,13 @@ object ErrorWarningMessages:
     val errorMsg = s"The following type is not handled in the Yaml script: $exceptionMessage"
     logger.error(errorMsg)
     errorMsg
+
+  def SlanUnexpectedTypeFound(exceptionMessage: String)(using logger: Logger): String =
+    val errorMsg = s"The following type $exceptionMessage is not expected at this location in Slan specification:"
+    logger.error(errorMsg)
+    errorMsg
+
+  def YamlKeyIsNotString(exceptionMessage: String)(using logger: Logger): String =
+    val errorMsg = s"Yaml key $exceptionMessage is not a String"
+    logger.error(errorMsg)
+    errorMsg
