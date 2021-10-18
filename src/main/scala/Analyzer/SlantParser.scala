@@ -10,18 +10,15 @@
 
 package Analyzer
 
-import SlanAbstractions.*
+import Analyzer.SlanAbstractions.*
 import Generator.PDFs.PdfStreamGenerator
-import HelperUtils.CreateLogger
-import SlanAbstractions.*
+import HelperUtils.{CreateLogger, ErrorWarningMessages}
+import org.slf4j.Logger
+import org.yaml.snakeyaml.Yaml
 
 import java.util
 import scala.collection.immutable
 import scala.io.Source
-import org.yaml.snakeyaml.Yaml
-import HelperUtils.ErrorWarningMessages
-import org.slf4j.Logger
-
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.runtime.Nothing$
 import scala.util.{Failure, Success, Try}
@@ -48,10 +45,10 @@ object SlantParser:
       case Failure(exception) => throw new IllegalArgumentException(ErrorWarningMessages.YamlScriptFileFailure(inputPath, exception.getMessage))
     }
 
-  private[Analyzer] def convertJ2S(yamlInstance: Any): YamlTypes =
-    if yamlInstance == null then None
-    else if yamlInstance.isInstanceOf[YamlTypes] then yamlInstance.asInstanceOf[YamlTypes]
-    else yamlInstance.getClass match {
+  private[Analyzer] def convertJ2S(yamlInstance: Any): YamlTypes = yamlInstance match {
+    case v: YamlTypes => v
+    case null => None
+    case _ => yamlInstance.getClass match {
       case c if c == classOf[java.util.ArrayList[_]] => yamlInstance.asInstanceOf[java.util.ArrayList[_]].asScala.toList
       case c if c == classOf[java.util.LinkedHashMap[_, _]] => yamlInstance.asInstanceOf[java.util.LinkedHashMap[_, _]].asScala.toMap
       case c if c == classOf[(_, _)] => yamlInstance.asInstanceOf[(_, _)]
@@ -61,3 +58,4 @@ object SlantParser:
       case c if c == classOf[java.lang.Boolean] => yamlInstance.asInstanceOf[Boolean]
       case c => throw new RuntimeException(ErrorWarningMessages.YamlUnexpectedTypeFound(c.getName))
     }
+  }
