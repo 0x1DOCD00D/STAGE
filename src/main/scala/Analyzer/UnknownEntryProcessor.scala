@@ -10,11 +10,9 @@
 
 package Analyzer
 
-object SlanAbstractions:
-  trait SlanConstruct
+import Analyzer.SlanAbstractions.{SlanConstruct, YamlTypes}
+import Analyzer.SlantParser.convertJ2S
+import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 
-  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | String | Int | Double | Boolean | Option[_]
-  type ObtainSlanConstruct = () => List[SlanConstruct]
-  type Yaml2Construct = YamlTypes => List[SlanConstruct]
-  type Key2Yaml2Construct = Option[String] => Yaml2Construct
-  type SlanProcessorSwitch = Map[String, GenericProcessor]
+class UnknownEntryProcessor(val yamlObj: YamlTypes, val key: Option[String] = None):
+  def constructSlanRecord: List[SlanConstruct] = List(UnknownConstruct(key.getOrElse("No key provided"), yamlObj.getClass().toString, yamlObj.toString))

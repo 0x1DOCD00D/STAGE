@@ -10,11 +10,7 @@
 
 package Analyzer
 
-object SlanAbstractions:
-  trait SlanConstruct
+import Analyzer.SlanAbstractions.{SlanConstruct, YamlTypes}
 
-  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | String | Int | Double | Boolean | Option[_]
-  type ObtainSlanConstruct = () => List[SlanConstruct]
-  type Yaml2Construct = YamlTypes => List[SlanConstruct]
-  type Key2Yaml2Construct = Option[String] => Yaml2Construct
-  type SlanProcessorSwitch = Map[String, GenericProcessor]
+class ModelsProcessor extends GenericProcessor :
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = super.yamlContentProcessor(yamlObj)

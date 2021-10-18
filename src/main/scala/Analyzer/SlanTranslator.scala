@@ -10,16 +10,25 @@
 
 package Analyzer
 
+import Analyzer.SlanAbstractions.*
+import Analyzer.SlanKeywords.*
 import Analyzer.SlantParser.convertJ2S
-import SlanAbstractions.*
-import SlanKeywords.*
 import HelperUtils.ErrorWarningMessages.*
-import cats.implicits._
+import cats.implicits.*
 import cats.kernel.Eq
-import AgentsProcessors.agentsProcessor
-//import MessageProcessors.messagesProcessor
-//import ModelsProcessors.modelsProcessor
-import SlanCommonUtilities.*
 
-object SlanTranslator extends GenericSwitchProcessor :
-  private[Analyzer] val slanStructure: SlanProcessorSwitch = Map(Agents.toLowerCase -> agentsProcessor) //, Messages.toLowerCase -> messagesProcessor, Models.toLowerCase -> modelsProcessor)
+object SlanTranslator extends GenericProcessor :
+  def apply(yamlObj: Any): List[SlanConstruct] = commandProcessor(convertJ2S(yamlObj))
+
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+    case v: (_, _) => convertJ2S(v._1) match {
+      case cv: String if cv.toLowerCase === Agents.toLowerCase => (new AgentsProcessors).commandProcessor(convertJ2S(v._2))
+      case cv: String if cv.toLowerCase === Messages.toLowerCase => (new MessagesProcessor).commandProcessor(convertJ2S(v._2))
+      case cv: String if cv.toLowerCase === Models.toLowerCase => (new ModelsProcessor).commandProcessor(convertJ2S(v._2))
+      case unknown: String => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+    }
+
+    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+  }
+

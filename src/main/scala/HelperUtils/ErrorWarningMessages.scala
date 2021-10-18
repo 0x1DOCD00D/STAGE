@@ -37,3 +37,8 @@ object ErrorWarningMessages:
     val errorMsg = s"Yaml key $exceptionMessage is not a String"
     logger.error(errorMsg)
     errorMsg
+
+  def LogGenericMessage(cls: Class[_], message: String)(using logger: Logger): String =
+    val errorMsg = s"${cls.getName}: $message"
+    logger.info(errorMsg)
+    errorMsg

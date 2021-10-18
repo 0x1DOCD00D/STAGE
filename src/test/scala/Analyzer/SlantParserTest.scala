@@ -12,6 +12,7 @@ package Analyzer
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
@@ -34,57 +35,58 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the single null entry in yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Option[_] => None
-      case _ => null
+      case _ => Some(path)
     }
-    shouldBe None
+
+    res shouldBe None
   }
 
 
   it should "load up and extract the content of the single scalar string value incorrectly treated as boolean" in {
     val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Boolean => v
       case _ => None
     }
-    shouldBe None
+    res shouldBe None
   }
 
   it should "load up and extract the content of the single scalar boolean value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Boolean => v
       case _ => !boolScalarValue
     }
-    shouldBe boolScalarValue
+    res shouldBe boolScalarValue
   }
 
   it should "load up and extract the content of the single scalar string value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: String => v
       case _ => null
     }
-    shouldBe stringScalarValue
+    res shouldBe stringScalarValue
   }
 
   it should "load up and extract the content of the single scalar floating point value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarFloatingPointValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Double => v
       case _ => -floatScalarValue
     }
-    shouldBe floatScalarValue
+    res shouldBe floatScalarValue
   }
 
   it should "load up and extract the content of the single scalar int value yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarIntValueFile).getPath
-    SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Int => v
       case _ => -intScalarValue
     }
-    shouldBe intScalarValue
+    res shouldBe intScalarValue
   }
 
 

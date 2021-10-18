@@ -10,7 +10,7 @@
 
 package Analyzer
 
-import SlanAbstractions.SlanConstruct
+import Analyzer.SlanAbstractions.SlanConstruct
 
 case class Agent(name: String, structure: List[SlanConstruct]) extends SlanConstruct
 
@@ -18,6 +18,6 @@ case class Message(name: String) extends SlanConstruct
 
 case class Model(name: String) extends SlanConstruct
 
-case class UnknownConstruct(key: Option[String], typeOfConstruct: String, obj: String) extends SlanConstruct
+case class UnknownConstruct(key: String, typeOfConstruct: String, obj: String) extends SlanConstruct
 
 
