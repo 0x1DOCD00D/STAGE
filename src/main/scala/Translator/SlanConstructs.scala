@@ -1,0 +1,74 @@
+/*
+ *
+ *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ *
+ *   Unless required by applicable law or agreed to in writing, software distributed under
+ *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+package Translator
+
+import Translator.SlanAbstractions.*
+
+/*
+* An agent is a basic computing unit in Stage. An agent is defined by its name and its behavior. Its specification defines its lifecycle,
+* i.e., how it is instantiated and destroyed, what its behavior is and what groups it belongs to if any. Each agent can be in one or more states
+* where a separate behavior is associated with each state. An agent can generate periodic messages according to some PDF, it can receive
+* messages from the attached channels and to respond to them by invoking the behavior that is associated with the state in which the agent is in.
+* Hence, the structure of the agent specification includes the agent's name, the section that describes the periodic message generation and the state
+* section that consists of state entries where each entry is designated by its name and its behavior in response to receiving messages of certain types.
+*
+*
+* */
+case class Agent(id: AgentReference, states: SlanConstructs) extends SlanConstruct
+
+case class State(id: StateReference, behavior: SlanConstructs) extends SlanConstruct
+
+case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
+
+case class PdfSpecification(specification: SlanConstructs) extends SlanConstruct
+
+//the content of the pdf specification
+case class Pdf(name: PdfReference) extends SlanConstruct
+
+case class PdfParameters(parameters: SlanValues) extends SlanConstruct
+
+case class PdfSeed(seed: Long) extends SlanConstruct
+
+case class PdfConstraints(constraintActions: List[ConstraintFilter])
+
+case class Behavior(id: BehaviorReference, actions: SlanConstructs) extends SlanConstruct
+
+case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
+
+case class Messages2Send(messages: SlanValues) extends SlanConstruct
+
+case class MixFrequence(elements: SlanConstructs) extends SlanConstruct
+
+case class Limit(elements: SlanConstructs) extends SlanConstruct
+
+case class MessageResponseBehavior(msgName: MessageReference, behavior: SlanConstructs) extends SlanConstruct
+
+case class GoTo(state: StateReference) extends SlanConstruct
+
+case class Group(id: GroupReference, members: SlanConstructs) extends SlanConstruct
+
+case class GroupAgents(agents: SlanValues) extends SlanConstruct
+
+case class GroupLeaders(leaders: SlanValues) extends SlanConstruct
+
+case class Channel(id: ChannelReference, behaviors: SlanConstructs) extends SlanConstruct
+
+case class Resource(id: ResourceReference, attributes: SlanConstructs) extends SlanConstruct
+
+case class ResourceAttribute(id: ResourceReference, value: SlanValues) extends SlanConstruct
+
+case class Message(id: MessageReference) extends SlanConstruct
+
+case class Model(id: ModelReference, elements: SlanConstructs) extends SlanConstruct
+
+case class UnknownConstruct(key: String, typeOfConstruct: String, obj: String) extends SlanConstruct
+
+

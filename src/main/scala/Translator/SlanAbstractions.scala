@@ -1,0 +1,31 @@
+/*
+ *
+ *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ *   
+ *   Unless required by applicable law or agreed to in writing, software distributed under
+ *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+ *  
+ */
+
+package Translator
+
+object SlanAbstractions:
+  transparent trait SlanConstruct
+
+  type YamlPrimitiveTypes = String | Int | Double | Boolean | Long
+  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_]
+  type BehaviorReference = Option[String]
+  type StateReference = Option[String]
+  type MessageReference = String
+  type ModelReference = String
+  type PdfReference = String
+  type PdfParameter = Double
+  type AgentReference = String
+  type GroupReference = String
+  type ChannelReference = String
+  type ResourceReference = String
+  type GroupLeaderReference = String
+  type ParameterOrderNumber = Int
+  type SlanConstructs = List[SlanConstruct]
+  type SlanValues = List[SlanValue]

@@ -1,0 +1,33 @@
+/*
+ *
+ *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ *
+ *   Unless required by applicable law or agreed to in writing, software distributed under
+ *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+package Translator
+
+import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
+import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
+import Translator.SlanKeywords.*
+import Translator.SlantParser.convertJ2S
+
+class AgentsProcessor extends GenericProcessor :
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+    case v: (_, _) => convertJ2S(v._1) match {
+      case `Groups` => (new GroupsProcessor).commandProcessor(convertJ2S(v._2))
+      case `Behaviors` => (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))
+      case `Channels` => (new ChannelsProcessor).commandProcessor(convertJ2S(v._2))
+      case `Resources` => (new ResourcesProcessor).commandProcessor(convertJ2S(v._2))
+      //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
+      //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
+      //otherwise it is a sequence of states each defining its own behavior
+      case cv: String => if lookAhead(Behavior, convertJ2S(v._2)) then List(Agent(cv, (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf)) else List(Agent(cv, (new StatesProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf))
+      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+    }
+
+    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+  }

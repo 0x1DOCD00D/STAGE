@@ -8,13 +8,7 @@
  *
  */
 
-package Analyzer
+package Translator
 
-object SlanAbstractions:
-  trait SlanConstruct
-
-  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | String | Int | Double | Boolean | Option[_]
-  type ObtainSlanConstruct = () => List[SlanConstruct]
-  type Yaml2Construct = YamlTypes => List[SlanConstruct]
-  type Key2Yaml2Construct = Option[String] => Yaml2Construct
-  type SlanProcessorSwitch = Map[String, GenericProcessor]
+object EmbeddedFunctions:
+  val c = 2

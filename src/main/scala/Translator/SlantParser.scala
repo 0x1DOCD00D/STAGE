@@ -8,11 +8,10 @@
  *
  */
 
-package Analyzer
+package Translator
 
-import Analyzer.SlanAbstractions.*
-import Generator.PDFs.PdfStreamGenerator
 import HelperUtils.{CreateLogger, ErrorWarningMessages}
+import Translator.SlanAbstractions.*
 import org.slf4j.Logger
 import org.yaml.snakeyaml.Yaml
 
@@ -45,7 +44,7 @@ object SlantParser:
       case Failure(exception) => throw new IllegalArgumentException(ErrorWarningMessages.YamlScriptFileFailure(inputPath, exception.getMessage))
     }
 
-  private[Analyzer] def convertJ2S(yamlInstance: Any): YamlTypes = yamlInstance match {
+  private[Translator] def convertJ2S(yamlInstance: Any): YamlTypes = yamlInstance match {
     case v: YamlTypes => v
     case null => None
     case _ => yamlInstance.getClass match {

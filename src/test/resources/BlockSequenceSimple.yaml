@@ -1,0 +1,14 @@
+# it is a list of four entries
+# the first entry is a map with three key->value pairs
+- A: B
+  A1: B1
+  A2: B2
+# the second entry is a map with two key->value pairs
+- C: D
+  C1: D1
+# then the third entry is an arraylist of one map entry with two key-> value pairs
+- - M: N
+    M1: N1
+# and the final fourth entry is the map with two key->value pairs
+- F: G
+  F1: G1

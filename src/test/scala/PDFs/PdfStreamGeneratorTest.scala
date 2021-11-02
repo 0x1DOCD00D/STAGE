@@ -8,13 +8,13 @@
  *
  */
 
-package Generator.PDFs
+package PDFs
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
 import HelperUtils.ConfigReference
 import org.apache.commons.math3.distribution.{BetaDistribution, NormalDistribution, PoissonDistribution, UniformRealDistribution}
 import org.apache.commons.math3.linear.{MatrixUtils, RealMatrix}
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.should.Matchers
 
 import scala.util.hashing.MurmurHash3
 
@@ -52,6 +52,13 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
   the[IllegalArgumentException] thrownBy PdfStreamGenerator("BETADistribution", true, 90d, 10d, 1000d) should have message "Wrong number of arguments for distribution BETADistribution"
 
   the[IllegalArgumentException] thrownBy PdfStreamGenerator("BetaDistribution", true, 90d) should have message "Wrong number of arguments for distribution BetaDistribution"
+
+  it should "create an enum integer distribution, cache it and then make sure that it returns the cached stream" in {
+    val betaDist = PdfStreamGenerator("betadistribution", false, 60d, 40d)
+    val enumd = PdfStreamGenerator("enumintdistribution", false, betaDist.filter(e => e >= 0d && e < 1d).take(30).toList: _*)
+    enumd.take(30).toList.foldLeft(0.0)(_ + _) / 30 - 19.43333 shouldBe <(0.001)
+  }
+
 
   it should "create a Beta distribution, cache it and then make sure that it returns the cached stream" in {
     //90% success and 10% failure

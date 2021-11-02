@@ -8,12 +8,15 @@
  *
  */
 
-package Analyzer
+package Translator
 
-import Analyzer.SlanAbstractions.{Key2Yaml2Construct, SlanConstruct, SlanProcessorSwitch, YamlTypes}
-import Analyzer.SlanKeywords.Agents
-import Analyzer.SlantParser.convertJ2S
 import HelperUtils.ErrorWarningMessages.{LogGenericMessage, YamlKeyIsNotString}
+import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
+import Translator.SlanKeywords.Agents
+import Translator.SlantParser.convertJ2S
+import cats.implicits.*
+import cats.kernel.Eq
+
 
 abstract class GenericProcessor:
   final def commandProcessor(yamlObj: YamlTypes): List[SlanConstruct] =
@@ -32,25 +35,27 @@ abstract class GenericProcessor:
     }
 
   protected final def isContainerizedContent(yamlObj: Any): Boolean = convertJ2S(yamlObj) match {
-    case v@(List | Map) => true
-    case v: Iterable[_] =>
-      val c = 2
-      true
-    case unknown => false
+    //    case v@(List | Map) => true
+    case v: Iterable[_] => true
+    case _ => false
   }
 
+  protected final def containerContentProcessor(yamlObj: YamlTypes, key: Option[String] = None): List[SlanConstruct] = convertJ2S(yamlObj) match {
+    case v: List[_] => v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
+    case v: Map[_, _] => v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
+    case unknown => (new UnknownEntryProcessor(unknown, key)).constructSlanRecord
+  }
 
-  protected final def containerContentProcessor(yamlObj: YamlTypes, key: Option[String] = None): List[SlanConstruct] =
-    yamlObj match {
-      case v: List[_] =>
-        val res = v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
-        logger.info(s"List result: ${res.toString()}")
-        res
-
-      case v: Map[_, _] =>
-        val res = v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
-        logger.info(s"Map result: ${res.toString()}")
-        res
-
-      case unknown => (new UnknownEntryProcessor(unknown, key)).constructSlanRecord
+  protected[Translator] final def lookAhead(key: String, yamlObj: YamlTypes): Boolean =
+    if isContainerizedContent(yamlObj) then convertJ2S(yamlObj) match {
+      case v: List[_] => v.foldLeft(false)((result, e) => result | lookAhead(key, convertJ2S(e)))
+      case v: Map[_, _] => v.foldLeft(false)((result, e) => result | lookAhead(key, convertJ2S(e)))
+      case unknown => false
+    }
+    else yamlObj match {
+      case v: (_, _) => convertJ2S(v._1) match {
+        case cv: String if cv.toLowerCase === key.toLowerCase => true
+        case unknown => false
+      }
+      case unknown => false
     }

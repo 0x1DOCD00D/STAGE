@@ -8,18 +8,27 @@
  *
  */
 
-package Generator.PDFs
+package PDFs
 
-import Generator.PDFs.PdfStreamGenerator.{config, defaultSeed, logger}
+import HelperUtils.ErrorWarningMessages.LogGenericMessage
+import HelperUtils.Parameters.config
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import org.apache.commons.math3.distribution.{ChiSquaredDistribution, *}
+import PDFs.PdfStreamGenerator.defaultSeed
+import Translator.SlantParser
+import cats.implicits.*
+import cats.kernel.Eq
+import org.apache.commons.math3.distribution.*
 import org.apache.commons.math3.linear.{MatrixUtils, RealMatrix}
-import org.apache.commons.math3.random.{ISAACRandom, JDKRandomGenerator, MersenneTwister, RandomGenerator, Well1024a, Well19937a, Well19937c, Well44497a, Well44497b, Well512a}
+import org.apache.commons.math3.random.*
 import org.apache.commons.rng.UniformRandomProvider
 import org.apache.commons.rng.simple.RandomSource
+import org.slf4j.Logger
 
-import scala.util.{Failure, Success, Try}
 import scala.util.hashing.MurmurHash3
+import scala.util.{Failure, Success, Try}
+
+type DistributionType = AbstractIntegerDistribution | AbstractRealDistribution
+given logger: Logger = CreateLogger(classOf[PdfStreamGenerator.type])
 
 object PdfStreamGenerator:
   private val defaultSeed: Long = System.currentTimeMillis()
@@ -49,7 +58,7 @@ object PdfStreamGenerator:
   private val strUniformIntegerDistribution = (UniformIntegerD.toString() + suffixDistribution).toUpperCase
   private val strWeibullDistribution = (WeibullD.toString() + suffixDistribution).toUpperCase
   private val strZipfDistribution = (ZipfD.toString() + suffixDistribution).toUpperCase
-
+  private val strEnumIntDistribution = (EnumIntD.toString() + suffixDistribution).toUpperCase
 
   //check if a distribution object exists for specific parameters - a cache for pdfs
   private[this] val pdfs: scala.collection.mutable.Map[String, scala.collection.mutable.Map[Int, LazyList[Double]]] = scala.collection.mutable.Map()
@@ -65,7 +74,11 @@ object PdfStreamGenerator:
   def apply(distributionName: String, useCache: Boolean, params: Double*): LazyList[Double] = apply(distributionName, useCache, None, params)
 
   def apply(distributionName: String, useCache: Boolean, seed: Option[Long], params: Seq[Double]): LazyList[Double] =
-    if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
+    if distributionName.toUpperCase === strEnumIntDistribution then
+      if params.length > config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") || params.length <= 0 then
+        throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
+      else if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
+
     if useCache then
       Try(pdfs.get(distributionName.toUpperCase).get(MurmurHash3.orderedHash(params))) match {
         case Success(lzDataStream) => lzDataStream
@@ -74,7 +87,7 @@ object PdfStreamGenerator:
     else
       createDistDataStream(distributionName, useCache, seed, params.toArray)
 
-  private def generateSamples(generator: AbstractIntegerDistribution | AbstractRealDistribution): LazyList[Double] =
+  private def generateSamples(generator: DistributionType): LazyList[Double] =
     generator match {
       case v: AbstractIntegerDistribution => v.sample() #:: generateSamples(generator)
       case v: AbstractRealDistribution => v.sample() #:: generateSamples(generator)
@@ -108,6 +121,7 @@ object PdfStreamGenerator:
       case `strUniformIntegerDistribution` => UniformIntegerD(params).create(seed)
       case `strWeibullDistribution` => WeibullD(params).create(seed)
       case `strZipfDistribution` => ZipfD(params).create(seed)
+      case `strEnumIntDistribution` => EnumIntD(params).create(seed)
       case _ => throw new IllegalArgumentException(s"Incorrect distribution is specified: $distributionName")
     }
     val dstream = generateSamples(distributionObject)
@@ -141,8 +155,9 @@ enum PdfStreamGenerator(params: Array[Double]):
   case UniformIntegerD(params: Array[Double]) extends PdfStreamGenerator(params)
   case WeibullD(params: Array[Double]) extends PdfStreamGenerator(params)
   case ZipfD(params: Array[Double]) extends PdfStreamGenerator(params)
+  case EnumIntD(params: Array[Double]) extends PdfStreamGenerator(params)
 
-  def create(seed: Option[Long]): AbstractIntegerDistribution | AbstractRealDistribution =
+  def create(seed: Option[Long]): DistributionType =
     val rg = createRandomGenerator(seed)
     this match {
       case BetaD(params: Array[Double]) => new BetaDistribution(rg, params(0), params(1))
@@ -170,6 +185,7 @@ enum PdfStreamGenerator(params: Array[Double]):
       case UniformIntegerD(params: Array[Double]) => new UniformIntegerDistribution(rg, params(0).toInt, params(1).toInt)
       case WeibullD(params: Array[Double]) => new WeibullDistribution(rg, params(0), params(1))
       case ZipfD(params: Array[Double]) => new ZipfDistribution(rg, params(0).toInt, params(1))
+      case EnumIntD(params: Array[Double]) => new EnumeratedIntegerDistribution(rg, (1 to params.length).toArray, params)
     }
 
   private def createRandomGenerator(seed: Option[Long]): RandomGenerator =
@@ -200,7 +216,7 @@ enum PdfStreamGenerator(params: Array[Double]):
     randomGenerator.setSeed(if seed.exists(v => v > 0) then seed.getOrElse(System.currentTimeMillis()) else Try(config.getLong("Stage.Random.seed")) match {
       case Success(value) => value
       case Failure(exception) => {
-        logger.warn(s"Using default seed $defaultSeed because it is missing in the configuration file.")
+        LogGenericMessage(getClass, s"Using default seed $defaultSeed because it is missing in the configuration file.")
         defaultSeed
       }
     })

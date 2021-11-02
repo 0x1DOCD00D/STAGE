@@ -1,32 +1,123 @@
 Agents:
     # an abstraction that represents a logical collection of agents based on some comprehension
-  - Agent 1:
-        property1: v1
-        property2: v2
+  - Agent Name X:
+      - Init: State B
+      - State C:
+          Message 007: Licence2Kill
+          Message Q:
+            Periodic: {
+              Messages: [ Message Z, Message W, Message U ],
+              MixFrequence: {
+                Distribution: Normal, #create three probabilities for three messages
+                Parameters: [ 1: 0.6, 2: 0.2 ],
+                Seed: 200,
+                Constraints: [ ">=": 0, "<": 1 ]
+              },
+              Distribution: Uniform, #how many messages to generate every time
+              Parameters: {
+                1: 1
+                  2: 10
+              },
+              Seed: 100,
+              Limit: [ Population: 1000, Time: [ 30, minute ], andThen: [ Fn_Destroy: self ] ],
+            }
+          GoTo: State A
+      - State A:
+          Behavior: stateAbehavior
+          GoTo: State B
+      - State B:
+          Behavior:
+            Message X: [ Behavior: DoSomething, GoTo: State A ]
+            Message Y:
+              Behavior:
+                Fn_Create:
+                  Agents: [ Agent Name Y: [ Population: 2 ], Agent 007: 0.3, Agent Putin: 0.5 ]
+                  Seed: null
+                  Limit:
+                    Population: 10
 
-  - Agent 2:
-        property1: v1
-        property2: v2
+  - Agent Name Y:
+      Behavior:
+        Message X: DoSomething
+        Message Y: DoSomethingElse
+        Periodic: {
+          Messages: [ Message Z: 0.3, Message W: 0.7, Message U: 0.1 ],
+          Distribution: Uniform, #how many messages to generate every time
+          Parameter 1: 1,
+          Parameter 2: 10,
+          Seed: ~,
+          Limit: [ Quantity: 1000, Time: [ 30, minute ], andThen: [ Fn_Destroy: self ] ],
+        }
 
   - Groups:
-    - groupName1:
-      Agents: [agent1, agent2]
-      Leader: agentName
-    - groupName2: [Agents: [agent1, agent2], Leader: agentName]
+      - groupName1:
+        Agents: [ agent1, agent2 ]
+        Leader: agentName
+      - groupName2: [ Agents: [ agent1, agent2 ], Leader: agentName ]
 
   - Groups: {
-        groupName1: [Agents: [Agent1, Agent2], Leader: agentName],
-        groupName2: [Agents: [Agent1, Agent2], Leader: AgentX],
-    } # an abstraction that represents a logical collection of agents based on some comprehension
+    groupName1: [ Agents: [ Agent1, Agent2 ], Leader: agentName, ConsistencyModel: Sequential ],
+    groupName2: [ Agents: [ Agent1, Agent2 ], Leader: AgentX, ConsistencyModel: Sequential ],
+  } # an abstraction that represents a logical collection of agents based on some comprehension
 
-  - Behaviors: 2 #each agent can be assigned one or more behaviors which are invoked in response to messages
+  - Behaviors: #each agent can be assigned one or more behaviors which are invoked in response to messages
+      - License2Kill:
+          Fn_Create: {
+            Messages: [ Message Z, Message W, Message U ],
+            MixFrequences: {
+              Distribution: Normal, #create three probabilities for three messages
+              Parameter 1: 0.6,
+              Parameter 2: 0.2,
+              Seed: 200,
+              Constraints: [ ">=": 0, "<": 1 ]
+            },
+            Distribution: Uniform, #how many messages to generate every time
+            Parameter 1: 1,SlanConstructs
+            Parameter 2: 10,
+            Seed: 100,
+            Limit: [ Population: 1000, Time: [ 30, minute ], andThen: [ Fn_Destroy: self ] ],
+          }
+
 
   - Channels: 3.14 #a channel is represented by some agent that adds behavior to message transmission
-          #a channel connects agents via some other agents, if any thus creating a path.
+    #a channel connects agents via some other agents, if any thus creating a path.
 
-  - Resources: true # resources exist within agents and behaviors access and manipulate resources.
+
+Resources: # resources exist within agents and behaviors access and manipulate resources.
+  SomeCounter: 0 # a basic counter initialized to zero
+
+  HDD: # resource names as keys under the entry Resources
+    # attributes are defined under each resource keys. Their values can be manipulated by the simulation
+    Size: {
+      Distribution: Normal,
+      Parameters: [ 1: 3000, 2: 1000 ]
+    }
+    Dimensions: Tb
+    Utilization:
+      Constraints: [ ">=": 0, "<": Size ]
+    ItemCount:
+      - 0
+      - Constraints: [ ">=": 0 ]
+    # this attribute designates the physical storage of items as a multiset or a set
+    # each items is described by its size and its has integer/long identifier that may be required to be unique
+    # the value Persist designates the following interfaces: store, retrieve, update, delete, and count
+    # Fn_Store: [HDD.DataStore, ID: 12, Size: 1000]
+    # Fn_Retrieve: [HDD.DataStore, ID: 12]
+    # Fn_Update: [HDD.DataStore, ID: 12, Size: 500]
+    # Fn_Delete: [HDD.DataStore, ID: 12, Count: 2]
+    # Fn_Count: [HDD.DataStore, ID: 12]
+    DataStore:
+      - Persist
+      - Unique
+
+  SomeRecord:
+    Field1: {
+      Distribution: Uniform,
+      Parameters: [ 1: 0.2, 2: 0.9 ]
+    }
+    Field2: 202nd preimage attack
+    Field3: null
+
 
 Messages:
-    subkey: value
-
-Models: false
+  subkey: value

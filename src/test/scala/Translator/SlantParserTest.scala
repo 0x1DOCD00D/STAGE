@@ -8,7 +8,7 @@
  *
  */
 
-package Analyzer
+package Translator
 
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -26,6 +26,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   val singleScalarStringValueFile = "OneScalarStringValue.yaml"
   val singleScalarBooleanValueFile = "OneScalarBooleanValue.yaml"
   val singleScalarNullValueFile = "OneScalarNULLValue.yaml"
+  val blockSequenceFile = "BlockSequenceSimple.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -171,7 +172,15 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     //    SlantParser(path).visit
   }
 
-
+  it should "load up and extract the content of block sequences with dashes from a script file" in {
+    val path = getClass.getClassLoader.getResource(blockSequenceFile).getPath
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+      case v: List[_] => v
+      case _ => List()
+    }
+    result.asInstanceOf[List[_]].toList.length shouldBe 4
+  }
 }
+
 
 

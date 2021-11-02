@@ -10,11 +10,10 @@
 
 package HelperUtils
 
-import Generator.PDFs.PdfStreamGenerator
+import HelperUtils.ConfigReference.*
+import org.apache.commons.math3.random.*
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
-import HelperUtils.ConfigReference.*
-import org.apache.commons.math3.random.{ISAACRandom, JDKRandomGenerator, MersenneTwister, Well1024a, Well19937a, Well19937c, Well44497a, Well44497b, Well512a}
 
 import scala.util.{Failure, Success, Try}
 

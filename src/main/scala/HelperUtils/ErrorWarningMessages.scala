@@ -13,7 +13,7 @@ package HelperUtils
 import org.slf4j.Logger
 
 object ErrorWarningMessages:
-  def YamlScriptFileFailure(input: String, exceptionMessage: String)(using logger: Logger): String =
+  def YamlScriptFileFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
     val errorMsg = s"Error occured when loading input Yaml script $input: $exceptionMessage"
     logger.error(errorMsg)
     errorMsg
