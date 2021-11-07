@@ -12,10 +12,11 @@ package Translator
 
 import HelperUtils.{CreateLogger, ErrorWarningMessages}
 import Translator.SlanAbstractions.*
+import org.joda.time.DateTime
 import org.slf4j.Logger
 import org.yaml.snakeyaml.Yaml
 
-import java.util
+import java.util.*
 import scala.collection.immutable
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
@@ -55,6 +56,7 @@ object SlantParser:
       case c if c == classOf[java.lang.Integer] => yamlInstance.asInstanceOf[Int]
       case c if c == classOf[java.lang.Double] => yamlInstance.asInstanceOf[Double]
       case c if c == classOf[java.lang.Boolean] => yamlInstance.asInstanceOf[Boolean]
+      case c if c == classOf[Date] => new DateTime(yamlInstance.asInstanceOf[Date])
       case c => throw new RuntimeException(ErrorWarningMessages.YamlUnexpectedTypeFound(c.getName))
     }
   }

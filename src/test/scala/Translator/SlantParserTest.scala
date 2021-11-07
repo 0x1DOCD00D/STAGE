@@ -10,18 +10,23 @@
 
 package Translator
 
+import org.joda.time.DateTime
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
+import java.util.Date
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
 class SlantParserTest extends AnyFlatSpec with Matchers {
   behavior of "the Slant parser for single value scalars"
+  val complexYamlTemplate_2 = "ComplexKey_v2.yaml"
+  val complexYamlTemplate_1 = "ComplexKey_v1.yaml"
   val basicYamlTemplate = "Template_v1.yaml"
   val illFormedYaml = "IllFormed.yaml"
   val nonexistentYamlFile = "Hades.yaml"
   val singleScalarFloatingPointValueFile = "OneScalarFloatingPointValue.yaml"
+  val singleScalarDateValueFile = "OneScalarDateValue.yaml"
   val singleScalarIntValueFile = "OneScalarIntValue.yaml"
   val singleScalarStringValueFile = "OneScalarStringValue.yaml"
   val singleScalarBooleanValueFile = "OneScalarBooleanValue.yaml"
@@ -33,6 +38,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   val boolScalarValue = false
 
   the[IllegalArgumentException] thrownBy SlantParser(nonexistentYamlFile) should have message s"Error occured when loading input Yaml script $nonexistentYamlFile: $nonexistentYamlFile (No such file or directory)"
+
 
   it should "load up and extract the content of the single null entry in yaml" in {
     val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
@@ -54,13 +60,23 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     res shouldBe None
   }
 
-  it should "load up and extract the content of the single scalar boolean value yaml" in {
+  it should "load up and extract the content of the single scalar boolean value" in {
     val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
     val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
       case v: Boolean => v
       case _ => !boolScalarValue
     }
     res shouldBe boolScalarValue
+  }
+
+  it should "load up and extract the content of the single scalar date value" in {
+    val wrongDate = new DateTime(new Date())
+    val path = getClass.getClassLoader.getResource(singleScalarDateValueFile).getPath
+    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+      case v: DateTime => v
+      case _ => wrongDate
+    }
+    res.toString shouldBe "2021-11-05T19:00:00.000-05:00"
   }
 
   it should "load up and extract the content of the single scalar string value yaml" in {
@@ -89,7 +105,6 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     }
     res shouldBe intScalarValue
   }
-
 
   it should "throw an exception for ill-formed yaml" in {
     val path = getClass.getClassLoader.getResource(illFormedYaml).getPath
@@ -167,6 +182,8 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   }
 
 
+
+
   it should "load up and extract the content of the yaml script from a script file" in {
     val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
     //    SlantParser(path).visit
@@ -180,7 +197,28 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     }
     result.asInstanceOf[List[_]].toList.length shouldBe 4
   }
+
+  it should "extract the content of a complex key as a list of entries" in {
+    val key1 = "Key entry 1"
+    val key2 = "Key entry 2"
+    val path = getClass.getClassLoader.getResource(complexYamlTemplate_1).getPath
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel).asInstanceOf[Map[_,_]].toList
+    val rs = SlantParser.convertJ2S(result.head._1)
+    val rs1 = SlantParser.convertJ2S(rs)
+    rs1.asInstanceOf[List[_]].head shouldBe key1
+    rs1.asInstanceOf[List[_]].reverse.head shouldBe key2
+  }
+
+  it should "extract the content of a complex key as key value pairs" in {
+    val key = "key"
+    val value = "value"
+    val path = getClass.getClassLoader.getResource(complexYamlTemplate_2).getPath
+    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel).asInstanceOf[Map[_,_]].toList
+
+    val keymap = SlantParser.convertJ2S(result.head._1).asInstanceOf[Map[_,_]].toList
+    keymap.head._1 shouldBe key
+    keymap.head._2 shouldBe value
+  }
+
 }
-
-
 

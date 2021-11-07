@@ -10,10 +10,8 @@ val logbackVersion = "1.3.0-alpha10"
 val sfl4sVersion = "2.0.0-alpha5"
 val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
-//noinspection SpellCheckingInspection
 val scalacticVersion = "3.2.9"
-//noinspection SpellCheckingInspection
-val nscalatimeVersion = "2.28.0"
+val nscalatimeVersion = "2.30.0"
 val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
 val guavaVersion = "30.1.1-jre"
