@@ -1,0 +1,16 @@
+# Agents is the main section of the specification that describes the functionality of agents. Each agent is identified by its unique name,
+# so the key Agents contains a list of agent names. Each agent can be in one or more states and each state is associated with one behavior.
+# An agent can be a Producer if it creates messages that are put into channels, a Consumer if it receives and processes messages or both.
+# Some Producers may be designated as Sources that are the entry points in the simulation or Sinks as they are collectors of measurements.
+# For each state name key the value is the object whose key is the name of the associated behavior and the value of this key is the next
+# state name to switch to or null or no value at all, which will make the value of the key state name the behavior with no state to switch to.
+Agents:
+  - Agent Name X:
+      - Init:
+          GenerateMessages X, W, and U: State A
+      - State A: [ stateAbehavior: State B ]
+      - State B: Respond to messages A and Y
+      - State X:
+          Last Behavior:
+
+  - Agent Name Y: behaviorWithOneState

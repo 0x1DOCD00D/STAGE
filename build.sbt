@@ -18,7 +18,7 @@ val guavaVersion = "30.1.1-jre"
 val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
 val snakeYamlVersion = "1.29"
-
+val scalaZVersion = "7.4.0-M8"
 
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
@@ -46,6 +46,7 @@ lazy val root = (project in file("."))
       "org.scalactic" %% "scalactic" % scalacticVersion,
       "org.scalatest" %% "scalatest" % scalacticVersion % Test,
       "org.scalatest" %% "scalatest-featurespec" % scalacticVersion % Test,
+      "org.scalaz" %% "scalaz-core" % scalaZVersion,
       "org.ow2.asm" % "asm" % asmVersion,
       "org.ow2.asm" % "asm-commons" % asmVersion,
       "org.ow2.asm" % "asm-util" % asmVersion,

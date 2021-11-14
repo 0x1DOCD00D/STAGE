@@ -26,6 +26,8 @@ case class Agent(id: AgentReference, states: SlanConstructs) extends SlanConstru
 
 case class State(id: StateReference, behavior: SlanConstructs) extends SlanConstruct
 
+case class StateBehavior(behavior: BehaviorReference, switchTo: StateReference) extends SlanConstruct
+
 case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
 
 case class PdfSpecification(specification: SlanConstructs) extends SlanConstruct

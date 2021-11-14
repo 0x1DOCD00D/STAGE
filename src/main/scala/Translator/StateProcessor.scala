@@ -18,21 +18,22 @@ import cats.implicits.*
 import cats.kernel.Eq
 
 class StateProcessor extends GenericProcessor {
-  //the keyword behavior is optional under the state key - if there is a predefined behavior that is referenced
-  //then the keyword can be used to designated that behavior, otherwise the whole point of having a state is
-  //to define the behavior of the agent in that state.
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+    //there are two cases to process: a key/value pair where the key designates the behavior reference
+    //and the value is the state reference to switch to or null; or simply a string value that designates
+    //the behavior reference in case when the state for this behavior is terminal.
     case v: (_, _) => convertJ2S(v._1) match {
-      case behaviorKey: String if behaviorKey.toLowerCase === SlanKeywords.Behavior.toLowerCase => null // Behavior((new BehaviorsProcessor).commandProcessor(convertJ2S(v._2)))
-      case periodic: String if periodic.toLowerCase === Periodic => null // PeriodicBehaviorProcessor
-      case messageID: String => List(MessageResponseBehavior(messageID, (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))))
+      case behaviorRef: String => List(StateBehavior(Some(behaviorRef), convertJ2S(v._2) match {
+        case switchTo: String => Some(switchTo)
+        case None => None
+        case unknown => Some((new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).toString)
+      }
+      ))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
+    case behaviorRef: String => List(StateBehavior(Some(behaviorRef), None))
 
-    case v => convertJ2S(v) match {
-      case cv: String => List(SlanValue(cv))
-      case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
-    }
+    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
   }
 
 }
