@@ -25,6 +25,7 @@ object SlanAbstractions:
   type PdfParameter = Double
   type AgentReference = String
   type GroupReference = String
+  type ConsistencyModelReference = String
   type ChannelReference = String
   type ResourceReference = String
   type GroupLeaderReference = String

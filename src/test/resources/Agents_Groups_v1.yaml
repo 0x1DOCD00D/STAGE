@@ -1,0 +1,27 @@
+# Groups enable the Adept to impose the membership relationship on agents. Each groups has its leader agent that represents all other agents in this group.
+# A group may contain subgroups and it is closely related to the notion of the set. An agent may be a member of zero or more groups. The leader agent is
+# assigned some behavior whereupon its job is to transduce input messages to agents that populate its group and transmit responses from the group agents.
+# Within a group some specific consistency model is enforced and shared resources are designated for all agents to read and write. The Adept may implement
+# specific behaviors for the leader agent to enforce certain protocols within the group, e.g., how agents exchange their internal states with one another.
+# Suppose that an agent is assigned to two different groups, e.g., demz and gopers and it responds to messages from its respective leader agents to vote
+# on different issues. It can access shared resources provided by each group and it responds to messages from its respected leaders by invoking its behavior.
+# Hence, participation in a group changes the interface of the agent and its state leaving it free to decide how it engages with other agents.
+# Agents can join a group by executing the function Fn_Join: GroupName as part of the behavior or they can be created when a group is created.
+# Agents can leave a group by executing the function Fn_Leave: GroupName as part of the behavior or they can be created when a group is created.
+Agents:
+  Groups:
+    Group Name:
+      agentname1: randomGenerator4Agent1
+      agentname2: 100 # fixed number of agents
+      bubba:
+      # Consistency models are important to determine the value of a replicated resource that is written to by multiple agents in some order.
+      # For a resource with the replication coefficient greater than one it is important to specify the level of its consistency. For Strict or
+      # Sequential consistency the simulation approximates the latency times to zero and linearizes all client requests by designating an agent
+      # that is responsible for enforcing the strict order. Since only agents can read and write the values of a resource, a replicated resource
+      # across multiple agents or groups may have different values depending on the chosen consistency model.
+      Resources:
+        ? Causal: hdd
+          : 2
+        vNic: 3
+        ? Eventual: varX
+          : randomGenerator1

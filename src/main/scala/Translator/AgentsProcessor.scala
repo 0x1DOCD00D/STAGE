@@ -14,11 +14,13 @@ import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.implicits.*
+import cats.kernel.Eq
 
 class AgentsProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v._1) match {
-      case `Groups` => (new GroupsProcessor).commandProcessor(convertJ2S(v._2))
+      case entry: String if entry.toUpperCase === Groups.toUpperCase => (new GroupsProcessor).commandProcessor(convertJ2S(v._2))
       case `Behaviors` => (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))
       case `Channels` => (new ChannelsProcessor).commandProcessor(convertJ2S(v._2))
       case `Resources` => (new ResourcesProcessor).commandProcessor(convertJ2S(v._2))

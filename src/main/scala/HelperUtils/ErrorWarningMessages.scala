@@ -13,6 +13,11 @@ package HelperUtils
 import org.slf4j.Logger
 
 object ErrorWarningMessages:
+  def DistributionNameFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
+    val errorMsg = s"Incorrect distribution name is specified: $input - $exceptionMessage"
+    logger.error(errorMsg)
+    errorMsg
+
   def YamlScriptFileFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
     val errorMsg = s"Error occured when loading input Yaml script $input: $exceptionMessage"
     logger.error(errorMsg)

@@ -13,14 +13,4 @@ package Translator
 import Translator.SlanAbstractions.SlanConstruct
 
 enum ConsistencyModel extends SlanConstruct :
-  case STRICT extends ConsistencyModel
-  case SEQUENTIAL extends ConsistencyModel
-  case CAUSAL extends ConsistencyModel
-  case PROCESSOR extends ConsistencyModel
-  case PRAM extends ConsistencyModel
-  case FIFO extends ConsistencyModel
-  case CACHE extends ConsistencyModel
-  case SLOW extends ConsistencyModel
-  case RELEASE extends ConsistencyModel
-  case EVENTUAL extends ConsistencyModel
-
+  case STRICT, SEQUENTIAL, PROCESSOR, PRAM, FIFO, CACHE, SLOW, RELEASE, DELTA, EVENTUAL

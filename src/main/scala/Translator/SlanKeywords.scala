@@ -43,6 +43,7 @@ object SlanKeywords:
   val SelfRef = "self"
   val GoTo = "goto"
   val Population = "population"
+  val Eventual = "eventual"
   val Fn_Create = "fn_create"
 
   val FnPrefix = "fn_"

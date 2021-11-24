@@ -57,13 +57,16 @@ case class GoTo(state: StateReference) extends SlanConstruct
 
 case class Group(id: GroupReference, members: SlanConstructs) extends SlanConstruct
 
-case class GroupAgents(agents: SlanValues) extends SlanConstruct
+case class GroupAgent(id: AgentReference, cardinality: SlanConstructs) extends SlanConstruct
 
-case class GroupLeaders(leaders: SlanValues) extends SlanConstruct
+case class ResourceConsistencyModelInGroup(cmr: ConsistencyModelReference, id: ResourceReference) extends SlanConstruct
+
+case class ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanValue) extends SlanConstruct
 
 case class Channel(id: ChannelReference, behaviors: SlanConstructs) extends SlanConstruct
 
 case class Resource(id: ResourceReference, attributes: SlanConstructs) extends SlanConstruct
+
 
 case class ResourceAttribute(id: ResourceReference, value: SlanValues) extends SlanConstruct
 
