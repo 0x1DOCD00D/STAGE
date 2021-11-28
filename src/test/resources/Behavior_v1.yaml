@@ -1,0 +1,57 @@
+# Behaviors can be invoked in response to some messages or periodically. The state of an agent is associated with one behavior
+# and a channel is a stateless agent for transducing messages that is associated with only one behavior.
+# Main functions of a behavior is to update the values of resources, create and send messages, i.e., put them into channels,
+# and spawn/destroy agents. Since SLAN is not supposed to provide a full range of constructs which are normally associated with
+# general-purpose programming languages, it is assumed that the Adept will use programming languages like Java or Scala to
+# implement specific behaviors and SLAN will enable the Adept to reference these behaviors. Hence, SLAN constructs are limited to
+# basic arithmetics, conditional and iterative statements and the lifecycle management of messages and agents. This design decision
+# is similar to deciding to produce calculators with limited capabilities - cheap ones perform basic arithmetics whereas complex
+# souped up calculators can graph functions and allow users to input complicated programs and to connect to workstations to
+# offload complex computations or to exchange data, e.g., TI-73 Explorer Graphing Calculator.
+Agents:
+  Behaviors:
+    null:
+      Fn_Send: [ Some Message Name: {
+        ItsField: varName.field1,
+        ItsOtherField: [ Fn_Eval: [ PLUS, varName.field2, varName.field3 ] ]
+      }, Channel: channelName ]
+
+    Behavior 1:
+      ? - MessageX
+        - MessageY
+        - MessageZ
+        # each behavior is defined in response to messages.
+        : {
+        # conditional statements
+        # reused parameterized functionality - functions
+        # iterations over collections
+        # references to agents, messages, groups, channels and resources as well as probabilities and external data items
+        # memoization of communication paths and referencing them
+        # specifying externally defined behaviors
+        Fn_Update: [ resourceName, Fn_Eval: [ MULTIPLY, resourceName, generatorRefId ] ],
+        Fn_Send: [ Some Message Name: {
+          ItsField: varName.field1,
+          ItsOtherField: [ Fn_Eval: [ PLUS, varName.field2, varName.field3 ] ]
+        }, Channel: channelName ]
+      }
+    Behavior 2:
+      MessageA:
+        ForEach: [ MessageA.CollectionField: refId, Fn_Add: [ resourceName, Fn_Mult: [ refId, 0.5 ] ] ]
+
+    Behavior 3:
+      null:
+        IF:
+          ">=":
+            - resource1
+            - thresholdValue
+          THEN:
+            Fn_Update: [ resource1, 100 ]
+
+    Behavior 4:
+      Message k:
+        JAR:
+          methodRefId:
+            url/to/Jar/name.jar: methodName
+        Fn_Send: {
+          methodName: [ 1: 10, 2: 20 ]
+        }

@@ -12,17 +12,14 @@ package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlanKeywords.Periodic
 import Translator.SlantParser.convertJ2S
 import cats.Eq
 import cats.implicits.*
 
-class PeriodicBehaviorProcessor extends GenericProcessor {
+class IfThenElseBehaviorProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v._1) match {
-      case messages: String if messages.toLowerCase === SlanKeywords.Messages.toLowerCase => null //Behavior((new BehaviorsProcessor).commandProcessor(convertJ2S(v._2)))
-      case periodic: String if periodic.toLowerCase === Periodic => null //PeriodicBehaviorProcessor
-      case messageID: String => List(MessageResponseBehavior(messageID, (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))))
+      case messageID: String => null //List(MessageResponseBehavior(List(messageID), (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 

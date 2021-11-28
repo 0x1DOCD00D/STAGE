@@ -24,7 +24,7 @@ class StatesProcessor extends GenericProcessor {
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
     //there is the single anonymous state whose behavior is defined by the behavior reference
-    case behaviorRef: String => List(State(None, List(StateBehavior(Some(behaviorRef), None))))
+    case behaviorRef: String => List(State(None, List(StateBehavior(Option(behaviorRef), None))))
 
     case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
   }

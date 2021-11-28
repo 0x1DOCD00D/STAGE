@@ -1,0 +1,9 @@
+Agents:
+  Behaviors:
+    Behavior 4 Messages 2: #linkedhashmap, size = 1: arraylist, size 3 -> linkedhashmap, size 1;
+      ? - MessageXX
+        - MessageYY
+        - MessageZZ
+        : {
+        Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
+      }

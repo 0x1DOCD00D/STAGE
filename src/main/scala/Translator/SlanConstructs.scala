@@ -30,18 +30,25 @@ case class StateBehavior(behavior: BehaviorReference, switchTo: StateReference) 
 
 case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
 
-case class PdfSpecification(specification: SlanConstructs) extends SlanConstruct
-
-//the content of the pdf specification
-case class Pdf(name: PdfReference) extends SlanConstruct
-
-case class PdfParameters(parameters: SlanValues) extends SlanConstruct
-
-case class PdfSeed(seed: Long) extends SlanConstruct
-
-case class PdfConstraints(constraintActions: List[ConstraintFilter])
-
 case class Behavior(id: BehaviorReference, actions: SlanConstructs) extends SlanConstruct
+
+case class MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs) extends SlanConstruct
+
+case class IfThenElse(condition: SlanConstructs, thenElseActions: SlanConstructs) extends SlanConstruct
+
+case class ThenElse(thenActions: SlanConstructs, elseActions: SlanConstructs) extends SlanConstruct
+
+case class AndCondition(relops: SlanConstructs) extends SlanConstruct
+
+case class OrCondition(relops: SlanConstructs) extends SlanConstruct
+
+case class NotCondition(relops: SlanConstructs) extends SlanConstruct
+
+case class RelationalOperation(operation: String, operands: SlanConstructs) extends SlanConstruct
+
+case class FnUpdate(operands: SlanConstructs) extends SlanConstruct
+
+case class FnMultiply(operands: SlanConstructs) extends SlanConstruct
 
 case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
 
@@ -49,9 +56,6 @@ case class Messages2Send(messages: SlanValues) extends SlanConstruct
 
 case class MixFrequence(elements: SlanConstructs) extends SlanConstruct
 
-case class Limit(elements: SlanConstructs) extends SlanConstruct
-
-case class MessageResponseBehavior(msgName: MessageReference, behavior: SlanConstructs) extends SlanConstruct
 
 case class GoTo(state: StateReference) extends SlanConstruct
 

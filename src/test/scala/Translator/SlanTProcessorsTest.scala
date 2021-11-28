@@ -29,6 +29,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val agentsFull_Flow = "Agents_Full_v1.yaml"
   val agentsFull_Block = "Agents_Full_v1.yaml"
   val agentsGroups1 = "Agents_Groups_v1.yaml"
+  val behaviorMessages_flow = "Behavior_Messages_KeyFlow.yaml"
+  val behaviorMessages_list = "Behavior_Messages_KeyList.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
   val stringScalarValue = "just one string value"
@@ -62,15 +64,31 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a group spec" in {
+    val expected = List(Group("Group Name", List(
+      GroupAgent("agentname1", List(SlanValue("randomGenerator4Agent1"))),
+      GroupAgent("agentname2", List(SlanValue(100))),
+      GroupAgent("bubba", List()),
+      ResourceReferenceInGroup(List(
+        ResourceConsistencyModelInGroup("Causal", "hdd")), SlanValue(2)),
+      ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("eventual", "vNic")), SlanValue(3)),
+      ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Eventual", "varX")), SlanValue("randomGenerator1"))))
+    )
     val path = getClass.getClassLoader.getResource(agentsGroups1).getPath
-    val res = SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel))
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
 
+  it should "translate a behavior spec with multiple messages as the key flow sequence" in {
+    val expected = List(Behavior(Some("Behavior 4 Messages 1"),
+      List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorMessages_flow).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
 
-    val cv = ConsistencyModel.values.toList
-    println(cv)
-    val b = Try(ConsistencyModel.valueOf("SEQUENTIAL1".toUpperCase)) match {
-      case Success(res) => res
-      case Failure(e) => e.getMessage
-    }
-    println(b)
+  it should "translate a behavior spec with multiple messages as the key list" in {
+    val expected = List(Behavior(Some("Behavior 4 Messages 2"),
+      List(MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY"), SlanValue("MessageZZ")),
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorMessages_list).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }

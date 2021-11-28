@@ -21,9 +21,9 @@ class AgentsProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v._1) match {
       case entry: String if entry.toUpperCase === Groups.toUpperCase => (new GroupsProcessor).commandProcessor(convertJ2S(v._2))
-      case `Behaviors` => (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))
-      case `Channels` => (new ChannelsProcessor).commandProcessor(convertJ2S(v._2))
-      case `Resources` => (new ResourcesProcessor).commandProcessor(convertJ2S(v._2))
+      case entry: String if entry.toUpperCase === Behaviors.toUpperCase => (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))
+      case entry: String if entry.toUpperCase === Channels.toUpperCase => (new ChannelsProcessor).commandProcessor(convertJ2S(v._2))
+      case entry: String if entry.toUpperCase === Resources.toUpperCase => (new ResourcesProcessor).commandProcessor(convertJ2S(v._2))
       //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
       //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
       //otherwise it is a sequence of states each defining its own behavior

@@ -12,7 +12,7 @@ package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlanKeywords.{InitState, Periodic}
+import Translator.SlanKeywords.InitState
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
@@ -23,7 +23,7 @@ class StateProcessor extends GenericProcessor {
     //and the value is the state reference to switch to or null; or simply a string value that designates
     //the behavior reference in case when the state for this behavior is terminal.
     case v: (_, _) => convertJ2S(v._1) match {
-      case behaviorRef: String => List(StateBehavior(Some(behaviorRef), convertJ2S(v._2) match {
+      case behaviorRef: String => List(StateBehavior(Option(behaviorRef), convertJ2S(v._2) match {
         case switchTo: String => Some(switchTo)
         case None => None
         case unknown => Some((new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).toString)
@@ -31,7 +31,7 @@ class StateProcessor extends GenericProcessor {
       ))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
-    case behaviorRef: String => List(StateBehavior(Some(behaviorRef), None))
+    case behaviorRef: String => List(StateBehavior(Option(behaviorRef), None))
 
     case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
   }

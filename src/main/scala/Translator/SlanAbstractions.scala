@@ -19,7 +19,7 @@ object SlanAbstractions:
   type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_]
   type BehaviorReference = Option[String]
   type StateReference = Option[String]
-  type MessageReference = String
+  type MessageReference = List[String]
   type ModelReference = String
   type PdfReference = String
   type PdfParameter = Double

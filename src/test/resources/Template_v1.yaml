@@ -15,8 +15,8 @@ Agents:
               },
               Distribution: Uniform, #how many messages to generate every time
               Parameters: {
-                1: 1
-                  2: 10
+                1: 1,
+                2: 10
               },
               Seed: 100,
               Limit: [ Population: 1000, Time: [ 30, minute ], andThen: [ Fn_Destroy: self ] ],
@@ -72,7 +72,7 @@ Agents:
               Constraints: [ ">=": 0, "<": 1 ]
             },
             Distribution: Uniform, #how many messages to generate every time
-            Parameter 1: 1,SlanConstructs
+            Parameter 1: 1,
             Parameter 2: 10,
             Seed: 100,
             Limit: [ Population: 1000, Time: [ 30, minute ], andThen: [ Fn_Destroy: self ] ],

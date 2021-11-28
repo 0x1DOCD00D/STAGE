@@ -18,8 +18,12 @@ import cats.kernel.Eq
 
 class BehaviorsProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+    //behaviors:
+    //behaviorname1: behaviorObject1
+    //behaviorname2: behaviorObject2
     case v: (_, _) => convertJ2S(v._1) match {
-      case unknown: String => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+      case cv: String => List(Behavior(Option(cv), (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf))
+      case None => List(Behavior(None, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 
