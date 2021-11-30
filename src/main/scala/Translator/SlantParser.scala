@@ -14,7 +14,9 @@ import HelperUtils.{CreateLogger, ErrorWarningMessages}
 import Translator.SlanAbstractions.*
 import org.joda.time.DateTime
 import org.slf4j.Logger
-import org.yaml.snakeyaml.Yaml
+import org.snakeyaml.engine.*
+import org.snakeyaml.engine.v2.*
+import org.snakeyaml.engine.v2.api.*
 
 import java.util.*
 import scala.collection.immutable
@@ -27,9 +29,12 @@ given logger: Logger = CreateLogger(classOf[SlantParser])
 
 class SlantParser(content: String):
   require(content != null)
-  private val yaml = new Yaml
+//  private val yaml = new Yaml
 
-  val yamlModel: Any = Try(yaml.load(content): Any) match {
+  private val yaml = new Load(LoadSettings.builder.setAllowDuplicateKeys(true).setAllowRecursiveKeys(true).build)
+
+
+  val yamlModel: Any = Try(yaml.loadFromString(content): Any) match {
     case Success(parser) => parser
     case Failure(exception) => throw new IllegalArgumentException(ErrorWarningMessages.YamlParsingFailed(exception.getMessage))
   }

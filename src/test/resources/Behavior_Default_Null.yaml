@@ -1,0 +1,5 @@
+Agents:
+  Behaviors:
+    Default Behavior 4 All Messages:
+      null:
+        Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]

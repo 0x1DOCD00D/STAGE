@@ -77,7 +77,8 @@ object PdfStreamGenerator:
     if distributionName.toUpperCase === strEnumIntDistribution then
       if params.length > config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") || params.length <= 0 then
         throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
-      else if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
+      end if
+    else if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
 
     if useCache then
       Try(pdfs.get(distributionName.toUpperCase).get(MurmurHash3.orderedHash(params))) match {

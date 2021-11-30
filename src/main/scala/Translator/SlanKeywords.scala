@@ -48,6 +48,9 @@ object SlanKeywords:
   val IF = "if"
   val THEN = "then"
   val ELSE = "else"
+  val AND = "and"
+  val OR = "or"
+  val NOT = "not"
   val FOREACH = "foreach"
 
   val FnPrefix = "fn_"

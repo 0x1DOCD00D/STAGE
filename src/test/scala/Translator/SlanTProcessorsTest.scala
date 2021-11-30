@@ -31,6 +31,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val agentsGroups1 = "Agents_Groups_v1.yaml"
   val behaviorMessages_flow = "Behavior_Messages_KeyFlow.yaml"
   val behaviorMessages_list = "Behavior_Messages_KeyList.yaml"
+  val behaviorIfThenElse_1 = "Behavior_IfThenElse.yaml"
+  val behaviorOneMessage = "Behavior_One_Message.yaml"
+  val behaviorNullMessage = "Behavior_Default_Null.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
   val stringScalarValue = "just one string value"
@@ -90,5 +93,34 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
       List(MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY"), SlanValue("MessageZZ")),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_list).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a behavior spec with one message response" in {
+    val expected = List(Behavior(Some("Behavior 4 Messages 3"),
+                        List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
+                        List(FnUpdate(List(SlanValue("resourceName2Update"),
+                          FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorOneMessage).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a default behavior spec for null message" in {
+    val expected = List(Behavior(Some("Default Behavior 4 All Messages"),
+      List(MessageResponseBehavior(List(),
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorNullMessage).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate an if-then-else behavior" in {
+    val expected = List(Behavior(Some("BehaviorIfThenElse"),
+      List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+        List(IfThenElse(List(
+          And(List(ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
+            Not(List(Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))), ROPGreater(List(
+              Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
+          Then(List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }

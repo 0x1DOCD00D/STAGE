@@ -13,20 +13,20 @@ package Translator
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
 import Translator.SlantParser.convertJ2S
+import SlanKeywords.*
 import cats.Eq
 import cats.implicits.*
 
-class IfThenElseBehaviorProcessor extends GenericProcessor {
+class IfThenElseBehaviorProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v._1) match {
-      case messageID: String => null //List(MessageResponseBehavior(List(messageID), (new BehaviorsProcessor).commandProcessor(convertJ2S(v._2))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
-    }
-
-    case v => convertJ2S(v) match {
-      case cv: String => List(SlanValue(cv))
+      case entry: String if entry.toUpperCase === THEN.toUpperCase => List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === ELSE.toUpperCase => List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === AND.toUpperCase || entry.toUpperCase === OR.toUpperCase || entry.toUpperCase === NOT.toUpperCase ||
+                            entry.toUpperCase === LessThen.toUpperCase || entry.toUpperCase === LessEqual.toUpperCase || entry.toUpperCase === GreaterThen.toUpperCase ||
+                            entry.toUpperCase === GreaterEqual.toUpperCase || entry.toUpperCase === EqualTo.toUpperCase => (new RelOpProcessor).commandProcessor(convertJ2S(v))
       case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
     }
-  }
 
-}
+    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+  }

@@ -34,17 +34,27 @@ case class Behavior(id: BehaviorReference, actions: SlanConstructs) extends Slan
 
 case class MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs) extends SlanConstruct
 
-case class IfThenElse(condition: SlanConstructs, thenElseActions: SlanConstructs) extends SlanConstruct
+case class IfThenElse(body: SlanConstructs) extends SlanConstruct
 
-case class ThenElse(thenActions: SlanConstructs, elseActions: SlanConstructs) extends SlanConstruct
+case class Then(thenActions: SlanConstructs) extends SlanConstruct
 
-case class AndCondition(relops: SlanConstructs) extends SlanConstruct
+case class Else(elseActions: SlanConstructs) extends SlanConstruct
 
-case class OrCondition(relops: SlanConstructs) extends SlanConstruct
+case class And(relops: SlanConstructs) extends SlanConstruct
 
-case class NotCondition(relops: SlanConstructs) extends SlanConstruct
+case class Or(relops: SlanConstructs) extends SlanConstruct
 
-case class RelationalOperation(operation: String, operands: SlanConstructs) extends SlanConstruct
+case class Not(relops: SlanConstructs) extends SlanConstruct
+
+case class ROPEqual(operands: SlanConstructs) extends SlanConstruct
+
+case class ROPLessEqual(operands: SlanConstructs) extends SlanConstruct
+
+case class ROPGreaterEqual(operands: SlanConstructs) extends SlanConstruct
+
+case class ROPLess(operands: SlanConstructs) extends SlanConstruct
+
+case class ROPGreater(operands: SlanConstructs) extends SlanConstruct
 
 case class FnUpdate(operands: SlanConstructs) extends SlanConstruct
 

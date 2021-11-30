@@ -21,7 +21,7 @@ Agents:
       # across multiple agents or groups may have different values depending on the chosen consistency model.
       Resources:
         ? Causal: hdd
-          : 2
+        : 2
         vNic: 3
         ? Eventual: varX
-          : randomGenerator1
+        : randomGenerator1
