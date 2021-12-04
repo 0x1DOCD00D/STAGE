@@ -1,13 +1,12 @@
 Resources:
-  - Generator: MessageMix
-    : {
-    Normal: [ 1: 0.6, 2: 0.2 ]
-      Seed: 200,
-    Constraints: [ ">": 0, "<": 1 ]
-  }
-  - Generator: Arrivals
-    : {
-    Poisson: [ 14, 7 ],
-    Seed: ~,
-    Constraints: [ ">": 0, "<=": 100 ]
-  }
+  Generators:
+    MessageMix: {
+        Uniform: [ 1, totalMessages ],
+        Seed: 200,
+        Constraints: [ ">": 0, "<": 1 ]
+    }
+    Arrivals: {
+      Poisson: [ 14, 7 ],
+      Seed: ~,
+      Constraints: [ ">": 0, "<=": 100 ]
+    }

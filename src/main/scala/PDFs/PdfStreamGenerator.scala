@@ -13,7 +13,6 @@ package PDFs
 import HelperUtils.ErrorWarningMessages.LogGenericMessage
 import HelperUtils.Parameters.config
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import PDFs.PdfStreamGenerator.defaultSeed
 import Translator.SlantParser
 import cats.implicits.*
 import cats.kernel.Eq
@@ -30,8 +29,8 @@ import scala.util.{Failure, Success, Try}
 type DistributionType = AbstractIntegerDistribution | AbstractRealDistribution
 given logger: Logger = CreateLogger(classOf[PdfStreamGenerator.type])
 
-object PdfStreamGenerator:
-  private val defaultSeed: Long = System.currentTimeMillis()
+object PdfStreamGenerator extends RandomGeneratorType:
+  val strEnumIntDistribution = "EnumIntDistribution"
   private val suffixDistribution = "istribution"
   private val strBetaDistribution = (BetaD.toString() + suffixDistribution).toUpperCase
   private val strBinomialDistribution = (BinomialD.toString() + suffixDistribution).toUpperCase
@@ -58,7 +57,6 @@ object PdfStreamGenerator:
   private val strUniformIntegerDistribution = (UniformIntegerD.toString() + suffixDistribution).toUpperCase
   private val strWeibullDistribution = (WeibullD.toString() + suffixDistribution).toUpperCase
   private val strZipfDistribution = (ZipfD.toString() + suffixDistribution).toUpperCase
-  private val strEnumIntDistribution = (EnumIntD.toString() + suffixDistribution).toUpperCase
 
   //check if a distribution object exists for specific parameters - a cache for pdfs
   private[this] val pdfs: scala.collection.mutable.Map[String, scala.collection.mutable.Map[Int, LazyList[Double]]] = scala.collection.mutable.Map()
@@ -66,23 +64,29 @@ object PdfStreamGenerator:
     case Some(value) => value
     case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
   }
-  val logger = CreateLogger(classOf[PdfStreamGenerator.type])
+  val logger: Logger = CreateLogger(classOf[PdfStreamGenerator.type])
 
   /*
   * This is the main interface for creating and managing distributions.
   * */
   def apply(distributionName: String, useCache: Boolean, params: Double*): LazyList[Double] = apply(distributionName, useCache, None, params)
 
+  def apply(useCache: Boolean, seed: Option[Long], params: Seq[(Int, Double)]): LazyList[Double] =
+    if useCache then
+      Try(pdfs(strEnumIntDistribution.toUpperCase)(MurmurHash3.orderedHash(params))) match {
+        case Success(lzDataStream) => lzDataStream
+        case Failure(_) => createDistDataStream(useCache, seed, params.toList)
+      }
+    else
+      createDistDataStream(useCache, seed, params.toList)
+
   def apply(distributionName: String, useCache: Boolean, seed: Option[Long], params: Seq[Double]): LazyList[Double] =
-    if distributionName.toUpperCase === strEnumIntDistribution then
-      if params.length > config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") || params.length <= 0 then
-        throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
-      end if
-    else if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
+    if params.length != config.getInt(s"Stage.Distributions.${distributionName.toLowerCase}") then
+      throw IllegalArgumentException(s"Wrong number of arguments for distribution $distributionName")
 
     if useCache then
-      Try(pdfs.get(distributionName.toUpperCase).get(MurmurHash3.orderedHash(params))) match {
-        case Success(lzDataStream) => lzDataStream
+      Try(pdfs(distributionName.toUpperCase).get(MurmurHash3.orderedHash(params))) match {
+        case Success(lzDataStream) => lzDataStream.get
         case Failure(_) => createDistDataStream(distributionName, useCache, seed, params.toArray)
       }
     else
@@ -94,6 +98,18 @@ object PdfStreamGenerator:
       case v: AbstractRealDistribution => v.sample() #:: generateSamples(generator)
     }
   end generateSamples
+
+  private def createDistDataStream(add2Cache: Boolean, seed: Option[Long], params: List[(Int,Double)]): LazyList[Double] =
+    val objectIds2Probs = params.unzip
+    val rg = createRandomGenerator(seed)
+    val distributionObject = new EnumeratedIntegerDistribution(rg, objectIds2Probs._1.toArray, objectIds2Probs._2.toArray)
+
+    val dstream = generateSamples(distributionObject)
+    if add2Cache then pdfs += (strEnumIntDistribution.toUpperCase() -> collection.mutable.Map(MurmurHash3.orderedHash(params) -> dstream))
+
+    dstream
+  end createDistDataStream
+
 
   private def createDistDataStream(distributionName: String, add2Cache: Boolean, seed: Option[Long], params: Array[Double]): LazyList[Double] =
     val distributionObject = distributionName.toUpperCase match {
@@ -122,7 +138,6 @@ object PdfStreamGenerator:
       case `strUniformIntegerDistribution` => UniformIntegerD(params).create(seed)
       case `strWeibullDistribution` => WeibullD(params).create(seed)
       case `strZipfDistribution` => ZipfD(params).create(seed)
-      case `strEnumIntDistribution` => EnumIntD(params).create(seed)
       case _ => throw new IllegalArgumentException(s"Incorrect distribution is specified: $distributionName")
     }
     val dstream = generateSamples(distributionObject)
@@ -130,7 +145,7 @@ object PdfStreamGenerator:
     dstream
   end createDistDataStream
 
-enum PdfStreamGenerator(params: Array[Double]):
+enum PdfStreamGenerator(params: Array[Double]) extends RandomGeneratorType:
   case BetaD(params: Array[Double]) extends PdfStreamGenerator(params)
   case BinomialD(params: Array[Double]) extends PdfStreamGenerator(params)
   case CauchyD(params: Array[Double]) extends PdfStreamGenerator(params)
@@ -156,7 +171,6 @@ enum PdfStreamGenerator(params: Array[Double]):
   case UniformIntegerD(params: Array[Double]) extends PdfStreamGenerator(params)
   case WeibullD(params: Array[Double]) extends PdfStreamGenerator(params)
   case ZipfD(params: Array[Double]) extends PdfStreamGenerator(params)
-  case EnumIntD(params: Array[Double]) extends PdfStreamGenerator(params)
 
   def create(seed: Option[Long]): DistributionType =
     val rg = createRandomGenerator(seed)
@@ -186,42 +200,4 @@ enum PdfStreamGenerator(params: Array[Double]):
       case UniformIntegerD(params: Array[Double]) => new UniformIntegerDistribution(rg, params(0).toInt, params(1).toInt)
       case WeibullD(params: Array[Double]) => new WeibullDistribution(rg, params(0), params(1))
       case ZipfD(params: Array[Double]) => new ZipfDistribution(rg, params(0).toInt, params(1))
-      case EnumIntD(params: Array[Double]) => new EnumeratedIntegerDistribution(rg, (1 to params.length).toArray, params)
     }
-
-  private def createRandomGenerator(seed: Option[Long]): RandomGenerator =
-    val rgISAACRandom = "ISAACRandom".toUpperCase
-    val rgJDKRandomGenerator = "JDKRandomGenerator".toUpperCase
-    val rgMersenneTwister = "MersenneTwister".toUpperCase
-    val rgWell512a = "Well512a".toUpperCase
-    val rgWell1024a = "Well1024a".toUpperCase
-    val rgWell19937a = "Well19937a".toUpperCase
-    val rgWell19937c = "Well19937c".toUpperCase
-    val rgWell44497a = "Well44497a".toUpperCase
-    val rgWell44497b = "Well44497b".toUpperCase
-
-    val randomGenerator: RandomGenerator = Try(config.getString("Stage.Random.generator")) match {
-      case Success(rgName) => rgName.toUpperCase match {
-        case `rgISAACRandom` => new ISAACRandom
-        case `rgJDKRandomGenerator` => new JDKRandomGenerator
-        case `rgMersenneTwister` => new MersenneTwister
-        case `rgWell512a` => new Well512a
-        case `rgWell1024a` => new Well1024a
-        case `rgWell19937a` => new Well19937a
-        case `rgWell19937c` => new Well19937c
-        case `rgWell44497a` => new Well44497a
-        case `rgWell44497b` => new Well44497b
-      }
-      case Failure(exception) => new Well1024a
-    }
-    randomGenerator.setSeed(if seed.exists(v => v > 0) then seed.getOrElse(System.currentTimeMillis()) else Try(config.getLong("Stage.Random.seed")) match {
-      case Success(value) => value
-      case Failure(exception) => {
-        LogGenericMessage(getClass, s"Using default seed $defaultSeed because it is missing in the configuration file.")
-        defaultSeed
-      }
-    })
-    randomGenerator
-  end createRandomGenerator
-
-end PdfStreamGenerator

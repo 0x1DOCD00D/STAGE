@@ -118,9 +118,12 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(IfThenElse(List(
           And(List(ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
-            Not(List(Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))), ROPGreater(List(
-              Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
-          Then(List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+            Not(List(
+              Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))),
+                ROPEqual(List(Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
+          Then(List(
+            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
+            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }

@@ -11,6 +11,7 @@
 package PDFs
 
 import HelperUtils.ConfigReference
+import com.typesafe.config.Config
 import org.apache.commons.math3.distribution.{BetaDistribution, NormalDistribution, PoissonDistribution, UniformRealDistribution}
 import org.apache.commons.math3.linear.{MatrixUtils, RealMatrix}
 import org.scalatest.flatspec.AnyFlatSpec
@@ -20,7 +21,7 @@ import scala.util.hashing.MurmurHash3
 
 class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
   behavior of "random number generator"
-  val config = ConfigReference("Stage.Distributions") match {
+  val config: Config = ConfigReference("Stage.Distributions") match {
     case Some(value) => value
     case None => throw new RuntimeException("Cannot obtain a reference to the config data for PDFs.")
   }
@@ -53,13 +54,6 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
 
   the[IllegalArgumentException] thrownBy PdfStreamGenerator("BetaDistribution", true, 90d) should have message "Wrong number of arguments for distribution BetaDistribution"
 
-  it should "create an enum integer distribution, cache it and then make sure that it returns the cached stream" in {
-    val betaDist = PdfStreamGenerator("betadistribution", false, 60d, 40d)
-    val enumd = PdfStreamGenerator("enumintdistribution", false, betaDist.filter(e => e >= 0d && e < 1d).take(30).toList: _*)
-    enumd.take(30).toList.foldLeft(0.0)(_ + _) / 30 - 19.43333 shouldBe <(0.001)
-  }
-
-
   it should "create a Beta distribution, cache it and then make sure that it returns the cached stream" in {
     //90% success and 10% failure
     val betaDist1 = PdfStreamGenerator("betadistribution", true, 90d, 10d)
@@ -78,14 +72,14 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
     //90% success and 10% failure
     val betaDist = PdfStreamGenerator("BetaDistribution", true, 90d, 10d)
     val betaDist1 = PdfStreamGenerator("BetaDistribution", true, 90d, 10d)
-    betaDist.drop(1).head should not be betaDist1(0)
+    betaDist.drop(1).head should not be betaDist1.head
     betaDist.drop(1).head shouldBe betaDist1(1)
   }
 
   it should "create a Binomial, distribution and drop its first value" in {
     val binomDist = PdfStreamGenerator("BinomialDistribution", false, 1000, 0.6)
     val binomDist1 = PdfStreamGenerator("BinomialDistribution", false, 1000, 0.6)
-    binomDist.drop(1).head should not be binomDist1(0)
+    binomDist.drop(1).head should not be binomDist1.head
     binomDist.drop(1).head shouldBe binomDist1(1)
   }
 
@@ -104,7 +98,7 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
   it should "create a cauchy distribution and drop its first value" in {
     val cauchyDist = PdfStreamGenerator("cauchyDistribution", false, -2, 1)
     val cauchyDist1 = PdfStreamGenerator("cauchyDistribution", false, -2, 1)
-    cauchyDist.drop(1).head should not be cauchyDist1(0)
+    cauchyDist.drop(1).head should not be cauchyDist1.head
     cauchyDist.drop(1).head shouldBe cauchyDist1(1)
   }
 
@@ -112,14 +106,14 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
   it should "create an exponential distribution and drop its first value" in {
     val expDist = PdfStreamGenerator("exponentialdistribution", false, 20)
     val expDist1 = PdfStreamGenerator("exponentialdistributioN", false, 20)
-    expDist.drop(1).head should not be expDist1(0)
+    expDist.drop(1).head should not be expDist1.head
     expDist.drop(1).head shouldBe expDist1(1)
   }
 
   it should "create an F distribution and drop its first value" in {
     val FDist = PdfStreamGenerator("fdistribution", false, 20, 3)
     val FDist1 = PdfStreamGenerator("fdistribution", false, 20, 3)
-    FDist.drop(1).head should not be FDist1(0)
+    FDist.drop(1).head should not be FDist1.head
     FDist.drop(1).head shouldBe FDist1(1)
   }
 
@@ -242,4 +236,11 @@ class PdfStreamGeneratorTest extends AnyFlatSpec with Matchers {
     val Dist1 = PdfStreamGenerator("zipfdistribution", false, 1000, 0.1)
     Dist.take(10).toList.foldLeft(0.0)((acc, v) => acc + v) should not be Dist1.take(10).toList.foldLeft(0.0)((acc, v) => acc + v)
   }
+
+  it should "create an enumerated distribution" in {
+      val Dist = PdfStreamGenerator(false, None, Seq((1, 0.2), (10,0.5), (100,0.7),(1000, 0.9)))
+      val res = Dist.take(20).toList
+      res.count(elem => elem.toInt == 1) should be < res.count(elem => elem.toInt == 1000)
+      res.count(elem => elem.toInt == 100) should be > res.count(elem => elem.toInt == 10)
+    }
 }

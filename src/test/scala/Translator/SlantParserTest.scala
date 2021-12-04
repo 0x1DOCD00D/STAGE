@@ -71,12 +71,14 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
 
   it should "load up and extract the content of the single scalar date value" in {
     val wrongDate = new DateTime(new Date())
+    val oracle = DateTime.parse("2021-11-06T00:00:00.000-05:00")
     val path = getClass.getClassLoader.getResource(singleScalarDateValueFile).getPath
     val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
+      case v: String => DateTime.parse(v)
       case v: DateTime => v
       case _ => wrongDate
     }
-    res.toString.startsWith("2021-11") shouldBe true
+    res.toString() shouldBe oracle.toString()
   }
 
   it should "load up and extract the content of the single scalar string value yaml" in {
@@ -146,9 +148,8 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
       case _ => List()
     }
     result should not be List()
-    val convResult = result.asInstanceOf[List[_]].toList
-    convResult.length shouldBe 3
-    convResult.head.asInstanceOf[java.util.ArrayList[_]].asScala.toList shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
+    result.length shouldBe 3
+    result.head.asInstanceOf[java.util.ArrayList[_]].asScala.toList shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
   }
 
   behavior of "the Slant parser for complex yaml scripts"
@@ -164,7 +165,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
       case _ => Map()
     }
     result should not be null
-    val convResult = result.asInstanceOf[Map[String, String]].toMap
+    val convResult = result.asInstanceOf[Map[String, String]]
     convResult.get(keyName) shouldBe Option(keyValue)
   }
 
@@ -175,7 +176,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
       case _ => Map()
     }
     result should not be null
-    val convResult = result.asInstanceOf[Map[String, String]].toMap
+    val convResult = result.asInstanceOf[Map[String, String]]
     (1 to 3).foreach(iter => {
       convResult.get(keyName + iter.toString) shouldBe Option(keyValue + iter.toString)
     })
@@ -195,7 +196,7 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
       case v: List[_] => v
       case _ => List()
     }
-    result.asInstanceOf[List[_]].toList.length shouldBe 4
+    result.length shouldBe 4
   }
 
   it should "extract the content of a complex key as a list of entries" in {
