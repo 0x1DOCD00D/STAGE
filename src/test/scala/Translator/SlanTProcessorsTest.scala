@@ -34,6 +34,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorIfThenElse_1 = "Behavior_IfThenElse.yaml"
   val behaviorOneMessage = "Behavior_One_Message.yaml"
   val behaviorNullMessage = "Behavior_Default_Null.yaml"
+  val behaviorPeriodic = "Behavior_Period.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
   val channelYaml = "Channels.yaml"
@@ -304,6 +305,27 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a message spec with multiple fields" in {
+    val expected = List(
+      Message("Message Name",
+        List(Resource(ResourceTag("Recursive Field",None),
+          List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
+          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
+            List(SlanValue(1), SlanValue(10), SlanValue(100))),
+          Resource(ResourceTag("Some Fixed Value",None),
+            List(SlanValue(100))),
+          Resource(ResourceTag("Another Recursive Field",None),
+            List(Resource(ResourceTag("Message Name",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(0), SlanValue(2))))))),
+          Resource(ResourceTag("Field Name",None),
+            List(Resource(ResourceTag("Uniform",None),
+              List(SlanValue(1), SlanValue(200)))))))
+    )
+    val path = getClass.getClassLoader.getResource(messageYaml).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a spec for a periodic behavior" in {
     val expected = List(
       Message("Message Name",
         List(Resource(ResourceTag("Recursive Field",None),

@@ -1,0 +1,9 @@
+Agents:
+  Behaviors:
+    Automatic Behavior 1:
+      ? period: 500
+      :
+        Fn_Send:
+          ? [MessageX: 0.2, MessageY: 0.6, MessageZ: 0.3]
+          :
+            Poisson: [10, 2]

@@ -9,9 +9,10 @@
  */
 
 import HelperUtils.*
+import org.slf4j.Logger
 
 object Main:
-  val logger = CreateLogger(classOf[Main])
+  val logger: Logger = CreateLogger(classOf[Main])
   /*
     val config = ObtainConfigReference("stage") match {
       case Some(value) => value
@@ -26,7 +27,7 @@ object Main:
 
   def testMeth(s: String): String => Int => (Int => Int) => Int = s => i => (f: Int => Int) => f(s.toInt + i)
 
-  @main def runSimulation =
+  @main def runSimulation: Unit =
     logger.info("Constructing a cloud model...")
     logger.info("Finished cloud simulation...")
 //println(processX(x=>x+1)(123.45f))

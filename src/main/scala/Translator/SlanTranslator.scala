@@ -25,9 +25,9 @@ object SlanTranslator extends GenericProcessor :
       case cv: String if cv.toLowerCase === Agents.toLowerCase => (new AgentsProcessor).commandProcessor(convertJ2S(v._2))
       case cv: String if cv.toLowerCase === Messages.toLowerCase => (new MessagesProcessor).commandProcessor(convertJ2S(v._2))
       case cv: String if cv.toLowerCase === Models.toLowerCase => (new ModelsProcessor).commandProcessor(convertJ2S(v._2))
-      case unknown: String => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+      case unknown: String => new UnknownEntryProcessor(unknown, Some(unknown.getClass().toString)).constructSlanRecord
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 
-    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }

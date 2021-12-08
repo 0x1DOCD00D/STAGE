@@ -11,9 +11,11 @@
 package HelperUtils
 
 
+import com.typesafe.config.Config
+
 import scala.collection.immutable.ListMap
 import scala.util.{Failure, Success, Try}
-import scala.collection.JavaConverters.*
+import scala.jdk.CollectionConverters.*
 
 /*
 * This module obtains configuration parameter values from application.conf and converts them
@@ -21,7 +23,7 @@ import scala.collection.JavaConverters.*
 * */
 object Parameters:
   private val logger = CreateLogger(classOf[Parameters.type])
-  val config = ObtainConfigReference("Stage") match {
+  val config: Config = ObtainConfigReference("Stage") match {
     case Some(value) => value
     case None => throw new RuntimeException("Cannot obtain a reference to the config data.")
   }
@@ -36,10 +38,7 @@ object Parameters:
 
   //comparing double values should be done within certain precision
   private val COMPARETHREASHOLD = 0.00001d
-  implicit private val comp: Ordering[Double] = new Ordering[Double] {
-    def compare(x: Double, y: Double) =
-      if math.abs(x - y) <= COMPARETHREASHOLD then 0 else if x - y > COMPARETHREASHOLD then -1 else 1
-  }
+  implicit private val comp: Ordering[Double] = (x: Double, y: Double) => if math.abs(x - y) <= COMPARETHREASHOLD then 0 else if x - y > COMPARETHREASHOLD then -1 else 1
 
   //for config parameter likelihood ranges, e.g., error = [0.3, 0.1], they are obtained from the conf file
   //and then sorted in the ascending order
@@ -50,7 +49,7 @@ object Parameters:
         throw new IllegalArgumentException(s"No config data for $entry")
     }
     if lst.length != 2 then throw new IllegalArgumentException(s"Incorrect range of values is specified for log $entry")
-    (lst(0), lst(1))
+    (lst.head, lst.tail.head)
 
   //It returns a function that takes the name of config entry and obtains the value of this entry if it exists
   //or it logs a warning message if it is absent and returns a default value
@@ -104,9 +103,9 @@ object Parameters:
     val overlaps = for {
       range1 <- input.keySet
       range2 <- input.keySet
-      if (range1._1 >= range2._1 && range1._2 <= range2._2 && range1 != range2)
+      if range1._1 >= range2._1 && range1._2 <= range2._2 && range1 != range2
     } yield (range1, range2)
-    if overlaps.toList.length > 0 then
+    if overlaps.toList.nonEmpty then
       logger.error(s"Ranges of likelihoods overlap: $overlaps")
       true
     else
@@ -115,4 +114,4 @@ object Parameters:
 
   private val compFunc: (Tuple2[Double, Double], Tuple2[Double, Double]) => Boolean = (input1, input2) => (input1._1 <= input2._1) && (input1._2 < input2._2)
 
-  def sortRanges[T](rangeMap: ListMap[Tuple2[Double, Double], T]) = rangeMap.toSeq.sortWith((i1, i2) => compFunc(i1._1, i2._1))
+  def sortRanges[T](rangeMap: ListMap[Tuple2[Double, Double], T]): Seq[((Double, Double), T)] = rangeMap.toSeq.sortWith((i1, i2) => compFunc(i1._1, i2._1))
