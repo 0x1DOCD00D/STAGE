@@ -1,0 +1,12 @@
+Agents:
+  Resources:
+    someTableResource:
+      # this is a resource that contains a list of attributes, it is effectively a table
+      ? list: columns
+      :
+        column1:
+        column2:
+        column3:
+        column4:
+        column5:
+        column6:

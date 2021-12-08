@@ -1,0 +1,4 @@
+Agents:
+  Resources:
+    ? queue: someBasicResourceListOfValues
+    : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list

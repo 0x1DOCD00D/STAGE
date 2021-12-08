@@ -182,9 +182,6 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     })
   }
 
-
-
-
   it should "load up and extract the content of the yaml script from a script file" in {
     val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
     //    SlantParser(path).visit
@@ -220,6 +217,4 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
     keymap.head._1 shouldBe key
     keymap.head._2 shouldBe value
   }
-
 }
-

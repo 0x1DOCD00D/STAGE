@@ -79,12 +79,13 @@ case class ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: 
 
 case class Channel(id: ChannelReference, behaviors: SlanConstructs) extends SlanConstruct
 
-case class Resource(id: ResourceReference, attributes: SlanConstructs) extends SlanConstruct
+case class Resource(id: SlanConstruct, attributes: SlanConstructs) extends SlanConstruct
 
+case class ResourceTag(id: ResourceReference, storageType: StorageTypeReference) extends SlanConstruct
 
-case class ResourceAttribute(id: ResourceReference, value: SlanValues) extends SlanConstruct
+case class ResourceAttribute(id: SlanConstruct, value: SlanValues) extends SlanConstruct
 
-case class Message(id: MessageReference) extends SlanConstruct
+case class Message(id: MessageReference, fields: SlanConstructs) extends SlanConstruct
 
 case class Model(id: ModelReference, elements: SlanConstructs) extends SlanConstruct
 

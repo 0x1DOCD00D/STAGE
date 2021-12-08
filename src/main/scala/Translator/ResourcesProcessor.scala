@@ -18,12 +18,9 @@ import cats.kernel.Eq
 
 class ResourcesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case unknown: String => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
-    }
+    case v: (_, _) => List(Resource((new ResourceTagProcessor).commandProcessor(convertJ2S(v._1)).head,
+      (new ResourceStructureProcessor).commandProcessor(convertJ2S(v._2))))
 
-    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }
 }
-

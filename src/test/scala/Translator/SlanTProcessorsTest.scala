@@ -36,6 +36,17 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorNullMessage = "Behavior_Default_Null.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
+  val channelYaml = "Channels.yaml"
+  val messageYaml = "Messages.yaml"
+  val resources_v0 = "Resources_v0.yaml"
+  val resources_v1 = "Resources_v1.yaml"
+  val resources_v2 = "Resources_v2.yaml"
+  val resources_v3 = "Resources_v3.yaml"
+  val resources_v4 = "Resources_v4.yaml"
+  val resources_v5 = "Resources_v5.yaml"
+  val resources_v6 = "Resources_v6.yaml"
+  val resources_v7 = "Resources_v7.yaml"
+  val resources_v8 = "Resources_v8.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -126,4 +137,190 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
             FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a simple resource spec with a fixed value" in {
+    val expected = List(
+      Resource(ResourceTag("autoInitializedPrimitiveResource",None),
+        List(SlanValue(10))))
+    val path = getClass.getClassLoader.getResource(resources_v0).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a simple resource spec with a randomly generated value" in {
+    val expected = List(Resource(ResourceTag("autoInitializedPrimitiveResource",None),
+        List(
+          Resource(ResourceTag("Uniform",None),
+            List(SlanValue(0), SlanValue(1))))))
+    val path = getClass.getClassLoader.getResource(resources_v1).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec with a composite key and a randomly generated value" in {
+    val expected = List(
+      Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
+        List(
+          Resource(ResourceTag("Uniform",None),List(SlanValue(0), SlanValue(1))))))
+    val path = getClass.getClassLoader.getResource(resources_v2).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec with a composite key and a list of fixed values" in {
+    val expected = List(
+      Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
+        List(SlanValue(1), SlanValue(10), SlanValue(100)))
+      )
+    val path = getClass.getClassLoader.getResource(resources_v3).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+
+  it should "translate a resource spec for a composite resource with a list of resources and a single simple resource" in {
+    val expected = List(
+      Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
+        List(SlanValue(1), SlanValue(10), SlanValue(100)))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v3).getPath
+    val res = SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) //shouldBe expected
+    println(res)
+  }
+
+  it should "translate a resource spec with a composite key whose attributes include a composite and a simple resources" in {
+    val expected = List(
+      Resource(ResourceTag("compositeResource",None),
+        List(
+          Resource(ResourceTag("someBasicResource1V",Some("list")),List(SlanValue(100), SlanValue(1000))),
+          Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1)))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v4).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a complex resource spec that describes a table populated with random data" in {
+    val expected = List(
+      Resource(ResourceTag("dim3",None),
+        List(Resource(ResourceTag("column1",None),
+          List(Resource(ResourceTag("Enum",None),
+            List(Resource(ResourceTag("Item1",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(0.2), SlanValue(0.8))))),
+              Resource(ResourceTag("Item2",None),List(SlanValue(0.2))),
+              Resource(ResourceTag("Item3",None),
+                List(Resource(ResourceTag("Uniform",None),
+                  List(SlanValue(0.1), SlanValue(0.6))))))))),
+          Resource(ResourceTag("column2",None),
+            List(Resource(ResourceTag("Uniform",None),
+              List(SlanValue(0), SlanValue(1))))),
+          Resource(ResourceTag("column3",None),
+            List(Resource(ResourceTag("Fn_Multiply",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(0), SlanValue(1))), SlanValue("column2"))))))),
+      Resource(ResourceTag("dim4",None),
+        List(Resource(ResourceTag("dim3",Some("list")),
+          List(Resource(ResourceTag("Uniform",None),
+            List(SlanValue(100), SlanValue(1000))),
+            Resource(ResourceTag("column4",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(200), SlanValue(500))))),
+            Resource(ResourceTag("column5",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(1), SlanValue(5))))))),
+          Resource(ResourceTag("someOtherAttribute",None),List()))),
+      Resource(ResourceTag("dim5",None),
+        List(Resource(ResourceTag("dim4",Some("list")),List()),
+          Resource(ResourceTag("column6",None),
+            List(Resource(ResourceTag("Uniform",None),
+              List(SlanValue(200), SlanValue(500)))))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v5).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec with a list of the instances of a composite resources that contains a queue initialized with some values" in {
+    val expected = List(
+      Resource(ResourceTag("HDD",Some("list")),
+        List(Resource(ResourceTag("Size",None),
+          List(Resource(ResourceTag("Normal",None),List(SlanValue(3000), SlanValue(1000))),
+            Resource(ResourceTag(">=",None),List(SlanValue(0))),
+            Resource(ResourceTag("<",None),List(SlanValue(2000))))),
+          Resource(ResourceTag("Utilization",None),List(Resource(ResourceTag(">=",None),List(SlanValue(0))),
+            Resource(ResourceTag("<",None),List(SlanValue("Size"))))),
+          Resource(ResourceTag("ItemCount",None),List(SlanValue(0),
+            Resource(ResourceTag(">=",None),List(SlanValue(0))))),
+          Resource(ResourceTag("DataStore",Some("queue")),
+            List(SlanValue(100), SlanValue(1000), SlanValue(100000)))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v6).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec that is a direct representation of a table with columns" in {
+    val expected = List(
+      Resource(ResourceTag("someTableResource",None),
+        List(Resource(ResourceTag("columns",Some("list")),
+          List(Resource(ResourceTag("column3",None),List()),
+            Resource(ResourceTag("column1",None),List()),
+            Resource(ResourceTag("column6",None),List()),
+            Resource(ResourceTag("column2",None),List()),
+            Resource(ResourceTag("column5",None),List()),
+            Resource(ResourceTag("column4",None),List())))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v7).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec for designating an external service: RESTful or JAR" in {
+    val expected = List(
+      Resource(ResourceTag("UniqueServiceId",None),
+        List(Resource(ResourceTag("protocol",None),
+          List(SlanValue("Jar"))),
+          Resource(ResourceTag("http://url/to/Jar/name.jar",None),
+            List(Resource(ResourceTag("methodName",None),
+              List(Resource(ResourceTag("p1name",None),
+                List(SlanValue("parm1"))),
+                Resource(ResourceTag("p2name",None),List(SlanValue("parm2"))))),
+              Resource(ResourceTag("otherMethodName",None),
+                List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v8).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a channel spec with multiple behaviors for different messages" in {
+    val expected = List(
+      Channel("Sensors2CloudChannel",
+        List(MessageResponseBehavior(
+          List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY")),
+            List(SlanValue("behaviorAttached2Channel")))),List()),
+          MessageResponseBehavior(List(
+            MessageResponseBehavior(List(SlanValue("MessageZ")),
+              List(SlanValue("otherBehaviorAttached2Channel")))),List()),
+          MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY")),
+            List(SlanValue("moreBehaviors"))),
+          MessageResponseBehavior(List(SlanValue("MessageW")),List(SlanValue("someWierdBehavior")))))
+    )
+    val path = getClass.getClassLoader.getResource(channelYaml).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a message spec with multiple fields" in {
+    val expected = List(
+      Message("Message Name",
+        List(Resource(ResourceTag("Recursive Field",None),
+          List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
+          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
+            List(SlanValue(1), SlanValue(10), SlanValue(100))),
+          Resource(ResourceTag("Some Fixed Value",None),
+            List(SlanValue(100))),
+          Resource(ResourceTag("Another Recursive Field",None),
+            List(Resource(ResourceTag("Message Name",None),
+              List(Resource(ResourceTag("Uniform",None),
+                List(SlanValue(0), SlanValue(2))))))),
+          Resource(ResourceTag("Field Name",None),
+            List(Resource(ResourceTag("Uniform",None),
+              List(SlanValue(2019-11-01), SlanValue(2021-12-31)))))))
+    )
+    val path = getClass.getClassLoader.getResource(messageYaml).getPath
+    val res = SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel))// shouldBe expected
+    println(res)
   }

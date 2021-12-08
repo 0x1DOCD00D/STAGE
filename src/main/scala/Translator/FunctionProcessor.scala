@@ -12,8 +12,9 @@ class FunctionProcessor extends GenericProcessor :
     case v: (_, _) => convertJ2S(v._1) match {
       case entry: String if entry.toUpperCase === Fn_Update.toUpperCase => List(FnUpdate((new FnUpdateProcessor).commandProcessor(convertJ2S(v._2))))
       case entry: String if entry.toUpperCase === Fn_Multiply.toUpperCase => List(FnMultiply((new FnMultiplyProcessor).commandProcessor(convertJ2S(v._2))))
-      case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+      case entry: String => List(SlanValue(entry))
+      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
     }
 
-    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }

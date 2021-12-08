@@ -1,0 +1,5 @@
+Agents:
+  Resources:
+    ? list: autoInitializedPrimitiveListResource
+    : # this resource is initialized with a stream of random values
+      Uniform: [ 0,1 ]

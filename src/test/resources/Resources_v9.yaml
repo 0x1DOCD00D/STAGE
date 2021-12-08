@@ -1,0 +1,9 @@
+Agents:
+  Resources:
+    Coordinates:
+      x:
+      y:
+
+    mapOfAgentCoordinates:
+      ? map: Pedestrian
+      : Coordinates

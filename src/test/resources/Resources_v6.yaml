@@ -1,0 +1,21 @@
+Agents:
+  Resources:
+    # this is a list of the instances of the resource HDD
+    ? list: HDD
+    : # resource names as keys under the entry Resources
+      # attributes are defined under each resource keys. Their values can be manipulated by the simulation
+      Size: [ Normal: [ 3000, 1000 ], ">=": 0, "<": 2000 ]
+
+      Utilization: [ ">=": 0, "<": Size ]
+
+      ItemCount: [ 0, ">=": 0 ]
+      # this attribute designates the physical storage of items as a multiset or a set
+      # each items is described by its size and its has integer/long identifier that may be required to be unique
+      # the value Persist designates the following interfaces: store, retrieve, update, delete, and count
+      # Fn_Store: [HDD.DataStore, ID: 12, Size: 1000]
+      # Fn_Retrieve: [HDD.DataStore, ID: 12]
+      # Fn_Update: [HDD.DataStore, ID: 12, Size: 500]
+      # Fn_Delete: [HDD.DataStore, ID: 12, Count: 2]
+      # Fn_Count: [HDD.DataStore, ID: 12]
+      ? queue: DataStore
+      : [ 100, 1000, 100000 ] # these are the initial items that we store in this resource

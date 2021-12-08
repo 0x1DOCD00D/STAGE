@@ -1,0 +1,4 @@
+Agents:
+  Resources:
+    autoInitializedPrimitiveResource: # this resource is initialized with a single random value
+      Uniform: [0,1]

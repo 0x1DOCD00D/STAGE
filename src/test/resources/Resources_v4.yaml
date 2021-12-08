@@ -1,0 +1,10 @@
+Agents:
+  Resources:
+    # this is a composite resource named compositeResource that contains a list of primitive resources
+    # named someBasicResource1V and this list is initialized with two resources one holding the value
+    # 100 and the other 1000. The resource compositeResource has a resource named valueHolder4compositeResource
+    # that holds the value 1. In this general case we have different cardinalities for the contained objects.
+    compositeResource:
+      ? list: someBasicResource1V
+      : [ 100, 1000 ]
+      valueHolder4compositeResource: 1

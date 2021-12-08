@@ -1,0 +1,12 @@
+Agents:
+  Channels: # a channel can be connected to agents or groups
+    # unidirectional channels trasmit specific messages from its sources to the destination agents.
+    # a channel transforms messages while delivering them to destinations.
+    # a channel does not change the topology of the system - it does not create or delete agents, it operates on messages and resources only
+      Sensors2CloudChannel:
+        ? [MessageX, MessageY]: behaviorAttached2Channel
+        ? [MessageZ]: otherBehaviorAttached2Channel
+        ? - MessageXX
+          - MessageYY
+        : moreBehaviors
+        MessageW: someWierdBehavior
