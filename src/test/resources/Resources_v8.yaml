@@ -1,7 +1,9 @@
 Agents:
   Resources:
-    UniqueServiceId:
-      protocol: Jar # REST
+    ? jar: UniqueServiceId
+    :
       http://url/to/Jar/name.jar:
-        methodName: [ p1name: parm1, p2name: parm2 ]
-        otherMethodName: [ parm1, parm2, parm3 ]
+        - methodName: [ p1name: parm1, p2name: parm2 ]
+        - methodName:  parm1
+        - methodName:
+        - otherMethodName: [ parm1, parm2, parm3 ]

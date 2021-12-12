@@ -1,11 +1,10 @@
 /*
+ * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
- *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- *   Unless required by applicable law or agreed to in writing, software distributed under
- *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
- *
+ *  See the License for the specific language governing permissions and limitations under the License.
  */
 
 package Translator
@@ -29,6 +28,8 @@ case class State(id: StateReference, behavior: SlanConstructs) extends SlanConst
 case class StateBehavior(behavior: BehaviorReference, switchTo: StateReference) extends SlanConstruct
 
 case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
+
+case class Pdf(id: PdfReference, actions: SlanConstructs) extends SlanConstruct
 
 case class Behavior(id: BehaviorReference, actions: SlanConstructs) extends SlanConstruct
 
@@ -58,7 +59,28 @@ case class ROPGreater(operands: SlanConstructs) extends SlanConstruct
 
 case class FnUpdate(operands: SlanConstructs) extends SlanConstruct
 
+case class FnRemove(operands: SlanConstructs) extends SlanConstruct
+
+case class FnCreate(operands: SlanConstructs) extends SlanConstruct
+
+case class FnDestroy(operands: SlanConstructs) extends SlanConstruct
+
+case class FnSend(operands: SlanConstructs) extends SlanConstruct
+
+case class FnForEach(operands: SlanConstructs) extends SlanConstruct
+
+case class FnAdd(operands: SlanConstructs) extends SlanConstruct
+
+case class FnInc(operands: SlanConstructs) extends SlanConstruct
+
+case class FnDec(operands: SlanConstructs) extends SlanConstruct
+
+case class FnSubstract(operands: SlanConstructs) extends SlanConstruct
+
 case class FnMultiply(operands: SlanConstructs) extends SlanConstruct
+
+case class FnDivide(operands: SlanConstructs) extends SlanConstruct
+
 
 case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
 
@@ -89,6 +111,14 @@ case class Message(id: MessageReference, fields: SlanConstructs) extends SlanCon
 
 case class Model(id: ModelReference, elements: SlanConstructs) extends SlanConstruct
 
+case class AgentPopulation(agent: AgentReference, instances: SlanConstructs) extends SlanConstruct
+
+case class ModelGraph(id: ModelGraphReference, vEv: SlanConstructs) extends SlanConstruct
+
+case class Agent2AgentViaChannel(agent: AgentReference, channel2Agent: SlanConstructs) extends SlanConstruct
+
+case class Channel2Agent(channel: ChannelReference, agent: AgentReference) extends SlanConstruct
+
+case class ModelDeployment(key: String, elements: SlanConstructs) extends SlanConstruct
+
 case class UnknownConstruct(key: String, typeOfConstruct: String, obj: String) extends SlanConstruct
-
-

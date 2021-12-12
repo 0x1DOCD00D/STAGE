@@ -3,25 +3,26 @@
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *
- *  See the License for the specific language governing permissions and limitations under the License.
+ *  
+ *  See the License for the specific language governing permissions and limitations under the License. 
  */
 
 package Translator
 
-import HelperUtils.ErrorWarningMessages.{YamlKeyIsMissing, YamlKeyIsNotString}
+import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlanKeywords.{Agents, Deployment}
+import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
 
-class ModelsProcessor extends GenericProcessor :
+class AgentsPopulationProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v._1) match {
-      case cv: String => List(ModelGraph(cv, (new ModelGraphProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf))
+      case cv: String => List(AgentPopulation(cv, (new ValueAssignmentProcessor).commandProcessor(convertJ2S(v._2)).asInstanceOf))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }
+}

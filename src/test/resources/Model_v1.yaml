@@ -1,0 +1,66 @@
+# A model is the executable description of the simulation formalized as graph where nodes designate agents and edges designate channels. All components of the
+# model graph are labeled with resources. Nodes receive and send messages via the attached channels. The graph description looks like the following using the block style yaml.
+# agent1:
+#   channel1:
+#     agent2:
+#       channel3:
+#         agent3
+#   channel2:
+#     agent4:
+#       channel5:
+#         agent1
+# The source is an instance agent1 that sends messages to agent2 and agent4 via the channels channel1 and channel2 respectively. The agent agent2 responds
+# to the input messages using some behavior and sends messages if any to agent3 via the channel channel3 and agent3 is terminal, its behavior is invoked to
+# update resources. Whereas agent4 sends messages back to agent1 via channel5 creating a loop.
+# The steps to create a model are generally the following.
+# Create groups
+# Create agents
+# Create channels
+# Create shared resources and attach them to groups, agents, channels
+# Attach channels to agents and groups
+# Specify the sources and optionally the sinks of the model
+# Generate the simulation logical plan
+# Specify physical resources for the model
+# Generate the simulation physical plan
+# Create and run the simulation.
+# We distinguish between individual entities, e.g., agents, channels or resources and their pools. Specifying more than one entity
+# results in the creation of a pool of entities. Consider a situation when a pool of agents representing pedestrians is created.
+# Each of these pedestrians can send messages to some other pedestrians once they get within some predefined distance from one another.
+# A model can reflect this requirement the following way.
+# Pedestrian:
+#   ProximityCommunication:
+#     Pedestrian:
+# For N passengers STAGE will have to create N(N-1) channels and it is not scalable. Instead the system exploits the symmetric nature
+# of these communications among pedestrians. A small pool of channel actors will be created that will be used by the pedestrian agents
+# to send messages depending on their coordinates. Each pedestrian agent determines the coordinates of the other, which is also a
+# nonscalable operation. Instead, each time a pedestrian agent sends a message to its neighbors the channel ProximityCommunication
+# will query a resource that maps each pedestrian agent to its location, i.e., it is the behavior of this channel. The shared map
+# resource is updated by all agents when they change their locations.
+Models:
+  Model Name:
+    Agents:
+      # specify how many agents to create
+      Pedestrian: quantity 1
+      Vehicle: 1000
+      Building:
+        Normal: [500, 10]
+
+    Graph Name X:
+      # this is a source agent
+      Pedestrian:
+        # that is connected via this channel to a sink agent
+        TalksT0: Pedestrian
+        # and via a different channel to a different sink agent
+        Enters: Building
+      Vehicle:
+        Yields: Pedestrian
+        ParksBy: Building
+      Building:
+        ConnectedByUndergroundPassagewayTo: Building
+        Alerts: Pedestrian
+
+    Deployment:
+      Nodes: # if no names or ip addresses provided then switch to autodiscovery
+        - cancun
+        - austin
+      Akka Configuration: # this section will contain akka configuration data provided in app.conf files.

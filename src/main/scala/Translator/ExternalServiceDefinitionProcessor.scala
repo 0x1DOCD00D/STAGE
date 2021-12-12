@@ -11,7 +11,7 @@ package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlanKeywords.{FOREACH, FnPrefix, IF}
+import Translator.SlanKeywords.{FnPrefix, IF}
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq

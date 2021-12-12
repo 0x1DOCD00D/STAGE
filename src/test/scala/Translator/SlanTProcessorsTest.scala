@@ -13,11 +13,10 @@ import Translator.SlanAbstractions.{BehaviorReference, SlanConstruct, StateRefer
 import Translator.{SlanTranslator, SlantParser}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
+import scalaz.Lens
 
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
-import scalaz.Lens
-
 import scala.util.{Failure, Success, Try}
 
 
@@ -34,6 +33,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorOneMessage = "Behavior_One_Message.yaml"
   val behaviorNullMessage = "Behavior_Default_Null.yaml"
   val behaviorPeriodic = "Behavior_Period.yaml"
+  val model_v1 = "Model_v1.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
   val channelYaml = "Channels.yaml"
@@ -272,14 +272,14 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   it should "translate a resource spec for designating an external service: RESTful or JAR" in {
     val expected = List(
-      Resource(ResourceTag("UniqueServiceId",None),
-        List(Resource(ResourceTag("protocol",None),
-          List(SlanValue("Jar"))),
+      Resource(ResourceTag("UniqueServiceId",Some("jar")),
+        List(
           Resource(ResourceTag("http://url/to/Jar/name.jar",None),
             List(Resource(ResourceTag("methodName",None),
-              List(Resource(ResourceTag("p1name",None),
-                List(SlanValue("parm1"))),
+              List(Resource(ResourceTag("p1name",None),List(SlanValue("parm1"))),
                 Resource(ResourceTag("p2name",None),List(SlanValue("parm2"))))),
+              Resource(ResourceTag("methodName",None),List(SlanValue("parm1"))),
+              Resource(ResourceTag("methodName",None),List()),
               Resource(ResourceTag("otherMethodName",None),
                 List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
     )
@@ -356,5 +356,27 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
         List(Resource(ResourceTag("Pedestrian",Some("map")),List(SlanValue("Coordinates")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a model for pedestrians, vehicles and buildings" in {
+    val expected = List(
+      ModelGraph("Model Name",
+        List(AgentPopulation("Pedestrian",
+          List(SlanValue("quantity 1"))),
+          AgentPopulation("Vehicle",List(SlanValue(1000))),
+          AgentPopulation("Building",List(Pdf("Normal",
+            List(SlanValue(500), SlanValue(10))))),
+          ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Pedestrian",
+            List(Channel2Agent("TalksT0","Pedestrian"),
+              Channel2Agent("Enters","Building"))),
+            Agent2AgentViaChannel("Vehicle",List(Channel2Agent("Yields","Pedestrian"),
+              Channel2Agent("ParksBy","Building"))), Agent2AgentViaChannel("Building",
+              List(Channel2Agent("ConnectedByUndergroundPassagewayTo","Building"),
+                Channel2Agent("Alerts","Pedestrian"))))),
+          ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))),
+          ModelDeployment("Akka Configuration",List())))
+    )
+    val path = getClass.getClassLoader.getResource(model_v1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
