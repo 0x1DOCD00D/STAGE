@@ -81,6 +81,10 @@ case class FnMultiply(operands: SlanConstructs) extends SlanConstruct
 
 case class FnDivide(operands: SlanConstructs) extends SlanConstruct
 
+case class FnJoin(operands: SlanConstructs) extends SlanConstruct
+
+case class FnLeave(operands: SlanConstructs) extends SlanConstruct
+
 
 case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
 

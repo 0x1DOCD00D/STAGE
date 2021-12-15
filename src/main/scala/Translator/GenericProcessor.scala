@@ -26,6 +26,11 @@ import cats.kernel.Eq
           - null
   The key methodName will have four instead of three values, since the list value is a list that
   will be discarded and key/value pairs will be added to the complex object defined by the key methodName.
+  To avoid side-effects of this auto-flattening behavior please use the following construct.
+  - methodName: [ p1name: parm1, p2name: parm2 ]
+  - methodName:  parm1
+  - methodName:
+  - otherMethodName: [ parm1, parm2, parm3 ]
 * */
 
 abstract class GenericProcessor:

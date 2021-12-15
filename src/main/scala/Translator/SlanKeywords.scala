@@ -80,3 +80,5 @@ object SlanKeywords:
   val Fn_Substract: String = FnPrefix + "substract"
   val Fn_Multiply: String = FnPrefix + "multiply"
   val Fn_Divide: String = FnPrefix + "divide"
+  val Fn_Join: String = FnPrefix + "join"
+  val Fn_Leave: String = FnPrefix + "leave"

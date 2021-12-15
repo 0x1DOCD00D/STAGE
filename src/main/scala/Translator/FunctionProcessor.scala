@@ -31,6 +31,8 @@ class FunctionProcessor extends GenericProcessor :
       case entry: String if entry.toUpperCase === Fn_Substract.toUpperCase => List(FnSubstract((new FunctionContentProcessor).commandProcessor(convertJ2S(v._2))))
       case entry: String if entry.toUpperCase === Fn_Multiply.toUpperCase => List(FnMultiply((new FnMultiplyProcessor).commandProcessor(convertJ2S(v._2))))
       case entry: String if entry.toUpperCase === Fn_Divide.toUpperCase => List(FnDivide((new FnMultiplyProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === Fn_Join.toUpperCase => List(FnJoin((new FnMultiplyProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === Fn_Leave.toUpperCase => List(FnLeave((new FnMultiplyProcessor).commandProcessor(convertJ2S(v._2))))
       case entry: YamlPrimitiveTypes => List(SlanValue(entry))
       case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
     }

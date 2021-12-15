@@ -4,6 +4,6 @@ Agents:
       x:
       y:
 
-    mapOfAgentCoordinates:
-      ? map: Pedestrian
-      : Coordinates
+    ? map: mapOfAgentCoordinates
+    :
+      Pedestrian: Coordinates

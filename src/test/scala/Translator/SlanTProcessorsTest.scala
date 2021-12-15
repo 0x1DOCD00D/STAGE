@@ -350,10 +350,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate a resource spec for a map of some agent to its coordinate resource" in {
     val expected = List(
       Resource(ResourceTag("Coordinates",None),
-        List(Resource(ResourceTag("x",None),List()),
-          Resource(ResourceTag("y",None),List()))),
-      Resource(ResourceTag("mapOfAgentCoordinates",None),
-        List(Resource(ResourceTag("Pedestrian",Some("map")),List(SlanValue("Coordinates")))))
+        List(Resource(ResourceTag("x",None),List()), Resource(ResourceTag("y",None),List()))),
+      Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),
+        List(Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
