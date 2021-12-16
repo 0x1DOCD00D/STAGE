@@ -11,16 +11,20 @@ package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlPrimitiveTypes, YamlTypes}
-import Translator.SlanKeywords.{FnPrefix, Fn_Multiply, Fn_Update, IF}
+import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
 
-class FnMultiplyProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = convertJ2S(yamlObj) match {
-    case simpleOperand: String => List(SlanValue(simpleOperand))
-    case v: (_, _) =>(new FunctionProcessor).commandProcessor(convertJ2S(v))
-    case None => List()
-    case entry: YamlPrimitiveTypes => List(SlanValue(entry))
+class ReferenceProcessor extends GenericProcessor :
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+    case v: (_, _) => convertJ2S(v._1) match {
+        case ref: String => List(Reference(Some(SlanValue(ref)), Option((new ReferenceProcessor).commandProcessor(convertJ2S(v._2)))))
+        case None => List(Reference(None, Option((new ReferenceProcessor).commandProcessor(convertJ2S(v._2)))))
+        case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+      }
+
+    case ref: String => List(Reference(Some(SlanValue(ref)), None))
+
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }

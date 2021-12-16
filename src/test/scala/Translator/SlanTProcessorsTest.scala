@@ -135,7 +135,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
                 ROPEqual(List(Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
           Then(List(
             FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
-            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(Reference(Some(SlanValue("MessageY")),Some(List(Reference(Some(SlanValue("field")),None)))), SlanValue("generatorRefId")))))
+          )))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }

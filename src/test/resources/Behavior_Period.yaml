@@ -1,7 +1,7 @@
 Agents:
   Behaviors:
     Automatic Behavior 1:
-      ? period: 500
+      ? period: [500, countMax, timeLimit]
       :
         Fn_Send:
           ? [MessageX: 0.2, MessageY: 0.6, MessageZ: 0.3]

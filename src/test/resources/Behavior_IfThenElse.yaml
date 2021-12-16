@@ -17,4 +17,4 @@ Agents:
                   - false
           Then:
             - Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
-            - Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
+            - Fn_Update: [ resourceName2Update, Fn_Multiply: [ MessageY: field, generatorRefId ] ]

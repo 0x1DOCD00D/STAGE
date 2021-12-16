@@ -85,6 +85,7 @@ case class FnJoin(operands: SlanConstructs) extends SlanConstruct
 
 case class FnLeave(operands: SlanConstructs) extends SlanConstruct
 
+case class Reference(key: Option[SlanConstruct], value: Option[SlanConstructs]) extends SlanConstruct
 
 case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
 
