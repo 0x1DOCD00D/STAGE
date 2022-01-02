@@ -1,7 +1,7 @@
 Agents:
   Behaviors:
     ...Some Periodic Behavior:
-      ? 10: howManyTimes
+      ? null: howManyTimes
       :
         Fn_Send: generatorResourceOfMessages
         Fn_Create: generatorResourceOfAgents

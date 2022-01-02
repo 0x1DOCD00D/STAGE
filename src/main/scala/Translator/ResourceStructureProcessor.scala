@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,15 @@ import Translator.SlantParser.convertJ2S
 class ResourceStructureProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: List[_] => v.map(aV => SlanValue(convertJ2S(aV).toString))
+/*
+      val converted = for {
+        objId <- compositeKey
+        result <- processListObjects(convertJ2S(objId))
+      } yield result
+      converted
+    case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+*/
+
     case v: (_, _) => (new ResourcesProcessor).commandProcessor(convertJ2S(v))
     case simpleValue: YamlPrimitiveTypes => List(SlanValue(simpleValue))
     case None => List()

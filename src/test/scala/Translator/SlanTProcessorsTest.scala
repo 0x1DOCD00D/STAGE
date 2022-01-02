@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,6 +15,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scalaz.Lens
 
+import scala.Double.NaN
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.util.{Failure, Success, Try}
@@ -33,6 +34,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorOneMessage = "Behavior_One_Message.yaml"
   val behaviorNullMessage = "Behavior_Default_Null.yaml"
   val behaviorPeriodic = "Behavior_Period.yaml"
+  val behaviorPeriodic_null_duration = "Behavior_Period_null_duration.yaml"
+  val behaviorPeriodic_null_timeInterval = "Behavior_Period_null_timeInterval.yaml"
+  val behaviorPeriodic_null_allParams = "Behavior_Period_null_allParams.yaml"
   val model_v1 = "Model_v1.yaml"
   val basicYamlTemplate_v1 = "Template_v1.yaml"
   val basicYamlTemplate_v2 = "Template_v2.yaml"
@@ -48,6 +52,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v7 = "Resources_v7.yaml"
   val resources_v8 = "Resources_v8.yaml"
   val resources_v9 = "Resources_v9.yaml"
+  val resources_v10 = "Resources_v10.yaml"
+  val resources_v11 = "Resources_v11.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -93,7 +99,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a behavior spec with multiple messages as the key flow sequence" in {
-    val expected = List(Behavior(Some("Behavior 4 Messages 1"),
+    val expected = List(Behavior("Behavior 4 Messages 1",
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_flow).getPath
@@ -101,7 +107,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a behavior spec with multiple messages as the key list" in {
-    val expected = List(Behavior(Some("Behavior 4 Messages 2"),
+    val expected = List(Behavior("Behavior 4 Messages 2",
       List(MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY"), SlanValue("MessageZZ")),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_list).getPath
@@ -109,7 +115,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a behavior spec with one message response" in {
-    val expected = List(Behavior(Some("Behavior 4 Messages 3"),
+    val expected = List(Behavior("Behavior 4 Messages 3",
                         List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
                         List(FnUpdate(List(SlanValue("resourceName2Update"),
                           FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
@@ -118,7 +124,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate a default behavior spec for null message" in {
-    val expected = List(Behavior(Some("Default Behavior 4 All Messages"),
+    val expected = List(Behavior("Default Behavior 4 All Messages",
       List(MessageResponseBehavior(List(),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))
     val path = getClass.getClassLoader.getResource(behaviorNullMessage).getPath
@@ -126,7 +132,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   }
 
   it should "translate an if-then-else behavior" in {
-    val expected = List(Behavior(Some("BehaviorIfThenElse"),
+    val expected = List(Behavior("BehaviorIfThenElse",
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(IfThenElse(List(
           And(List(ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
@@ -328,24 +334,46 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   it should "translate a spec for a periodic behavior" in {
     val expected = List(
-      Message("Message Name",
-        List(Resource(ResourceTag("Recursive Field",None),
-          List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
-          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
-            List(SlanValue(1), SlanValue(10), SlanValue(100))),
-          Resource(ResourceTag("Some Fixed Value",None),
-            List(SlanValue(100))),
-          Resource(ResourceTag("Another Recursive Field",None),
-            List(Resource(ResourceTag("Message Name",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(0), SlanValue(2))))))),
-          Resource(ResourceTag("Field Name",None),
-            List(Resource(ResourceTag("Uniform",None),
-              List(SlanValue(2019-11-01), SlanValue(2021-12-31)))))))
+      PeriodicBehavior("...Some Periodic Behavior",
+        List(PeriodicBehaviorFiringDuration(SlanValue(10),Some(SlanValue("howManyTimes"))),
+          FnSend(List(SlanValue("generatorResourceOfMessages"))),
+          FnCreate(List(SlanValue("generatorResourceOfAgents")))))
     )
-    val path = getClass.getClassLoader.getResource(messageYaml).getPath
-    val res = SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel))// shouldBe expected
-    println(res)
+    val path = getClass.getClassLoader.getResource(behaviorPeriodic).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a spec for a periodic behavior without params" in {
+    val expected = List(
+      PeriodicBehavior("...Some Periodic Behavior",
+        List(PeriodicBehaviorFiringDuration(SlanValue(0),None),
+          FnSend(List(SlanValue("generatorResourceOfMessages"))),
+          FnCreate(List(SlanValue("generatorResourceOfAgents")))))
+    )
+    val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_allParams).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a spec for a periodic behavior without a time interval" in {
+    val expected = List(
+      PeriodicBehavior("...Some Periodic Behavior",
+        List(PeriodicBehaviorFiringDuration(SlanValue(0),Some(SlanValue("howManyTimes"))),
+          FnSend(List(SlanValue("generatorResourceOfMessages"))),
+          FnCreate(List(SlanValue("generatorResourceOfAgents")))))
+    )
+    val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_timeInterval).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a spec for a periodic behavior without duration" in {
+    val expected = List(
+      PeriodicBehavior("...Some Periodic Behavior",
+        List(PeriodicBehaviorFiringDuration(SlanValue(10),None),
+          FnSend(List(SlanValue("generatorResourceOfMessages"))),
+          FnCreate(List(SlanValue("generatorResourceOfAgents")))))
+    )
+    val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_duration).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
   it should "translate a resource spec for a map of some agent to its coordinate resource" in {
@@ -356,6 +384,18 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
         List(Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec for a generator of messages or agents with given probabilities" in {
+    val expected = List(
+      Resource(ResourceTag("generatorOfMessagesXYZ",None),
+        List(
+          ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(0)),
+            ResourceProbability("MessageY",SlanValue(0.6)), ResourceProbability("MessageZ",SlanValue("somePdfGenerator")),
+            Resource(ResourceTag("Poisson",None),List(SlanValue(10), SlanValue(2)))))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v11).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,6 +17,7 @@ object SlanAbstractions:
   type YamlPrimitiveTypes = String | Int | Double | Boolean | Long | DateTime
   type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_]
   type BehaviorReference = Option[String]
+  type BehaviorMandatoryReference = String
   type StateReference = Option[String]
   type MessageReference = String
   type ModelReference = String

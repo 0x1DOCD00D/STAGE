@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -31,7 +31,9 @@ case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
 
 case class Pdf(id: PdfReference, actions: SlanConstructs) extends SlanConstruct
 
-case class Behavior(id: BehaviorReference, actions: SlanConstructs) extends SlanConstruct
+case class Behavior(id: BehaviorMandatoryReference, actions: SlanConstructs) extends SlanConstruct
+
+case class PeriodicBehavior(id: BehaviorMandatoryReference, actions: SlanConstructs) extends SlanConstruct
 
 case class MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs) extends SlanConstruct
 
@@ -87,7 +89,7 @@ case class FnLeave(operands: SlanConstructs) extends SlanConstruct
 
 case class Reference(key: Option[SlanConstruct], value: Option[SlanConstructs]) extends SlanConstruct
 
-case class PeriodicBehavior(elements: SlanConstructs) extends SlanConstruct
+case class PeriodParameters(timeInterval: SlanValue, iterations: SlanValue) extends SlanConstruct
 
 case class Messages2Send(messages: SlanValues) extends SlanConstruct
 
@@ -110,7 +112,13 @@ case class Resource(id: SlanConstruct, attributes: SlanConstructs) extends SlanC
 
 case class ResourceTag(id: ResourceReference, storageType: StorageTypeReference) extends SlanConstruct
 
+case class ResourcePeriodicGenerator(resourceTypes: SlanConstructs) extends SlanConstruct
+
+case class ResourceProbability(id: ResourceReference, probability: SlanValue) extends SlanConstruct
+
 case class ResourceAttribute(id: SlanConstruct, value: SlanValues) extends SlanConstruct
+
+case class PeriodicBehaviorFiringDuration(timeInterval: SlanValue, howManyTimes2Fire: Option[SlanValue]) extends SlanConstruct
 
 case class Message(id: MessageReference, fields: SlanConstructs) extends SlanConstruct
 

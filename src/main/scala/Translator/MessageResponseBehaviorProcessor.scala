@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -11,8 +11,8 @@ package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlantParser.convertJ2S
 import Translator.SlanKeywords.*
+import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
 
@@ -23,6 +23,7 @@ class MessageResponseBehaviorProcessor extends GenericProcessor {
     case v: (_, _) if v._2 == null => convertJ2S(v._1) match {
       //msgName: {blah blah behavior actions}
       case msgId: String => List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      //null defines a periodic behavior that is invoked at specified time intervals
       case None => List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
       //? [msg1, msg2, ..., msgN]: {blah blah behavior actions}
       case msgIdList: Map[_, _] =>

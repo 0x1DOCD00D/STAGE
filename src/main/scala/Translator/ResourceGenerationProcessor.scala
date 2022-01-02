@@ -9,21 +9,20 @@
 
 package Translator
 
-import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
-import Translator.SlanKeywords.PERIODICBEHAVIORDESIGNATOR
+import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
+import Translator.SlanAbstractions.{SlanConstruct, YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
 
-class BehaviorsProcessor extends GenericProcessor {
+class ResourceGenerationProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String if cv.startsWith(PERIODICBEHAVIORDESIGNATOR) => List(PeriodicBehavior(cv, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1)))))
-      case cv: String => List(Behavior(cv, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).asInstanceOf))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+    case resourceId: String => List(ResourceProbability(resourceId, SlanValue(0)))
+    case v: (_, _) => (convertJ2S(v._1), convertJ2S(v._2)) match {
+      case (resId: String, valIfAny: YamlPrimitiveTypes) => List(ResourceProbability(resId, SlanValue(valIfAny)))
+      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
     }
-
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }
 }
