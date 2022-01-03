@@ -1,0 +1,9 @@
+Agents:
+  Agent Name X:
+    null:
+      GenerateMessages X, W, and U: State A
+      GenerateMessages P or Q: State X
+    State A: [ stateAbehavior: State B ]
+    State B: Respond to messages A and Y
+    State X:
+      Spawn Agent Y: null

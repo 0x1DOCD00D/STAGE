@@ -25,8 +25,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   behavior of "the Slan traslator for SLAN Yaml specifications"
 
-  val agentsFull_Flow = "Agents_Full_v1.yaml"
   val agentsFull_Block = "Agents_Full_v1.yaml"
+  val agentsFull_Flow = "Agents_Full_v2.yaml"
+  val agentsFull_manyBehaviorsInState = "Agents_Full_v3.yaml"
   val agentsGroups1 = "Agents_Groups_v1.yaml"
   val behaviorMessages_flow = "Behavior_Messages_KeyFlow.yaml"
   val behaviorMessages_list = "Behavior_Messages_KeyList.yaml"
@@ -82,6 +83,19 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     res1.tail.head shouldBe expected2
     res2.head shouldBe expected1
     res2.tail.head shouldBe expected2
+  }
+
+  it should "translate a behavior spec with multiple behaviors for a single state" in {
+    val expected = List(
+      Agent("Agent Name X",List(
+        State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")),
+          StateBehavior(Some("GenerateMessages P or Q"),Some("State X")))),
+        State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),Some("State B")))),
+        State(Some("State B"),List(StateBehavior(Some("Respond to messages A and Y"),None))),
+        State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
+    )
+    val path = getClass.getClassLoader.getResource(agentsFull_manyBehaviorsInState).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
   it should "translate a group spec" in {

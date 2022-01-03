@@ -18,8 +18,9 @@ import cats.kernel.Eq
 
 class StatesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case stateRef: String => List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v._2))))
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case stateRef: String => List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v(1)))))
+      case None => List(State(None, (new StateProcessor).commandProcessor(convertJ2S(v(1)))))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
     //there is the single anonymous state whose behavior is defined by the behavior reference
