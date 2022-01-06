@@ -1,12 +1,10 @@
 Messages:
   Message Name:
-    Field Name:
-      Uniform: [1, 200]
+    Field Name: generatorUniformPdf
     ? queue: someBasicResourceListOfValues
     : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list
     Some Fixed Value: 100
     Recursive Field:
       Message Name: 3 # the max depth of recursion
     Another Recursive Field:
-      Message Name:
-        Uniform: [0, 2]
+      Message Name: 10

@@ -3,4 +3,4 @@ Agents:
     generatorOfMessagesXYZ:
       ? [MessageX, MessageY: 0.6, MessageZ: somePdfGenerator]
       :
-        Poisson: [10, 2]
+        pdfgenerator

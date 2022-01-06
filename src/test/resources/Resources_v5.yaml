@@ -7,15 +7,11 @@ Agents:
     dim3:
       column1:
         Enum:
-          Item1:
-            Uniform: [0.2, 0.8]
+          Item1: someGenerator
           Item2: 0.2
-          Item3:
-            Uniform: [0.1, 0.6]
-      column2:
-        Uniform: [ 0, 1 ]
-      column3:
-        Fn_Multiply: [ [ Uniform: [ 0, 1 ], column2 ] ]
+          Item3: someOtherGenerator
+      column2: someGenerator
+      column3: someBehavior
 
     # This new resource, dim4 contains a list of the resources dim3 and for each entry on this list it adds
     # two more resources, column4 and column5 whose values are generated using some PDF. That is, the resource
@@ -23,19 +19,14 @@ Agents:
     dim4:
       ? list: dim3
       :
-          Uniform: [100, 1000] # create a list of dim3 resources that contains from 100 to 1000 entries
-          # these attrs will be appended to every entry dim3 on the list
-          column4:
-            Uniform: [ 200, 500 ]
-          column5:
-            Uniform: [ 1, 5 ]
+        column4: generator200_500
+        column5: generator1_5
       someOtherAttribute: # this uninitialized attr for the resource dim4 is a singleton
 
     dim5:
       ? list: dim4
       :
-      column6:
-        Uniform: [ 200, 500 ]
+        column6: generator0_1
     #------------------------------------------------------------
     # column6 | column5 | column4 | column3 | column2 | column1 |
     #------------------------------------------------------------

@@ -34,3 +34,4 @@ object SlanAbstractions:
   type ParameterOrderNumber = Int
   type SlanConstructs = List[SlanConstruct]
   type SlanValues = List[SlanValue]
+  type SlanKeyValues = List[SlanKeyValue]

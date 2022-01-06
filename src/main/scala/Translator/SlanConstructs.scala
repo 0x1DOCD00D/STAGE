@@ -29,6 +29,8 @@ case class StateBehavior(behavior: BehaviorReference, switchTo: StateReference) 
 
 case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
 
+case class SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes) extends SlanConstruct
+
 case class Pdf(id: PdfReference, actions: SlanConstructs) extends SlanConstruct
 
 case class Behavior(id: BehaviorMandatoryReference, actions: SlanConstructs) extends SlanConstruct
@@ -116,11 +118,19 @@ case class ResourcePeriodicGenerator(resourceTypes: SlanConstructs) extends Slan
 
 case class ResourceProbability(id: ResourceReference, probability: SlanValue) extends SlanConstruct
 
+case class ResourcePDFParameters(params: SlanConstructs) extends SlanConstruct
+
+case class ResourcePDFConstraintsAndSeed(constraints: SlanConstructs) extends SlanConstruct
+
+case class PdfSeed(seed: YamlPrimitiveTypes) extends SlanConstruct
+
 case class ResourceAttribute(id: SlanConstruct, value: SlanValues) extends SlanConstruct
 
 case class PeriodicBehaviorFiringDuration(timeInterval: SlanValue, howManyTimes2Fire: Option[SlanValue]) extends SlanConstruct
 
-case class Message(id: MessageReference, fields: SlanConstructs) extends SlanConstruct
+case class Message(id: SlanConstructs, fields: SlanConstructs) extends SlanConstruct
+
+case class MessageDeclaration(id: MessageReference, parent: Option[MessageReference]) extends SlanConstruct
 
 case class Model(id: ModelReference, elements: SlanConstructs) extends SlanConstruct
 

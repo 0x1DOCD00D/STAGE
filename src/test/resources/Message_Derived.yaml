@@ -1,0 +1,14 @@
+Messages:
+  Message Name:
+    Field Name:
+      Uniform: [1, 200]
+    ? queue: someBasicResourceListOfValues
+    : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list
+    Some Fixed Value: 100
+  # this is a declaration of a message that inherits the definitions from its parent message
+  # and it refines the inherited definition by adding a new field whose values are selected
+  # at random with the specified probabilities.
+  ? Derived Message: Message Name
+  :
+    FieldX:
+      Discrete: [1: 0.3, 2: 0.5, 3: 0.6]

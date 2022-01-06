@@ -4,7 +4,7 @@ Agents:
     ? list: HDD
     : # resource names as keys under the entry Resources
       # attributes are defined under each resource keys. Their values can be manipulated by the simulation
-      Size: [ Normal: [ 3000, 1000 ], ">=": 0, "<": 2000 ]
+      Size: pdfgenerator
 
       Utilization: [ ">=": 0, "<": Size ]
 

@@ -43,6 +43,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val basicYamlTemplate_v2 = "Template_v2.yaml"
   val channelYaml = "Channels.yaml"
   val messageYaml = "Messages.yaml"
+  val messageDerivedYaml = "Message_Derived.yaml"
+  val resource_generator = "ResourceGenerators.yaml"
   val resources_v0 = "Resources_v0.yaml"
   val resources_v1 = "Resources_v1.yaml"
   val resources_v2 = "Resources_v2.yaml"
@@ -181,8 +183,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate a resource spec with a composite key and a randomly generated value" in {
     val expected = List(
       Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
-        List(
-          Resource(ResourceTag("Uniform",None),List(SlanValue(0), SlanValue(1))))))
+        List(SlanValue("aUniformGeneratorReference")))
+      )
     val path = getClass.getClassLoader.getResource(resources_v2).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
@@ -196,26 +198,25 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
-
-  it should "translate a resource spec for a composite resource with a list of resources and a single simple resource" in {
-    val expected = List(
-      Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
-        List(SlanValue(1), SlanValue(10), SlanValue(100)))
-    )
-    val path = getClass.getClassLoader.getResource(resources_v3).getPath
-    val res = SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) //shouldBe expected
-    println(res)
-  }
-
   it should "translate a resource spec with a composite key whose attributes include a composite and a simple resources" in {
     val expected = List(
       Resource(ResourceTag("compositeResource",None),
-        List(
-          Resource(ResourceTag("someBasicResource1V",Some("list")),List(SlanValue(100), SlanValue(1000))),
-          Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1)))))
+        List(Resource(ResourceTag("someBasicResource1V",Some("list")),
+          List(SlanValue(100), SlanValue(1000))),
+          SlanKeyValue("valueHolder4compositeResource",1)))
     )
     val path = getClass.getClassLoader.getResource(resources_v4).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a complex resource spec for generating random distributions" in {
+    val expected = List(
+        Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+          List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
+            ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8)))))
+    )
+    val path = getClass.getClassLoader.getResource(resource_generator).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)).toString() shouldBe expected.toString()
   }
 
   it should "translate a complex resource spec that describes a table populated with random data" in {
@@ -223,36 +224,13 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
       Resource(ResourceTag("dim3",None),
         List(Resource(ResourceTag("column1",None),
           List(Resource(ResourceTag("Enum",None),
-            List(Resource(ResourceTag("Item1",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(0.2), SlanValue(0.8))))),
-              Resource(ResourceTag("Item2",None),List(SlanValue(0.2))),
-              Resource(ResourceTag("Item3",None),
-                List(Resource(ResourceTag("Uniform",None),
-                  List(SlanValue(0.1), SlanValue(0.6))))))))),
-          Resource(ResourceTag("column2",None),
-            List(Resource(ResourceTag("Uniform",None),
-              List(SlanValue(0), SlanValue(1))))),
-          Resource(ResourceTag("column3",None),
-            List(Resource(ResourceTag("Fn_Multiply",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(0), SlanValue(1))), SlanValue("column2"))))))),
+            List(SlanKeyValue("Item1","someGenerator"), SlanKeyValue("Item2",0.2), SlanKeyValue("Item3","someOtherGenerator"))))), SlanKeyValue("column2","someGenerator"), SlanKeyValue("column3","someBehavior"))),
       Resource(ResourceTag("dim4",None),
         List(Resource(ResourceTag("dim3",Some("list")),
-          List(Resource(ResourceTag("Uniform",None),
-            List(SlanValue(100), SlanValue(1000))),
-            Resource(ResourceTag("column4",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(200), SlanValue(500))))),
-            Resource(ResourceTag("column5",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(1), SlanValue(5))))))),
+          List(SlanKeyValue("column4","generator200_500"), SlanKeyValue("column5","generator1_5"))),
           Resource(ResourceTag("someOtherAttribute",None),List()))),
       Resource(ResourceTag("dim5",None),
-        List(Resource(ResourceTag("dim4",Some("list")),List()),
-          Resource(ResourceTag("column6",None),
-            List(Resource(ResourceTag("Uniform",None),
-              List(SlanValue(200), SlanValue(500)))))))
+        List(Resource(ResourceTag("dim4",Some("list")),List(SlanKeyValue("column6","generator0_1")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v5).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -260,17 +238,10 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   it should "translate a resource spec with a list of the instances of a composite resources that contains a queue initialized with some values" in {
     val expected = List(
-      Resource(ResourceTag("HDD",Some("list")),
-        List(Resource(ResourceTag("Size",None),
-          List(Resource(ResourceTag("Normal",None),List(SlanValue(3000), SlanValue(1000))),
-            Resource(ResourceTag(">=",None),List(SlanValue(0))),
-            Resource(ResourceTag("<",None),List(SlanValue(2000))))),
-          Resource(ResourceTag("Utilization",None),List(Resource(ResourceTag(">=",None),List(SlanValue(0))),
-            Resource(ResourceTag("<",None),List(SlanValue("Size"))))),
-          Resource(ResourceTag("ItemCount",None),List(SlanValue(0),
-            Resource(ResourceTag(">=",None),List(SlanValue(0))))),
-          Resource(ResourceTag("DataStore",Some("queue")),
-            List(SlanValue(100), SlanValue(1000), SlanValue(100000)))))
+      Resource(ResourceTag("HDD",Some("list")), List(SlanKeyValue("Size","pdfgenerator"),
+        Resource(ResourceTag("Utilization",None),List(SlanKeyValue(">=",0), SlanKeyValue("<","Size"))),
+        Resource(ResourceTag("ItemCount",None),List(SlanValue(0), SlanKeyValue(">=",0))),
+        Resource(ResourceTag("DataStore",Some("queue")),List(SlanValue(100), SlanValue(1000), SlanValue(100000)))))
     )
     val path = getClass.getClassLoader.getResource(resources_v6).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -294,15 +265,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate a resource spec for designating an external service: RESTful or JAR" in {
     val expected = List(
       Resource(ResourceTag("UniqueServiceId",Some("jar")),
-        List(
-          Resource(ResourceTag("http://url/to/Jar/name.jar",None),
-            List(Resource(ResourceTag("methodName",None),
-              List(Resource(ResourceTag("p1name",None),List(SlanValue("parm1"))),
-                Resource(ResourceTag("p2name",None),List(SlanValue("parm2"))))),
-              Resource(ResourceTag("methodName",None),List(SlanValue("parm1"))),
-              Resource(ResourceTag("methodName",None),List()),
-              Resource(ResourceTag("otherMethodName",None),
-                List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
+        List(Resource(ResourceTag("http://url/to/Jar/name.jar",None),
+          List(Resource(ResourceTag("methodName",None),List(SlanValue("parm1"), SlanValue("parm2"))), SlanKeyValue("methodName","parm1"),
+            Resource(ResourceTag("methodName",None),List()), Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
     )
     val path = getClass.getClassLoader.getResource(resources_v8).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -327,22 +292,28 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   it should "translate a message spec with multiple fields" in {
     val expected = List(
-      Message("Message Name",
-        List(Resource(ResourceTag("Recursive Field",None),
-          List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
-          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
-            List(SlanValue(1), SlanValue(10), SlanValue(100))),
-          Resource(ResourceTag("Some Fixed Value",None),
-            List(SlanValue(100))),
-          Resource(ResourceTag("Another Recursive Field",None),
-            List(Resource(ResourceTag("Message Name",None),
-              List(Resource(ResourceTag("Uniform",None),
-                List(SlanValue(0), SlanValue(2))))))),
-          Resource(ResourceTag("Field Name",None),
-            List(Resource(ResourceTag("Uniform",None),
-              List(SlanValue(1), SlanValue(200)))))))
+      Message(List(MessageDeclaration("Message Name",None)),
+        List(Resource(ResourceTag("Recursive Field",None),List(SlanKeyValue("Message Name",3))),
+          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+          Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))),
+          Resource(ResourceTag("Another Recursive Field",None),List(SlanKeyValue("Message Name",10))),
+          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf")))))
     )
     val path = getClass.getClassLoader.getResource(messageYaml).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a derived message spec" in {
+    val expected = List(
+      Message(List(MessageDeclaration("Message Name",None)),List(Resource(ResourceTag("Field Name",None),
+        List(Resource(ResourceTag("Uniform",None),List(SlanValue(1), SlanValue(200))))),
+        Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+        Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))),
+      Message(List(MessageDeclaration("Derived Message",Some("Message Name"))),
+        List(Resource(ResourceTag("FieldX",None),
+          List(Resource(ResourceTag("Discrete",None),List(SlanKeyValue(1,0.3), SlanKeyValue(2,0.5), SlanKeyValue(3,0.6)))))))
+    )
+    val path = getClass.getClassLoader.getResource(messageDerivedYaml).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
@@ -394,8 +365,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val expected = List(
       Resource(ResourceTag("Coordinates",None),
         List(Resource(ResourceTag("x",None),List()), Resource(ResourceTag("y",None),List()))),
-      Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),
-        List(Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates")))))
+      Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),List(SlanKeyValue("Pedestrian","Coordinates")))
     )
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -404,10 +374,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate a resource spec for a generator of messages or agents with given probabilities" in {
     val expected = List(
       Resource(ResourceTag("generatorOfMessagesXYZ",None),
-        List(
-          ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(0)),
-            ResourceProbability("MessageY",SlanValue(0.6)), ResourceProbability("MessageZ",SlanValue("somePdfGenerator")),
-            Resource(ResourceTag("Poisson",None),List(SlanValue(10), SlanValue(2)))))))
+        List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(0)),
+          ResourceProbability("MessageY",SlanValue(0.6)),
+          ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v11).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
