@@ -34,6 +34,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorIfThenElse_1 = "Behavior_IfThenElse.yaml"
   val behaviorOneMessage = "Behavior_One_Message.yaml"
   val behaviorNullMessage = "Behavior_Default_Null.yaml"
+  val behaviorMultipleMessages = "Behavior_Multiple_Messages.yaml"
   val behaviorPeriodic = "Behavior_Period.yaml"
   val behaviorPeriodic_null_duration = "Behavior_Period_null_duration.yaml"
   val behaviorPeriodic_null_timeInterval = "Behavior_Period_null_timeInterval.yaml"
@@ -349,6 +350,21 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_timeInterval).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
+
+  it should "translate a spec for a behavior with multiple messages" in {
+    val expected = List(
+      Behavior("Behavior 4 Multiple Messages",
+        List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))),
+          MessageResponseBehavior(List(SlanValue("MessageW")),
+            List(FnUpdate(List(SlanValue("resourceName2Update"), SlanValue("MessageW.field"))))),
+          MessageResponseBehavior(List(SlanValue("MessageC"), SlanValue("MessageB")),
+            List(FnUpdate(List(SlanValue("resourceName2Update"), SlanValue("MessageA.field")))))))
+    )
+    val path = getClass.getClassLoader.getResource(behaviorMultipleMessages).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
 
   it should "translate a spec for a periodic behavior without duration" in {
     val expected = List(

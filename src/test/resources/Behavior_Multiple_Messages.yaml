@@ -1,0 +1,9 @@
+Agents:
+  Behaviors:
+    Behavior 4 Multiple Messages:
+      ? [ MessageX, MessageY,  MessageZ ]:
+        Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
+      ? [ MessageW ]:
+        Fn_Update: [ resourceName2Update, MessageW.field ]
+      ? [ MessageC, MessageB ]: # messages C and B extend A
+        Fn_Update: [ resourceName2Update, MessageA.field ]
