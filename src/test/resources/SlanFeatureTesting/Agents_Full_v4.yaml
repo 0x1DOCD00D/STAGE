@@ -1,0 +1,10 @@
+Agents:
+  Agent Name X:
+    Resources:
+      - resource1
+      - resource2
+    null: #this is the initial state
+      GenerateMessages X, W, and U:
+      GenerateMessages P or Q: State X
+    State X:
+      Spawn Agent Y: null

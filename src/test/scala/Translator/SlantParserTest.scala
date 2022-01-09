@@ -1,11 +1,10 @@
 /*
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
- *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Unless required by applicable law or agreed to in writing, software distributed under the
+ *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *
- *   Unless required by applicable law or agreed to in writing, software distributed under
- *   the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
- *   either express or implied.  See the License for the specific language governing permissions and limitations under the License.
- *
+ *  See the License for the specific language governing permissions and limitations under the License.
  */
 
 package Translator
@@ -20,18 +19,18 @@ import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
 class SlantParserTest extends AnyFlatSpec with Matchers {
   behavior of "the Slant parser for single value scalars"
-  val complexYamlTemplate_2 = "ComplexKey_v2.yaml"
-  val complexYamlTemplate_1 = "ComplexKey_v1.yaml"
-  val basicYamlTemplate = "Template_v1.yaml"
-  val illFormedYaml = "IllFormed.yaml"
+  val complexYamlTemplate_2 = "SlanFeatureTesting/ComplexKey_v2.yaml"
+  val complexYamlTemplate_1 = "SlanFeatureTesting/ComplexKey_v1.yaml"
+  val basicYamlTemplate = "SlanFeatureTesting/Template_v1.yaml"
+  val illFormedYaml = "SlanFeatureTesting/IllFormed.yaml"
   val nonexistentYamlFile = "Hades.yaml"
-  val singleScalarFloatingPointValueFile = "OneScalarFloatingPointValue.yaml"
-  val singleScalarDateValueFile = "OneScalarDateValue.yaml"
-  val singleScalarIntValueFile = "OneScalarIntValue.yaml"
-  val singleScalarStringValueFile = "OneScalarStringValue.yaml"
-  val singleScalarBooleanValueFile = "OneScalarBooleanValue.yaml"
-  val singleScalarNullValueFile = "OneScalarNULLValue.yaml"
-  val blockSequenceFile = "BlockSequenceSimple.yaml"
+  val singleScalarFloatingPointValueFile = "SlanFeatureTesting/OneScalarFloatingPointValue.yaml"
+  val singleScalarDateValueFile = "SlanFeatureTesting/OneScalarDateValue.yaml"
+  val singleScalarIntValueFile = "SlanFeatureTesting/OneScalarIntValue.yaml"
+  val singleScalarStringValueFile = "SlanFeatureTesting/OneScalarStringValue.yaml"
+  val singleScalarBooleanValueFile = "SlanFeatureTesting/OneScalarBooleanValue.yaml"
+  val singleScalarNullValueFile = "SlanFeatureTesting/OneScalarNULLValue.yaml"
+  val blockSequenceFile = "SlanFeatureTesting/BlockSequenceSimple.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -119,9 +118,9 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   }
 
   behavior of "the Slant parser for lists of values"
-  val seqOfScalarsFile = "SeqOfScalars.yaml"
-  val seqFlowOfScalarsFile = "SeqFlowScalars.yaml"
-  val seqOfSeqOfScalarsFile = "SeqOfSeqOfScalars.yaml"
+  val seqOfScalarsFile = "SlanFeatureTesting/SeqOfScalars.yaml"
+  val seqFlowOfScalarsFile = "SlanFeatureTesting/SeqFlowScalars.yaml"
+  val seqOfSeqOfScalarsFile = "SlanFeatureTesting/SeqOfSeqOfScalars.yaml"
 
   it should "load up and extract the content of the sequence of scalars from a yaml file" in {
     val path = getClass.getClassLoader.getResource(seqOfScalarsFile).getPath
@@ -153,10 +152,10 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   }
 
   behavior of "the Slant parser for complex yaml scripts"
-  val simpleMapFile = "OneSimpleMap.yaml"
+  val simpleMapFile = "SlanFeatureTesting/OneSimpleMap.yaml"
   val keyName = "key"
   val keyValue = "value"
-  val threeSimpleMapsFile = "ThreeSimpleMaps.yaml"
+  val threeSimpleMapsFile = "SlanFeatureTesting/ThreeSimpleMaps.yaml"
 
   it should "load up and extract the content of one simple map from a yaml file" in {
     val path = getClass.getClassLoader.getResource(simpleMapFile).getPath

@@ -25,39 +25,40 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   behavior of "the Slan traslator for SLAN Yaml specifications"
 
-  val agentsFull_Block = "Agents_Full_v1.yaml"
-  val agentsFull_Flow = "Agents_Full_v2.yaml"
-  val agentsFull_manyBehaviorsInState = "Agents_Full_v3.yaml"
-  val agentsGroups1 = "Agents_Groups_v1.yaml"
-  val behaviorMessages_flow = "Behavior_Messages_KeyFlow.yaml"
-  val behaviorMessages_list = "Behavior_Messages_KeyList.yaml"
-  val behaviorIfThenElse_1 = "Behavior_IfThenElse.yaml"
-  val behaviorOneMessage = "Behavior_One_Message.yaml"
-  val behaviorNullMessage = "Behavior_Default_Null.yaml"
-  val behaviorMultipleMessages = "Behavior_Multiple_Messages.yaml"
-  val behaviorPeriodic = "Behavior_Period.yaml"
-  val behaviorPeriodic_null_duration = "Behavior_Period_null_duration.yaml"
-  val behaviorPeriodic_null_timeInterval = "Behavior_Period_null_timeInterval.yaml"
-  val behaviorPeriodic_null_allParams = "Behavior_Period_null_allParams.yaml"
-  val model_v1 = "Model_v1.yaml"
-  val basicYamlTemplate_v1 = "Template_v1.yaml"
-  val basicYamlTemplate_v2 = "Template_v2.yaml"
-  val channelYaml = "Channels.yaml"
-  val messageYaml = "Messages.yaml"
-  val messageDerivedYaml = "Message_Derived.yaml"
-  val resource_generator = "ResourceGenerators.yaml"
-  val resources_v0 = "Resources_v0.yaml"
-  val resources_v1 = "Resources_v1.yaml"
-  val resources_v2 = "Resources_v2.yaml"
-  val resources_v3 = "Resources_v3.yaml"
-  val resources_v4 = "Resources_v4.yaml"
-  val resources_v5 = "Resources_v5.yaml"
-  val resources_v6 = "Resources_v6.yaml"
-  val resources_v7 = "Resources_v7.yaml"
-  val resources_v8 = "Resources_v8.yaml"
-  val resources_v9 = "Resources_v9.yaml"
-  val resources_v10 = "Resources_v10.yaml"
-  val resources_v11 = "Resources_v11.yaml"
+  val agentsFull_Block = "SlanFeatureTesting/Agents_Full_v1.yaml"
+  val agentsFull_Flow = "SlanFeatureTesting/Agents_Full_v2.yaml"
+  val agentsFull_manyBehaviorsInState = "SlanFeatureTesting/Agents_Full_v3.yaml"
+  val agentsFull_localResources_Flow = "SlanFeatureTesting/Agents_Full_v4.yaml"
+  val agentsGroups1 = "SlanFeatureTesting/Agents_Groups_v1.yaml"
+  val behaviorMessages_flow = "SlanFeatureTesting/Behavior_Messages_KeyFlow.yaml"
+  val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
+  val behaviorIfThenElse_1 = "SlanFeatureTesting/Behavior_IfThenElse.yaml"
+  val behaviorOneMessage = "SlanFeatureTesting/Behavior_One_Message.yaml"
+  val behaviorNullMessage = "SlanFeatureTesting/Behavior_Default_Null.yaml"
+  val behaviorMultipleMessages = "SlanFeatureTesting/Behavior_Multiple_Messages.yaml"
+  val behaviorPeriodic = "SlanFeatureTesting/Behavior_Period.yaml"
+  val behaviorPeriodic_null_duration = "SlanFeatureTesting/Behavior_Period_null_duration.yaml"
+  val behaviorPeriodic_null_timeInterval = "SlanFeatureTesting/Behavior_Period_null_timeInterval.yaml"
+  val behaviorPeriodic_null_allParams = "SlanFeatureTesting/Behavior_Period_null_allParams.yaml"
+  val model_v1 = "SlanFeatureTesting/Model_v1.yaml"
+  val basicYamlTemplate_v1 = "SlanFeatureTesting/Template_v1.yaml"
+  val basicYamlTemplate_v2 = "SlanFeatureTesting/Template_v2.yaml"
+  val channelYaml = "SlanFeatureTesting/Channels.yaml"
+  val messageYaml = "SlanFeatureTesting/Messages.yaml"
+  val messageDerivedYaml = "SlanFeatureTesting/Message_Derived.yaml"
+  val resource_generator = "SlanFeatureTesting/ResourceGenerators.yaml"
+  val resources_v0 = "SlanFeatureTesting/Resources_v0.yaml"
+  val resources_v1 = "SlanFeatureTesting/Resources_v1.yaml"
+  val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
+  val resources_v3 = "SlanFeatureTesting/Resources_v3.yaml"
+  val resources_v4 = "SlanFeatureTesting/Resources_v4.yaml"
+  val resources_v5 = "SlanFeatureTesting/Resources_v5.yaml"
+  val resources_v6 = "SlanFeatureTesting/Resources_v6.yaml"
+  val resources_v7 = "SlanFeatureTesting/Resources_v7.yaml"
+  val resources_v8 = "SlanFeatureTesting/Resources_v8.yaml"
+  val resources_v9 = "SlanFeatureTesting/Resources_v9.yaml"
+  val resources_v10 = "SlanFeatureTesting/Resources_v10.yaml"
+  val resources_v11 = "SlanFeatureTesting/Resources_v11.yaml"
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -98,6 +99,17 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
         State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
     )
     val path = getClass.getClassLoader.getResource(agentsFull_manyBehaviorsInState).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a behavior spec with local resources in an agent" in {
+    val expected = List(
+      Agent("Agent Name X",List(LocalResources(List(SlanValue("resource1"), SlanValue("resource2"))),
+        State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),None),
+          StateBehavior(Some("GenerateMessages P or Q"),Some("State X")))),
+        State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
+    )
+    val path = getClass.getClassLoader.getResource(agentsFull_localResources_Flow).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 

@@ -97,8 +97,9 @@ case class Messages2Send(messages: SlanValues) extends SlanConstruct
 
 case class MixFrequence(elements: SlanConstructs) extends SlanConstruct
 
-
 case class GoTo(state: StateReference) extends SlanConstruct
+
+case class LocalResources(localResourceList: SlanConstructs) extends SlanConstruct
 
 case class Group(id: GroupReference, members: SlanConstructs) extends SlanConstruct
 
