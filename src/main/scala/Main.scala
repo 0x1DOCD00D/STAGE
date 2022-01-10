@@ -26,13 +26,26 @@ object Main:
 
   def testMeth(s: String): String => Int => (Int => Int) => Int = s => i => (f: Int => Int) => f(s.toInt + i)
 
+
+  type BasicType = Int
+  enum Expression:
+    case Var(s: String)
+    case Val(v: BasicType)
+    case Add(arg1: Expression, arg2: Expression)
+    private var Env: Map[String, BasicType] = Map("x" -> 1, "y" -> 8)
+    def eval: BasicType =
+      this match {
+        case Add(p1, p2) => p1.eval + p2.eval
+        case Val(v) => v
+        case Var(v) => Env(v)
+      }
+
   @main def runSimulation(): Unit =
     logger.info("Constructing a cloud model...")
     logger.info("Finished cloud simulation...")
-    case class A(p: B)
-    case class B(p: A)
-    val b = B(null)
-    val x = B(A(B(A(b))))
+    import Expression.*
+    val exp = Add(Add(Val(2), Var("y")), Add(Val(1),Val(9)))
+    println(exp.eval)
 //println(processX(x=>x+1)(123.45f))
 //    println(testMeth("10")())
 

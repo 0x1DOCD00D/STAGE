@@ -25,6 +25,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
   behavior of "the Slan traslator for SLAN Yaml specifications"
 
+  val fullSimulation = "SlanFeatureTesting/Full_Simulation_v1.yaml"
   val agentsFull_Block = "SlanFeatureTesting/Agents_Full_v1.yaml"
   val agentsFull_Flow = "SlanFeatureTesting/Agents_Full_v2.yaml"
   val agentsFull_manyBehaviorsInState = "SlanFeatureTesting/Agents_Full_v3.yaml"
@@ -429,5 +430,24 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
           ModelDeployment("Akka Configuration",List())))
     )
     val path = getClass.getClassLoader.getResource(model_v1).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a full semantically meaningless simulation" in {
+    val expected = List(
+      Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+      Agent("Agent Name X",List(State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))), State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
+      Group("Group Name",List(GroupAgent("Agent Name X",List()),
+        ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),SlanValue(2)))),
+      Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))),
+      Agent("Agent Name Y",List(State(None,List()))),
+      Channel("TalksT0",List(MessageResponseBehavior(List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY")),
+        List(SlanValue("behaviorAttached2Channel")))),List()), MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY")), List(SlanValue("moreBehaviors"))))),
+      Message(List(MessageDeclaration("Message Name",None)),List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))),
+      ModelGraph("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))), AgentPopulation("Agent Name Y",List()),
+        ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y")))))))
+    )
+    val path = getClass.getClassLoader.getResource(fullSimulation).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }

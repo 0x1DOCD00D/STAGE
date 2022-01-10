@@ -1,0 +1,47 @@
+Agents:
+  Agent Name X:
+    null: #this is the initial state
+      GenerateMessages X, W, and U: State A
+    State A:
+      stateAbehavior:
+  Agent Name Y:
+
+  Groups:
+    Group Name:
+      Agent Name X:
+      Resources:
+        ? Causal: someBasicResourceListOfValues
+        : 2
+
+  Channels:
+    TalksT0:
+      ? [ MessageX, MessageY ]: behaviorAttached2Channel
+      ? - MessageXX
+        - MessageYY
+      : moreBehaviors
+
+  Behaviors:
+    Behavior 4 Messages 1:
+      ? [ MessageX, MessageY,  MessageZ ]:
+        Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
+
+  Resources:
+    ? queue: someBasicResourceListOfValues
+    : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list
+
+Messages:
+  Message Name:
+    Some Fixed Value: 100
+
+Models:
+  Model Name:
+    Agents:
+      # specify how many agents to create
+      Agent Name X: quantity 1
+      Agent Name Y:
+
+    Graph Name X:
+      # this is a source agent
+      Agent Name X:
+        # that is connected via this channel to a sink agent
+        TalksT0: Agent Name Y
