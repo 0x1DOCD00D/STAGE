@@ -14,7 +14,7 @@ val scalacticVersion = "3.2.9"
 val nscalatimeVersion = "2.30.0"
 val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
-val guavaVersion = "30.1.1-jre"
+val guavaVersion = "31.0.1-jre"
 val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
 val snakeYamlVersion = "2.3"
@@ -56,6 +56,6 @@ lazy val root = (project in file("."))
     ),
     homepage := Some(url("https://github.com/0x1DOCD00D/STAGE")),
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
-    scriptedBufferLog := false,
     publishMavenStyle := false,
+    Global / onChangedBuildSource := IgnoreSourceChanges
   )
