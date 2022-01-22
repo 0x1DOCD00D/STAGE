@@ -35,6 +35,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
   val behaviorIfThenElse_1 = "SlanFeatureTesting/Behavior_IfThenElse.yaml"
   val behaviorOneMessage = "SlanFeatureTesting/Behavior_One_Message.yaml"
+  val behaviorOneMessageIFTHEN = "SlanFeatureTesting/Behavior_One_Message_IFTHEN.yaml"
   val behaviorNullMessage = "SlanFeatureTesting/Behavior_Default_Null.yaml"
   val behaviorMultipleMessages = "SlanFeatureTesting/Behavior_Multiple_Messages.yaml"
   val behaviorPeriodic = "SlanFeatureTesting/Behavior_Period.yaml"
@@ -60,6 +61,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v9 = "SlanFeatureTesting/Resources_v9.yaml"
   val resources_v10 = "SlanFeatureTesting/Resources_v10.yaml"
   val resources_v11 = "SlanFeatureTesting/Resources_v11.yaml"
+
+  val socialMediaCompanySimulation = "Simulations/SocialMediaCompany.yaml"
+
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
   val floatScalarValue = 123450.6789
@@ -68,8 +72,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate an agents spec" in {
     val path1 = getClass.getClassLoader.getResource(agentsFull_Flow).getPath
     val path2 = getClass.getClassLoader.getResource(agentsFull_Block).getPath
-    val res1 = SlanTranslator(SlantParser.convertJ2S(SlantParser(path1).yamlModel))
-    val res2 = SlanTranslator(SlantParser.convertJ2S(SlantParser(path2).yamlModel))
+    val flowResult = SlanTranslator(SlantParser.convertJ2S(SlantParser(path1).yamlModel))
+    val blockResult = SlanTranslator(SlantParser.convertJ2S(SlantParser(path2).yamlModel))
     val expected1 = Agent("Agent Name X",
       List(
         State(Some("Init"), List(StateBehavior(Some("GenerateMessages X, W, and U"), Some("State A")))),
@@ -84,10 +88,10 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val sb = state2Behavior.get(as.head.asInstanceOf[State])
     val br = behavior2Ref.get(sb.head.asInstanceOf[StateBehavior])
     br shouldBe Some("behaviorWithOneState")
-    res1.head shouldBe expected1
-    res1.tail.head shouldBe expected2
-    res2.head shouldBe expected1
-    res2.tail.head shouldBe expected2
+    flowResult.head shouldBe expected1
+    flowResult.tail.head shouldBe expected2
+    blockResult.head shouldBe expected1
+    blockResult.tail.head shouldBe expected2
   }
 
   it should "translate a behavior spec with multiple behaviors for a single state" in {
@@ -451,3 +455,349 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val path = getClass.getClassLoader.getResource(fullSimulation).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
+
+  it should "translate a behavior with a graph resource and a single message to respond" in {
+    val expected = List(
+
+      Behavior("HandleFriendRequests",List(MessageResponseBehavior(List(SlanValue("BeMyFriend")),
+        List(IfThenElse(List(ROPEqual(List(FnSend(List(SlanValue("generatorOfFriendAcceptances"), CorrelationToken(SlanValue("friendRequestCorrID")))), SlanValue("AcceptedFriend"))),
+          Then(List(FnUpdate(List(Reference(Some(SlanValue("TheFriendsGraph")),
+            Some(List(Reference(Some(SlanValue("AddEdge")),Some(List(Reference(Some(SlanValue("this")),Some(List(Reference(Some(SlanValue("sender")),
+              Some(List(Reference(Some(SlanValue(true)),None)))))))))))))))))))))))
+    )
+    val path = getClass.getClassLoader.getResource(behaviorOneMessageIFTHEN).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+
+  it should "translate a simulation of the social media company" in {
+    val expected = List(
+    /*
+        generatorOfInsultResponseMessages:
+          ? [Opinion: 0.2, Fact: 0.1, Insult: 0.7]
+          :
+            departureGenerator
+
+    */
+
+      Resource(ResourceTag("generatorOfInsultResponseMessages",None),
+        List(ResourcePeriodicGenerator(List(ResourceProbability("Opinion",SlanValue(0.2)),
+          ResourceProbability("Fact",SlanValue(0.1)),
+          ResourceProbability("Insult",SlanValue(0.7)), SlanValue("departureGenerator"))))),
+
+      /*
+            generatorOfMessages:
+            ? [Opinion: 0.6, Fact: 0.3, Insult: 0.2]
+            : arrivalGenerator
+      */
+      Resource(ResourceTag("generatorOfMessages",None),
+        List(ResourcePeriodicGenerator(List(ResourceProbability("Opinion",SlanValue(0.6)),
+          ResourceProbability("Fact",SlanValue(0.3)), ResourceProbability("Insult",SlanValue(0.2)), SlanValue("arrivalGenerator"))))),
+
+      /*
+          acceptRejectGenerator:
+            Uniform: [0, 1]
+      * */
+      Resource(ResourceTag("acceptRejectGenerator",None),
+        List(Resource(ResourceTag("Uniform",None),List(SlanValue(0), SlanValue(1))))),
+      /*
+        ? graph: TheFriendsGraph
+        : null
+      * */
+      Resource(ResourceTag("TheFriendsGraph",Some("graph")),List()),
+      /*
+        generatorOfFriendAcceptances:
+        ? [AcceptedFriend: 0.6, RejectedFriend: 0.4]
+        : 1
+      * */
+      Resource(ResourceTag("generatorOfFriendAcceptances",None),
+        List(ResourcePeriodicGenerator(
+          List(ResourceProbability("AcceptedFriend",SlanValue(0.6)),
+            ResourceProbability("RejectedFriend",SlanValue(0.4)), SlanValue(1))))),
+
+      /*
+        departureGenerator:
+          Uniform: [1, 3]
+      */
+      Resource(ResourceTag("departureGenerator",None),List(
+        Resource(ResourceTag("Uniform",None),List(SlanValue(1), SlanValue(3))))),
+
+      /*
+        generatorOfAgents:
+          Person: arrivalGenerator
+      * */
+      Resource(ResourceTag("generatorOfAgents",None),List(SlanKeyValue("Person","arrivalGenerator"))),
+
+      /*
+        generatorOfEncouragementResponseMessages:
+        ? [Opinion: 0.5, Fact: 0.4, Insult: 0.7]
+        :
+          arrivalGenerator
+      * */
+      Resource(ResourceTag("generatorOfEncouragementResponseMessages",None),
+        List(ResourcePeriodicGenerator(List(
+          ResourceProbability("Opinion",SlanValue(0.5)), ResourceProbability("Fact",SlanValue(0.4)),
+          ResourceProbability("Insult",SlanValue(0.7)), SlanValue("arrivalGenerator"))))),
+
+      /*
+        generatorOfFriends:
+          BeMyFriend: arrivalGenerator
+      * */
+      Resource(ResourceTag("generatorOfFriends",None),List(SlanKeyValue("BeMyFriend","arrivalGenerator"))),
+
+      /*
+      arrivalGenerator:
+        Poisson: [3, 14]
+      * */
+      Resource(ResourceTag("arrivalGenerator",None),
+        List(Resource(ResourceTag("Poisson",None),List(SlanValue(3), SlanValue(14))))),
+
+      /*
+        TheCompany:
+          null:
+            ...NewPersonsJoinSocialMediaPlatform:
+            ...PersonLeavesSocialMediaPlatform:
+      * */
+      Agent("TheCompany",List(State(None,
+        List(StateBehavior(Some("...NewPersonsJoinSocialMediaPlatform"),None),
+          StateBehavior(Some("...PersonLeavesSocialMediaPlatform"),None))))),
+
+      /*
+          Respond2FactsAndOpinions:
+            Insult:
+              - Fn_Send: [generatorOfEncouragementResponseMessages, "~>": messageResponseCorrID]
+              - Fn_Send: [generatorOfInsultResponseMessages]
+      */
+      Behavior("Respond2FactsAndOpinions",
+        List(MessageResponseBehavior(List(SlanValue("Insult")),
+          List(FnSend(List(SlanValue("generatorOfEncouragementResponseMessages"), CorrelationToken(SlanValue("messageResponseCorrID")))),
+            FnSend(List(SlanValue("generatorOfInsultResponseMessages"))))))),
+
+      /*
+          HandleInsults:
+            Insult:
+              - Fn_Send: [generatorOfInsultResponseMessages, "~>": messageResponseCorrID]
+              - Fn_Send: [generatorOfInsultResponseMessages]
+              - Fn_Update: [goodWill, Fn_Substract: [goodWill, 0.01]]
+      * */
+      Behavior("HandleInsults",
+        List(MessageResponseBehavior(List(SlanValue("Insult")),
+          List(FnSend(List(SlanValue("generatorOfInsultResponseMessages"), CorrelationToken(SlanValue("messageResponseCorrID")))),
+            FnSend(List(SlanValue("generatorOfInsultResponseMessages"))),
+            FnUpdate(List(SlanValue("goodWill"), FnSubstract(List(SlanValue("goodWill"), SlanValue(0.01))))))))),
+
+      /*
+          ...PersonLeavesSocialMediaPlatform:
+            ? 1000: null
+            :
+              IF:
+                ">":
+                  - acceptRejectGenerator
+                  - 0.9
+                THEN:
+                  Fn_ForEach:
+                    Fn_Select: # this function provides some randomly selected nodes
+                      TheFriendsGraph: departureGenerator
+                      # for each of the selected nodes perform some operation/function
+                    Fn_Send: [this, Unfriend]
+                    Fn_Remove: [this, TheFriendsGraph]
+                    Fn_Destroy: this
+      * */
+      PeriodicBehavior("...PersonLeavesSocialMediaPlatform",
+        List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
+          IfThenElse(
+            List(ROPGreater(
+              List(SlanValue("acceptRejectGenerator"), SlanValue(0.9))),
+              Then(
+                List(FnForEach(List(FnSelect(List(Reference(Some(SlanValue("TheFriendsGraph")), Some(List(Reference(Some(SlanValue("departureGenerator")),None)))))),
+                  FnSend(List(SlanValue("this"), SlanValue("Unfriend"))),
+                  FnRemove(List(SlanValue("this"), SlanValue("TheFriendsGraph"))),
+                  FnDestroy(List(SlanValue("this"))))))))))),
+
+      /*
+          HandleFriendRequests: #used
+            BeMyFriend:
+              IF:
+                "==":
+                  - Fn_Send: [generatorOfFriendAcceptances, "~>": friendRequestCorrID]
+                  - AcceptedFriend
+                THEN:
+                  Fn_Update:
+                    TheFriendsGraph: [this, sender, true]
+      * */
+      Behavior("HandleFriendRequests",List(MessageResponseBehavior(List(SlanValue("BeMyFriend")),
+        List(IfThenElse(
+          List(ROPEqual(
+            List(FnSend(List(SlanValue("generatorOfFriendAcceptances"), CorrelationToken(SlanValue("friendRequestCorrID")))), SlanValue("AcceptedFriend"))),
+            Then(List(FnUpdate(
+              List(Reference(Some(SlanValue("TheFriendsGraph")),Some(List(Reference(Some(SlanValue("this")),None), Reference(Some(SlanValue("sender")),None), Reference(Some(SlanValue(true)),None)))))))))))))),
+
+      /*
+      Transmissions: # send message to some friend
+        null: # for all messages
+          Fn_Send:
+            Fn_Select:
+              TheFriendsGraph:
+                Sender:
+                  RelatedTo:
+              departureGenerator:
+      */
+      Behavior("Transmissions",List(MessageResponseBehavior(List(),
+        List(FnSend(
+          List(FnSelect(List(Reference(Some(SlanValue("TheFriendsGraph")),
+            Some(List(Reference(Some(SlanValue("Sender")),
+              Some(List(Reference(Some(SlanValue("RelatedTo")),Some(List(Reference(None,None)))))))))),
+            Reference(Some(SlanValue("departureGenerator")),Some(List(Reference(None,None)))))))))))),
+
+      /*
+      ...Post2Friends:
+        ? 100: null
+        :
+          IF:
+            ">":
+              - TheFriendsGraph: EdgeCount
+              - 0
+            THEN:
+              Fn_Send: [generatorOfMessages, "~>": friendRequestCorrID]
+      */
+      PeriodicBehavior("...Post2Friends",List(PeriodicBehaviorFiringDuration(SlanValue(100),None),
+        IfThenElse(
+          List(ROPGreater(
+            List(Reference(Some(SlanValue("TheFriendsGraph")),Some(List(Reference(Some(SlanValue("EdgeCount")),None)))), SlanValue(0))),
+            Then(List(FnSend(List(SlanValue("generatorOfMessages"), CorrelationToken(SlanValue("friendRequestCorrID")))))))))),
+
+      /*
+        HandleSupport:
+          StrongSupport:
+            - Fn_Send: [generatorOfEncouragementResponseMessages, "~>": messageResponseCorrID]
+            - Fn_Send: [generatorOfEncouragementResponseMessages]
+            - Fn_Update: [goodWill, Fn_Add: [goodWill, 0.005]]
+      */
+      Behavior("HandleSupport",
+        List(MessageResponseBehavior(List(SlanValue("StrongSupport")),
+          List(FnSend(List(SlanValue("generatorOfEncouragementResponseMessages"), CorrelationToken(SlanValue("messageResponseCorrID")))),
+            FnSend(List(SlanValue("generatorOfEncouragementResponseMessages"))),
+            FnUpdate(List(SlanValue("goodWill"),
+              FnAdd(List(SlanValue("goodWill"), SlanValue(0.005))))))))),
+
+
+      /*
+          HandleFriendRequestResponses:
+            ? [AcceptedFriend, RejectedFriend]:
+              IF:
+                - AcceptedFriend
+                - THEN:
+                    Fn_Update:
+                      TheFriendsGraph: [this, sender, true]
+      */
+      Behavior("HandleFriendRequestResponses",
+        List(MessageResponseBehavior(List(SlanValue("AcceptedFriend"), SlanValue("RejectedFriend")),
+          List(IfThenElse(List(SlanValue("AcceptedFriend"),
+            Then(
+              List(FnUpdate(
+                List(Reference(Some(SlanValue("TheFriendsGraph")),
+                  Some(List(Reference(Some(SlanValue("this")),None), Reference(Some(SlanValue("sender")),None), Reference(Some(SlanValue(true)),None)))))))))))))),
+
+      /*
+          ...NewPersonsJoinSocialMediaPlatform:
+        ? 1000: null
+        :
+        Fn_Add:
+          Fn_Create: generatorOfAgents
+          TheFriendsGraph:
+      * */
+      PeriodicBehavior("...NewPersonsJoinSocialMediaPlatform",
+        List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
+          FnAdd(
+            List(FnCreate(List(SlanValue("generatorOfAgents"))),
+              Reference(Some(SlanValue("TheFriendsGraph")),Some(List(Reference(None,None)))))))),
+
+      /*
+        Person:
+          null:
+            ...Post2Friends: respond2Messages
+
+          # if no behavior is provided in a state to handle some messages then these messages are discarded
+          respond2Messages:
+            HandleFriendRequests:
+            HandleInsults: offended
+            HandleSupport: happy
+            Respond2FactsAndOpinions:
+
+          offended:
+            HandleFriendRequests: respond2Messages
+            HandleSupport: respond2Messages
+
+          happy:
+            HandleFriendRequests:
+            HandleInsults: respond2Messages
+            Respond2FactsAndOpinions: respond2Messages
+
+          Resources:
+            goodWill: 100
+      */
+      Agent("Person",
+        List(State(None,List(StateBehavior(Some("...Post2Friends"),Some("respond2Messages")))),
+          LocalResources(List(SlanKeyValue("goodWill",100))),
+          State(Some("offended"),List(StateBehavior(Some("HandleFriendRequests"),Some("respond2Messages")),
+            StateBehavior(Some("HandleSupport"),Some("respond2Messages")))),
+          State(Some("happy"),List(StateBehavior(Some("HandleFriendRequests"),None),
+            StateBehavior(Some("HandleInsults"),Some("respond2Messages")),
+            StateBehavior(Some("Respond2FactsAndOpinions"),Some("respond2Messages")))),
+          State(Some("respond2Messages"),List(StateBehavior(Some("HandleFriendRequests"),None),
+            StateBehavior(Some("HandleInsults"),Some("offended")),
+            StateBehavior(Some("HandleSupport"),Some("happy")),
+            StateBehavior(Some("Respond2FactsAndOpinions"),None))))),
+
+      /*
+        Channels:
+          TalksT0:
+            null: Transmissions
+      */
+      Channel("TalksT0",List(MessageResponseBehavior(List(),List(SlanValue("Transmissions"))))),
+
+      /*
+        Messages:
+          BeMyFriend:
+          Unfriend:
+          AcceptedFriend:
+          RejectedFriend:
+          Opinion:
+          Fact:
+          Insult:
+          StrongSupport:
+      */
+      Message(List(MessageDeclaration("Opinion",None)),List()),
+      Message(List(MessageDeclaration("StrongSupport",None)),List()),
+      Message(List(MessageDeclaration("Unfriend",None)),List()),
+      Message(List(MessageDeclaration("AcceptedFriend",None)),List()),
+      Message(List(MessageDeclaration("RejectedFriend",None)),List()),
+      Message(List(MessageDeclaration("Insult",None)),List()),
+      Message(List(MessageDeclaration("BeMyFriend",None)),List()),
+      Message(List(MessageDeclaration("Fact",None)),List()),
+      /*
+        Models:
+          SocialMediaSimulation:
+            Agents:
+              TheCompany: 1
+
+            SimGraph:
+              Person:
+                TalksT0: Person
+
+            Deployment:
+              Nodes: # if no names or ip addresses provided then switch to autodiscovery
+                - cancun
+                - austin
+              Akka Configuration: # this section will contain akka configuration data provided in app.conf files.
+      */
+      ModelGraph("SocialMediaSimulation",
+        List(AgentPopulation("TheCompany",List(SlanValue(1))),
+          ModelGraph("SimGraph",List(Agent2AgentViaChannel("Person",List(Channel2Agent("TalksT0","Person"))))),
+          ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))),
+          ModelDeployment("Akka Configuration",List())))
+    )
+    val path = getClass.getClassLoader.getResource(socialMediaCompanySimulation).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+

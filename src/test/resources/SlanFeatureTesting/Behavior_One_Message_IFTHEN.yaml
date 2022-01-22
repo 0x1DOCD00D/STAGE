@@ -1,0 +1,14 @@
+Agents:
+  Behaviors:
+    HandleFriendRequests:
+      BeMyFriend:
+        IF:
+          "==":
+            - Fn_Send: [generatorOfFriendAcceptances, "~>": friendRequestCorrID]
+            - AcceptedFriend
+          THEN:
+            Fn_Update:
+              TheFriendsGraph:
+                AddEdge:
+                  this:
+                    sender: true

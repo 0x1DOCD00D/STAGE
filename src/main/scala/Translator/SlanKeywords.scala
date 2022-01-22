@@ -26,6 +26,7 @@ object SlanKeywords:
   val ParameterPrefix = "parameter"
   val Seed = "seed"
   val Constraints = "constraints"
+  val Correlation = "~>"
   val LessThen = "<"
   val LessEqual = "<="
   val GreaterThen = ">"
@@ -48,8 +49,10 @@ object SlanKeywords:
   val IF = "if"
   val THEN = "then"
   val ELSE = "else"
+  val ELSEIF = "elseif"
   val AND = "and"
   val OR = "or"
+  val XOR = "xor"
   val NOT = "not"
   val PARENT = "parent"
   val CHILDREN = "children"
@@ -74,6 +77,7 @@ object SlanKeywords:
   val Fn_Send: String = FnPrefix + "send"
   //apply some behavior to each value in a collection
   val Fn_ForEach: String = FnPrefix + "foreach"
+  val Fn_Select: String = FnPrefix + "select"
   //arithmetic operations
   val Fn_Add: String = FnPrefix + "add"
   val Fn_Inc: String = FnPrefix + "inc"

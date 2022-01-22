@@ -1,0 +1,174 @@
+Agents:
+  Person:
+    null:
+      ...Post2Friends: respond2Messages
+
+    # if no behavior is provided in a state to handle some messages then these messages are discarded
+    respond2Messages:
+      HandleFriendRequests:
+      HandleInsults: offended
+      HandleSupport: happy
+      Respond2FactsAndOpinions:
+
+    offended:
+      HandleFriendRequests: respond2Messages
+      HandleSupport: respond2Messages
+
+    happy:
+      HandleFriendRequests:
+      HandleInsults: respond2Messages
+      Respond2FactsAndOpinions: respond2Messages
+
+    Resources:
+      goodWill: 100
+
+  TheCompany:
+    null:
+      ...NewPersonsJoinSocialMediaPlatform:
+      ...PersonLeavesSocialMediaPlatform:
+
+  Behaviors:
+    HandleFriendRequests: #used
+      BeMyFriend:
+        IF:
+          "==":
+            - Fn_Send: [generatorOfFriendAcceptances, "~>": friendRequestCorrID]
+            - AcceptedFriend
+          THEN:
+            Fn_Update:
+              TheFriendsGraph: [this, sender, true]
+
+    HandleFriendRequestResponses:
+      ? [AcceptedFriend, RejectedFriend]:
+        IF:
+          - AcceptedFriend
+          - THEN:
+              Fn_Update:
+                TheFriendsGraph: [this, sender, true]
+
+    HandleInsults:
+      Insult:
+        - Fn_Send: [generatorOfInsultResponseMessages, "~>": messageResponseCorrID]
+        - Fn_Send: [generatorOfInsultResponseMessages]
+        - Fn_Update: [goodWill, Fn_Substract: [goodWill, 0.01]]
+
+    HandleSupport:
+      StrongSupport:
+        - Fn_Send: [generatorOfEncouragementResponseMessages, "~>": messageResponseCorrID]
+        - Fn_Send: [generatorOfEncouragementResponseMessages]
+        - Fn_Update: [goodWill, Fn_Add: [goodWill, 0.005]]
+
+    Respond2FactsAndOpinions: #used
+      Insult:
+        - Fn_Send: [generatorOfEncouragementResponseMessages, "~>": messageResponseCorrID]
+        - Fn_Send: [generatorOfInsultResponseMessages]
+
+    Transmissions: # send message to some friend
+      null: # for all messages
+        Fn_Send:
+          Fn_Select:
+            TheFriendsGraph:
+              Sender:
+                RelatedTo:
+            departureGenerator:
+
+    ...Post2Friends:
+      ? 100: null
+      :
+        IF:
+          ">":
+            - TheFriendsGraph: EdgeCount
+            - 0
+          THEN:
+            Fn_Send: [generatorOfMessages, "~>": friendRequestCorrID]
+
+    ...NewPersonsJoinSocialMediaPlatform:
+      ? 1000: null
+      :
+        Fn_Add:
+          Fn_Create: generatorOfAgents
+          TheFriendsGraph:
+
+    ...PersonLeavesSocialMediaPlatform:
+      ? 1000: null
+      :
+        IF:
+          ">":
+            - acceptRejectGenerator
+            - 0.9
+          THEN:
+            Fn_ForEach:
+              Fn_Select: # this function provides some randomly selected nodes
+                TheFriendsGraph: departureGenerator
+                # for each of the selected nodes perform some operation/function
+              Fn_Send: [this, Unfriend]
+              Fn_Remove: [this, TheFriendsGraph]
+              Fn_Destroy: this
+
+
+  Channels:
+    TalksT0:
+      null: Transmissions
+
+  Resources:
+    ? graph: TheFriendsGraph
+    : null
+
+    generatorOfFriends:
+      BeMyFriend: arrivalGenerator
+
+    generatorOfFriendAcceptances:
+      ? [AcceptedFriend: 0.6, RejectedFriend: 0.4]
+      : 1
+
+    generatorOfMessages:
+      ? [Opinion: 0.6, Fact: 0.3, Insult: 0.2]
+      :
+        arrivalGenerator
+
+    generatorOfInsultResponseMessages:
+      ? [Opinion: 0.2, Fact: 0.1, Insult: 0.7]
+      :
+        departureGenerator
+
+    generatorOfEncouragementResponseMessages:
+      ? [Opinion: 0.5, Fact: 0.4, Insult: 0.7]
+      :
+        arrivalGenerator
+
+    generatorOfAgents:
+      Person: arrivalGenerator
+
+    arrivalGenerator:
+      Poisson: [3, 14]
+
+    departureGenerator:
+      Uniform: [1, 3]
+
+    acceptRejectGenerator:
+      Uniform: [0, 1]
+
+Messages:
+  BeMyFriend:
+  Unfriend:
+  AcceptedFriend:
+  RejectedFriend:
+  Opinion:
+  Fact:
+  Insult:
+  StrongSupport:
+
+Models:
+  SocialMediaSimulation:
+    Agents:
+      TheCompany: 1
+
+    SimGraph:
+      Person:
+        TalksT0: Person
+
+    Deployment:
+      Nodes: # if no names or ip addresses provided then switch to autodiscovery
+        - cancun
+        - austin
+      Akka Configuration: # this section will contain akka configuration data provided in app.conf files.

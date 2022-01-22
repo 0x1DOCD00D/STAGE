@@ -39,15 +39,21 @@ case class PeriodicBehavior(id: BehaviorMandatoryReference, actions: SlanConstru
 
 case class MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs) extends SlanConstruct
 
+case class CorrelationToken(ID: SlanValue) extends SlanConstruct
+
 case class IfThenElse(body: SlanConstructs) extends SlanConstruct
 
 case class Then(thenActions: SlanConstructs) extends SlanConstruct
 
 case class Else(elseActions: SlanConstructs) extends SlanConstruct
 
+case class ElseIf(elseIfActions: SlanConstructs) extends SlanConstruct
+
 case class And(relops: SlanConstructs) extends SlanConstruct
 
 case class Or(relops: SlanConstructs) extends SlanConstruct
+
+case class Xor(relops: SlanConstructs) extends SlanConstruct
 
 case class Not(relops: SlanConstructs) extends SlanConstruct
 
@@ -70,6 +76,8 @@ case class FnCreate(operands: SlanConstructs) extends SlanConstruct
 case class FnDestroy(operands: SlanConstructs) extends SlanConstruct
 
 case class FnSend(operands: SlanConstructs) extends SlanConstruct
+
+case class FnSelect(operands: SlanConstructs) extends SlanConstruct
 
 case class FnForEach(operands: SlanConstructs) extends SlanConstruct
 

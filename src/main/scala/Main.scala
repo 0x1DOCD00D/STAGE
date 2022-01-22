@@ -43,6 +43,7 @@ object Main:
   @main def runSimulation(): Unit =
     logger.info("Constructing a cloud model...")
     logger.info("Finished cloud simulation...")
+
     import Expression.*
     val exp = Add(Add(Val(2), Var("y")), Add(Val(1),Val(9)))
     println(exp.eval)

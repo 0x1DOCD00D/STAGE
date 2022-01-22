@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,15 +18,11 @@ import cats.kernel.Eq
 
 class IfThenElseProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case entry: String if entry.toUpperCase === NOT.toUpperCase => List(Not((new NotProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === AND.toUpperCase || entry.toUpperCase === OR.toUpperCase || entry.toUpperCase === LessThen.toUpperCase ||
-        entry.toUpperCase === LessEqual.toUpperCase || entry.toUpperCase === GreaterThen.toUpperCase ||
-        entry.toUpperCase === GreaterEqual.toUpperCase || entry.toUpperCase === EqualTo.toUpperCase
-            =>  (new RelOpProcessor).commandProcessor(convertJ2S(v))
+    case v: (_, _) => convertJ2S(v(0)) match {
       case entry: String if entry.toUpperCase === THEN.toUpperCase => List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
       case entry: String if entry.toUpperCase === ELSE.toUpperCase => List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+      case entry: String if entry.toUpperCase === ELSEIF.toUpperCase => List(ElseIf((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
     }
 
     case entry: YamlPrimitiveTypes => List(SlanValue(entry))
