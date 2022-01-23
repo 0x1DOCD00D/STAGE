@@ -63,6 +63,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v11 = "SlanFeatureTesting/Resources_v11.yaml"
 
   val socialMediaCompanySimulation = "Simulations/SocialMediaCompany.yaml"
+  val primitiveSimulation = "Simulations/PrimitiveMessageExchange.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -801,3 +802,106 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
+  it should "translate a primitive simulation for two agents exchanging messages" in {
+    val expected = List(
+      /*
+        Person:
+          null:
+            ...SendMessage: respond2Messages
+
+          respond2Messages:
+            Respond2Message:
+      * */
+      Agent("Person",
+        List(State(None,List(StateBehavior(Some("...SendMessage"),Some("respond2Messages")))),
+          State(Some("respond2Messages"),List(StateBehavior(Some("Respond2Message"),None))))),
+
+      /*
+          Respond2Message: #used
+            MyOpinionAboutYou:
+              IF:
+                ">=":
+                  - messageCounter
+                  - maxMessagesThreshold
+                THEN:
+                  Fn_Send: IdoNotCareResponse
+                  Fn_Destroy: this
+                ELSE:
+                  Fn_Send: IdoNotCareResponse
+      * */
+      Behavior("Respond2Message",
+        List(MessageResponseBehavior(List(SlanValue("MyOpinionAboutYou")),
+          List(IfThenElse(
+            List(ROPGreaterEqual(
+              List(SlanValue("messageCounter"), SlanValue("maxMessagesThreshold"))),
+              Then(List(FnSend(List(SlanValue("IdoNotCareResponse"))),
+                FnDestroy(List(SlanValue("this"))))),
+              Else(List(FnSend(List(SlanValue("IdoNotCareResponse"))))))))))),
+      /*
+        Transmissions:
+          IdoNotCareResponse:
+            Fn_Inc: responseCounter
+      * */
+      Behavior("Transmissions",
+        List(MessageResponseBehavior(List(SlanValue("IdoNotCareResponse")),
+          List(FnInc(List(SlanValue("responseCounter"))))))),
+
+      /*
+          ...SendMessage:
+            ? 1000: null
+            :
+              Fn_Send: MyOpinionAboutYou
+              Fn_Inc: messageCounter
+      * */
+      PeriodicBehavior("...SendMessage",
+        List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
+          FnSend(List(SlanValue("MyOpinionAboutYou"))), FnInc(List(SlanValue("messageCounter"))))),
+
+      /*
+        Channels:
+          TalksT0:
+            null: Transmissions
+      * */
+      Channel("TalksT0",List(MessageResponseBehavior(List(),List(SlanValue("Transmissions"))))),
+
+      /*
+        Resources:
+          messageCounter: 0
+          responseCounter: 0
+          maxMessagesThreshold: 10
+      * */
+      Resource(ResourceTag("messageCounter",None),List(SlanValue(0))),
+      Resource(ResourceTag("responseCounter",None),List(SlanValue(0))),
+      Resource(ResourceTag("maxMessagesThreshold",None),List(SlanValue(10))),
+
+      /*
+      Messages:
+        MyOpinionAboutYou:
+        IdoNotCareResponse:
+      * */
+      Message(List(MessageDeclaration("MyOpinionAboutYou",None)),List()),
+      Message(List(MessageDeclaration("IdoNotCareResponse",None)),List()),
+
+      /*
+        Models:
+          SocialMediaSimulation:
+            Agents:
+              Person: 2
+
+            SimGraph:
+              Person:
+                TalksT0: Person
+
+            Deployment:
+              Nodes: # if no names or ip addresses provided then switch to autodiscovery
+                - cancun
+                - austin
+              Akka Configuration: # this section will contain akka configuration data provided in app.conf files.
+      * */
+      ModelGraph("SocialMediaSimulation",List(AgentPopulation("Person",List(SlanValue(2))),
+        ModelGraph("SimGraph",List(Agent2AgentViaChannel("Person",List(Channel2Agent("TalksT0","Person"))))),
+        ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))), ModelDeployment("Akka Configuration",List())))
+    )
+    val path = getClass.getClassLoader.getResource(primitiveSimulation).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
