@@ -1,6 +1,3 @@
-import org.apache.commons.math4.random.{CorrelatedRandomVectorGenerator, GaussianRandomGenerator}
-import org.apache.commons.rng.simple.RandomSource
-import org.apache.commons.statistics.distribution.{NormalDistribution, UniformContinuousDistribution}
 import org.objectweb.asm.{ClassReader, ClassWriter}
 /*
  *
@@ -16,41 +13,20 @@ import scalaz.Scalaz.{ToOrderOps, doubleInstance}
 
 object Various extends App {
 
-  import com.github.nscala_time.time.Imports._
-  import org.scalactic._
-  import TripleEquals._
-  import scalaz._
-  import std.option._, std.list._
-  import syntax.bind._
-  import org.apache.commons.rng.UniformRandomProvider;
-
-  import org.apache.commons.math4.linear.MatrixUtils
-  import org.apache.commons.math4.linear.RealMatrix
-
-  val ud = new UniformContinuousDistribution(0, 1)
-  val pud = ud.inverseCumulativeProbability(0.3)
-  val nd = new NormalDistribution(100, 10)
-  val value = nd.inverseCumulativeProbability(0.9)
+  import com.github.nscala_time.time.Imports.*
+  import org.scalactic.*
+  import TripleEquals.*
+  import scalaz.*
+  import std.list.*
+  import std.option.*
+  import syntax.bind.*
 
   val ordering = 2.0 ?|? 3.0
 
   val c = 3 * 4 * 0.5
   val mean: Array[Double] = Array(1, 2)
   val cov: Array[Array[Double]] = Array(Array(9, c), Array(c, 16))
-  val covariance: RealMatrix = MatrixUtils.createRealMatrix(cov)
 
-  // Create (and possibly seed) a PRNG (could use any of the CM-provided generators).
-  val seed = 17399225432L; // Fixed seed means same results every time
-  val rg = RandomSource.create(RandomSource.MT, seed);
-
-  // Create a GaussianRandomGenerator using "rg" as its source of randomness.
-  val rawGenerator = new GaussianRandomGenerator(rg);
-
-  // Create a CorrelatedRandomVectorGenerator using "rawGenerator" for the components.
-  val generator = new CorrelatedRandomVectorGenerator(mean, covariance, 1.0e-12 * covariance.getNorm(), rawGenerator);
-
-  // Use the generator to generate correlated vectors.
-  val randomVector = generator.nextVector();
 
   val res1 = Apply[Option].apply2(some(1), some(2))((a, b) => a + b)
 
@@ -63,11 +39,11 @@ object Various extends App {
 
   println(DateTime.now() + 2.months) // returns org.joda.time.DateTime = 2009-06-27T13:25:59.195-07:00
 
-  DateTime.nextMonth < DateTime.now() + 2.months // returns Boolean = true
+  DateTime.nextMonth() < DateTime.now() + 2.months // returns Boolean = true
 
-  DateTime.now() to DateTime.tomorrow // return org.joda.time.Interval = > 2009-04-27T13:47:14.840/2009-04-28T13:47:14.840
+  DateTime.now() to DateTime.tomorrow() // return org.joda.time.Interval = > 2009-04-27T13:47:14.840/2009-04-28T13:47:14.840
 
-  (DateTime.now() to DateTime.nextSecond).millis // returns Long = 1000
+  (DateTime.now() to DateTime.nextSecond()).millis // returns Long = 1000
 
   2.hours + 45.minutes + 10.seconds
   // returns com.github.nscala_time.time.DurationBuilder

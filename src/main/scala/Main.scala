@@ -2,6 +2,7 @@ import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.event.{Logging, LoggingAdapter}
 
 import scala.reflect.runtime.currentMirror
+import scala.reflect.runtime.universe.runtimeMirror
 /*
  *
  *  Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
@@ -16,7 +17,7 @@ import scala.tools.reflect.ToolBox
 
 object Main {
   var actor: ActorRef = _
-  implicit val actorSystem = ActorSystem("STAGEAS")
+  val actorSystem = ActorSystem("STAGEAS")
 
   //we should generate this case class
   trait Msg
@@ -25,6 +26,7 @@ object Main {
 
   abstract class ActorNode extends Actor
 
+/*
   val code =
     """
       |    import Main._
@@ -32,6 +34,10 @@ object Main {
       |    import akka.event.{Logging, LoggingAdapter}
       |    case class A(data:String) extends Msg
       |    case class B(data:String) extends Msg
+      |    scala.reflect.classTag[LoggingAdapter].runtimeClass
+      |    scala.reflect.classTag[A].runtimeClass
+      |    scala.reflect.classTag[Msg].runtimeClass
+      |
       |    actor = actorSystem.actorOf(Props(new ActorNode() {
       |      val logger: LoggingAdapter = Logging(context.system, this)
       |
@@ -42,16 +48,34 @@ object Main {
       |    }), "1")
       |    msg = A("Howdy, Comrade!")
      """.stripMargin
+*/
+
+  case class A(data:String) extends Msg
+
+  actor = actorSystem.actorOf(Props(new ActorNode() {
+      val logger: LoggingAdapter = Logging(context.system, this)
+
+      override def receive: Receive = {
+        case msg: A => logger.info(msg.data)
+        case _ => logger.error("Stronzo!!")
+      }
+    }), "1")
 
   def main(args: Array[String]): Unit = {
-    val toolbox = currentMirror.mkToolBox()
+    //val code = """import Main.{A, Msg}; Main.msg = Main.A("Howdy, Comrade!")"""
+    val x = 2
+    val code = "val y = x + 3; println(y)"
+    val evalMirror = runtimeMirror(this.getClass.getClassLoader)
+    val toolbox = evalMirror.mkToolBox()
     val tree = toolbox.parse(code)
     val compiledCode = toolbox.compile(tree)
+/*
 
     def sendMessage: Any = compiledCode().asInstanceOf[Unit]
 
     sendMessage
     actor ! msg
     actorSystem.terminate()
+*/
   }
 }

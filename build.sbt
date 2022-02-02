@@ -1,25 +1,18 @@
 val stageVersion = "0.1"
 val junitVersion = "0.11"
-val nscalatimeVersion = "2.26.0"
-val scalacticVersion = "3.2.5"
-val catsVersion = "2.3.0"
-val mathApacheVersion = "4.0-SNAPSHOT"
+val nscalatimeVersion = "2.30.0"
+val scalacticVersion = "3.2.10"
+val catsVersion = "2.7.0"
 val commonIOVersion = "2.8.0"
-val scalazVersion = "7.3.3"
+val scalazVersion = "7.4.0-M10"
 val asmVersion = "9.1"
 val guavaVersion = "30.1-jre"
-val akkaVersion = "2.6.13"
+val akkaVersion = "2.6.18"
 val circeVersion = "0.12.3"
 val typesafeConfigVersion = "1.4.1"
 val loggerVersion = "1.2.3"
 
-scalaVersion := "2.13.2" //dottyLatestNightlyBuild.get
-
-libraryDependencies ++= Seq(
-  "io.circe" %% "circe-core",
-  "io.circe" %% "circe-generic",
-  "io.circe" %% "circe-parser"
-).map(_ % circeVersion).map(_.withDottyCompat(scalaVersion.value))
+scalaVersion := "3.1.1" //dottyLatestNightlyBuild.get
 
 
 lazy val root = project
@@ -50,8 +43,7 @@ libraryDependencies ++= Seq(
   "com.novocode" % "junit-interface" % junitVersion % "test",
   "com.typesafe" % "config" % typesafeConfigVersion,
   "com.google.guava" % "guava" % guavaVersion,
-  "commons-io" % "commons-io" % commonIOVersion,
-  "org.apache.commons" % "commons-math4" % mathApacheVersion
+  "commons-io" % "commons-io" % commonIOVersion
 )
 /*
   .map(_.withDottyCompat(scalaVersion.value))
@@ -64,9 +56,3 @@ scalacOptions ++= {
 
 resolvers += Resolver.url("typesafe", url("https://repo.typesafe.com/typesafe/ivy-releases/"))(Resolver.ivyStylePatterns)
 Test / parallelExecution := false
-
-Compile / PB.targets := Seq(
-  scalapb.gen() -> (Compile / sourceManaged).value / "scalapb"
-)
-
-enablePlugins(JavaAppPackaging)
