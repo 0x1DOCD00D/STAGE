@@ -1,0 +1,58 @@
+Agents:
+  Person:
+    null:
+      ...SendMessage: respond2Messages
+
+    respond2Messages:
+      Respond2Message:
+
+  Behaviors:
+    Respond2Message: #used
+      MyOpinionAboutYou:
+        IF:
+          ">=":
+            - messageCounter
+            - maxMessagesThreshold
+          THEN:
+            Fn_Send: IdoNotCareResponse
+            Fn_Destroy: this
+          ELSE:
+            Fn_Send: IdoNotCareResponse
+
+    Transmissions:
+      IdoNotCareResponse:
+        Fn_Inc: responseCounter
+
+    ...SendMessage:
+      ? 1000: null
+        :
+        Fn_Send: MyOpinionAboutYou
+        Fn_Inc: messageCounter
+
+  Channels:
+    TalksT0:
+      null: Transmissions
+
+  Resources:
+    messageCounter: 0
+    responseCounter: 0
+    maxMessagesThreshold: 10
+
+Messages:
+  MyOpinionAboutYou:
+  IdoNotCareResponse:
+
+Models:
+  SocialMediaSimulation:
+    Agents:
+      Person: 2
+
+    SimGraph:
+      Person:
+        TalksT0: Person
+
+    Deployment:
+      Nodes: # if no names or ip addresses provided then switch to autodiscovery
+        - cancun
+        - austin
+      Akka Configuration: # this section will contain akka configuration data provided in app.conf files.

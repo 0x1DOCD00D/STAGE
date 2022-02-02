@@ -4,7 +4,7 @@ ThisBuild / version := {
   if (orig.endsWith("-SNAPSHOT")) "1.0.A-SNAPSHOT"
   else orig
 }
-ThisBuild / scalaVersion := "3.0.2"
+ThisBuild / scalaVersion := "3.1.1"
 
 val logbackVersion = "1.3.0-alpha10"
 val sfl4sVersion = "2.0.0-alpha5"
@@ -19,6 +19,8 @@ val akkaVersion = "2.6.13"
 val catsVersion = "2.6.1"
 val snakeYamlVersion = "2.3"
 val scalaZVersion = "7.4.0-M8"
+val scalaCompilerVersion = "2.13.8"
+val scalaReflectVersion = "2.13.8"
 
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
@@ -27,8 +29,7 @@ resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecu
 lazy val root = (project in file("."))
   .settings(
     name := "STAGE",
-    scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
-    scalacOptions += "-language:experimental.macros",
+//    scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
     description := "Simulation Templatized Agent-based Generation Engine",
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
@@ -53,6 +54,8 @@ lazy val root = (project in file("."))
       "com.google.guava" % "guava" % guavaVersion,
       "com.typesafe" % "config" % typesafeConfigVersion,
       "org.snakeyaml" % "snakeyaml-engine" % snakeYamlVersion,
+      "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
+      "org.scala-lang" % "scala-compiler" % scalaCompilerVersion
     ),
     homepage := Some(url("https://github.com/0x1DOCD00D/STAGE")),
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),

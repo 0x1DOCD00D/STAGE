@@ -47,6 +47,11 @@ object Main:
     import Expression.*
     val exp = Add(Add(Val(2), Var("y")), Add(Val(1),Val(9)))
     println(exp.eval)
+
+    class ClassWithIntParam(cp: Int):
+      infix def *(mp: Int): Int = mp * cp
+
+    println(new ClassWithIntParam(3) * 5)
 //println(processX(x=>x+1)(123.45f))
 //    println(testMeth("10")())
 

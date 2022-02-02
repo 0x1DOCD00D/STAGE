@@ -10,6 +10,5 @@
 
 package Generator.Agents
 
-class AgentsGenerator {
-
+object AgentsGenerator extends App {
 }
