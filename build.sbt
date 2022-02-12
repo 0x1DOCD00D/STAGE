@@ -12,7 +12,7 @@ ThisBuild / assemblyMergeStrategy := {
 }
 
 
-val logbackVersion = "1.3.0-alpha10"
+val logbackVersion = "1.2.10"
 val sfl4sVersion = "2.0.0-alpha5"
 val typesafeConfigVersion = "1.4.1"
 val apacheCommonIOVersion = "2.11.0"
@@ -27,11 +27,11 @@ val snakeYamlVersion = "2.3"
 val scalaZVersion = "7.4.0-M8"
 val scalaCompilerVersion = "2.13.8"
 val scalaReflectVersion = "2.13.8"
+val typesafeScalaLogging = "3.9.4"
 
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
 
-//noinspection SpellCheckingInspection
 lazy val root = (project in file("."))
   .settings(
     name := "STAGE",
@@ -39,9 +39,8 @@ lazy val root = (project in file("."))
     description := "Simulation Templatized Agent-based Generation Engine",
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
-      "ch.qos.logback" % "logback-core" % logbackVersion,
       "ch.qos.logback" % "logback-classic" % logbackVersion,
-      "org.slf4j" % "slf4j-api" % sfl4sVersion,
+      "com.typesafe.scala-logging" %% "scala-logging" % typesafeScalaLogging,
       "com.typesafe" % "config" % typesafeConfigVersion,
       "commons-io" % "commons-io" % apacheCommonIOVersion,
       "org.apache.commons" % "commons-math3" % apacheCommonMathVersion,
@@ -74,9 +73,7 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
     libraryDependencies ++= Seq(
       "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,//).cross(CrossVersion.for3Use2_13),
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,//).cross(CrossVersion.for3Use2_13),
-      "ch.qos.logback" % "logback-core" % logbackVersion,
-      "ch.qos.logback" % "logback-classic" % logbackVersion,
-      "org.slf4j" % "slf4j-api" % sfl4sVersion,
+      "org.specs2" %% "specs2-core" % "4.13.2" % Test,
       "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
       "org.scala-lang" % "scala-compiler" % scalaCompilerVersion
     ),
@@ -85,3 +82,9 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
     publishMavenStyle := false,
     Global / onChangedBuildSource := IgnoreSourceChanges
   )
+
+assembly / assemblyJarName := "Stage.jar"
+
+Compile / run / mainClass := Some("Main")
+
+assembly / mainClass := Some("Main")

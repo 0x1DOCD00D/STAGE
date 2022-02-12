@@ -8,10 +8,12 @@
  */
 
 import HelperUtils.*
-import org.slf4j.Logger
+import com.typesafe.scalalogging.Logger
+
+//import org.slf4j.Logger
 
 object Main:
-  val logger: Logger = CreateLogger(classOf[Main])
+//  val logger: Logger = CreateLogger(classOf[Main])
   /*
     val config = ObtainConfigReference("stage") match {
       case Some(value) => value
@@ -40,7 +42,9 @@ object Main:
         case Var(v) => Env(v)
       }
 
-  @main def runSimulation(): Unit =
+  //@main def runSimulation(): Unit =
+  def main(args: Array[String]): Unit =
+    val logger = Logger(Main.getClass.getName)
     logger.info("Constructing a cloud model...")
     logger.info("Finished cloud simulation...")
 
