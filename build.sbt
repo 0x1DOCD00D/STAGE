@@ -6,6 +6,12 @@ ThisBuild / version := {
 }
 ThisBuild / scalaVersion := "3.1.1"
 
+ThisBuild / assemblyMergeStrategy := {
+  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case x => MergeStrategy.first
+}
+
+
 val logbackVersion = "1.3.0-alpha10"
 val sfl4sVersion = "2.0.0-alpha5"
 val typesafeConfigVersion = "1.4.1"
@@ -15,7 +21,7 @@ val nscalatimeVersion = "2.30.0"
 val apacheCommonMathVersion = "3.6.1"
 val asmVersion = "9.2"
 val guavaVersion = "31.0.1-jre"
-val akkaVersion = "2.6.13"
+val akkaVersion = "2.6.18"
 val catsVersion = "2.6.1"
 val snakeYamlVersion = "2.3"
 val scalaZVersion = "7.4.0-M8"
@@ -29,12 +35,10 @@ resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecu
 lazy val root = (project in file("."))
   .settings(
     name := "STAGE",
-//    scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
+    scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
     description := "Simulation Templatized Agent-based Generation Engine",
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
-      ("com.typesafe.akka" %% "akka-actor-typed" % akkaVersion).cross(CrossVersion.for3Use2_13),
-      ("com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test).cross(CrossVersion.for3Use2_13),
       "ch.qos.logback" % "logback-core" % logbackVersion,
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "org.slf4j" % "slf4j-api" % sfl4sVersion,
@@ -52,8 +56,27 @@ lazy val root = (project in file("."))
       "org.ow2.asm" % "asm-commons" % asmVersion,
       "org.ow2.asm" % "asm-util" % asmVersion,
       "com.google.guava" % "guava" % guavaVersion,
-      "com.typesafe" % "config" % typesafeConfigVersion,
-      "org.snakeyaml" % "snakeyaml-engine" % snakeYamlVersion,
+      "org.snakeyaml" % "snakeyaml-engine" % snakeYamlVersion
+    ),
+    homepage := Some(url("https://github.com/0x1DOCD00D/STAGE")),
+    licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
+    publishMavenStyle := false,
+    Global / onChangedBuildSource := IgnoreSourceChanges
+  ) aggregate runtimePlatform dependsOn runtimePlatform
+
+lazy val runtimePlatform = (project in file("RuntimePlatform"))
+  .settings(
+    name := "StageRuntime",
+    scalaVersion := "2.13.8",
+    scalacOptions := Seq("-Xfatal-warnings", "-unchecked", "-deprecation", "-feature"),
+    description := "Stage Actor Execution Platform",
+    Test / parallelExecution := false,
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,//).cross(CrossVersion.for3Use2_13),
+      "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,//).cross(CrossVersion.for3Use2_13),
+      "ch.qos.logback" % "logback-core" % logbackVersion,
+      "ch.qos.logback" % "logback-classic" % logbackVersion,
+      "org.slf4j" % "slf4j-api" % sfl4sVersion,
       "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
       "org.scala-lang" % "scala-compiler" % scalaCompilerVersion
     ),
