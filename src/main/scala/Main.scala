@@ -56,6 +56,7 @@ object Main:
       infix def *(mp: Int): Int = mp * cp
 
     println(new ClassWithIntParam(3) * 5)
+    SpawnActor()
 //println(processX(x=>x+1)(123.45f))
 //    println(testMeth("10")())
 

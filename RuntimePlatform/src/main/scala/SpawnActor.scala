@@ -7,8 +7,38 @@
  *  See the License for the specific language governing permissions and limitations under the License.
  */
 
-object SpawnActor {
-  val actor = 1
+import akka.actor.{ActorSystem, Props}
 
-  def apply(): Int = actor
+import scala.reflect.runtime.universe
+import scala.tools.reflect.ToolBox
+
+object SpawnActor {
+  val toolbox:  ToolBox[scala.reflect.runtime.universe.type] = universe.runtimeMirror(getClass.getClassLoader).mkToolBox()
+  val code:String =
+    """
+      |import akka.actor._
+      |class HelloActor extends Actor {
+      |override def receive: Receive = {
+      |case "changeX" => println("Received a message inside the actor...")
+      |case None => println("None received!")
+      |}
+      |}
+      |object HelloActor {
+      |def props() : Props = Props(new HelloActor())
+      | }
+      |return HelloActor.props()
+      |""".stripMargin
+
+  def apply(): Unit = {
+    val tree = toolbox.parse(code)
+    val actorProps =  toolbox.compile(tree)().asInstanceOf[Props]
+    val actorSystem = ActorSystem("system")
+    (1 to 20).foreach(_ =>{
+      val helloActor = actorSystem.actorOf(actorProps)
+      helloActor ! "changeX"
+      Thread.sleep(3000)
+    })
+    actorSystem.terminate()
+  }
+
 }

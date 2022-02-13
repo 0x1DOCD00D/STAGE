@@ -37,6 +37,8 @@ lazy val root = (project in file("."))
     name := "STAGE",
     scalacOptions := Seq("-explain", "-Yexplain-lowlevel", "-Xfatal-warnings", "-unchecked", "-deprecation", "-feature", "-language:implicitConversions"),
     description := "Simulation Templatized Agent-based Generation Engine",
+    run / cinnamon := true,
+    test / cinnamon := true,
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
       "ch.qos.logback" % "logback-classic" % logbackVersion,
@@ -61,7 +63,7 @@ lazy val root = (project in file("."))
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
     publishMavenStyle := false,
     Global / onChangedBuildSource := IgnoreSourceChanges
-  ) aggregate runtimePlatform dependsOn runtimePlatform
+  ).enablePlugins(Cinnamon) aggregate runtimePlatform dependsOn runtimePlatform
 
 lazy val runtimePlatform = (project in file("RuntimePlatform"))
   .settings(
@@ -71,8 +73,24 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
     description := "Stage Actor Execution Platform",
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,//).cross(CrossVersion.for3Use2_13),
+      "com.typesafe.akka" %% "akka-actor" % akkaVersion,
+//      "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,//).cross(CrossVersion.for3Use2_13),
       "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,//).cross(CrossVersion.for3Use2_13),
+      // Use Coda Hale Metrics and Akka instrumentation
+      Cinnamon.library.cinnamonCHMetrics,
+      Cinnamon.library.cinnamonJvmMetricsProducer,
+      Cinnamon.library.cinnamonPrometheus,
+      Cinnamon.library.cinnamonPrometheusHttpServer,
+      // Use Akka instrumentation
+      Cinnamon.library.cinnamonAkka,
+      Cinnamon.library.cinnamonAkkaTyped,
+      Cinnamon.library.cinnamonAkkaPersistence,
+      Cinnamon.library.cinnamonAkkaStream,
+      Cinnamon.library.cinnamonAkkaProjection,
+      // Use Akka HTTP instrumentation
+      Cinnamon.library.cinnamonAkkaHttp,
+      // Use Akka gRPC instrumentation
+      Cinnamon.library.cinnamonAkkaGrpc,
       "org.specs2" %% "specs2-core" % "4.13.2" % Test,
       "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
       "org.scala-lang" % "scala-compiler" % scalaCompilerVersion
@@ -83,7 +101,7 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
     Global / onChangedBuildSource := IgnoreSourceChanges
   )
 
-assembly / assemblyJarName := "Stage.jar"
+assembly / assemblyJarName := "Stage_" + (ThisBuild / version).value + ".jar"
 
 Compile / run / mainClass := Some("Main")
 
