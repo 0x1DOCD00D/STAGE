@@ -9,7 +9,8 @@
 
 package Translator
 
-import Translator.SlanAbstractions.{BehaviorReference, SlanConstruct, StateReference}
+import Translator.SlanAbstractions.{BehaviorReference, StateReference}
+import Translator.SlanConstruct.*
 import Translator.{SlanTranslator, SlantParser}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
@@ -19,7 +20,6 @@ import scala.Double.NaN
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.util.{Failure, Success, Try}
-
 
 class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
 
@@ -81,18 +81,17 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
         State(Some("State A"), List(StateBehavior(Some("stateAbehavior"), Some("State B")))),
         State(Some("State B"), List(StateBehavior(Some("Respond to messages A and Y"), None))),
         State(Some("State X"), List(StateBehavior(Some("Last Behavior"), None)))))
-    val expected2 = Agent("Agent Name Y", List(State(None, List(StateBehavior(Some("behaviorWithOneState"), None)))))
     val agent2States: Lens[Agent, List[SlanConstruct]] = Lens.lensu[Agent, List[SlanConstruct]]((a, sv) => a.copy(states = sv), _.states)
     val state2Behavior: Lens[State, List[SlanConstruct]] = Lens.lensu[State, List[SlanConstruct]]((s, bv) => s.copy(behavior = bv), _.behavior)
     val behavior2Ref: Lens[StateBehavior, BehaviorReference] = Lens.lensu[StateBehavior, BehaviorReference]((b, br) => b.copy(behavior = br), _.behavior)
-    val as = agent2States.get(expected2)
+    val as = agent2States.get(Agent("Agent Name Y", List(State(None, List(StateBehavior(Some("behaviorWithOneState"), None))))))
     val sb = state2Behavior.get(as.head.asInstanceOf[State])
     val br = behavior2Ref.get(sb.head.asInstanceOf[StateBehavior])
     br shouldBe Some("behaviorWithOneState")
     flowResult.head shouldBe expected1
-    flowResult.tail.head shouldBe expected2
+    flowResult.tail.head shouldBe Agent("Agent Name Y", List(State(None, List(StateBehavior(Some("behaviorWithOneState"), None)))))
     blockResult.head shouldBe expected1
-    blockResult.tail.head shouldBe expected2
+    blockResult.tail.head shouldBe Agent("Agent Name Y", List(State(None, List(StateBehavior(Some("behaviorWithOneState"), None)))))
   }
 
   it should "translate a behavior spec with multiple behaviors for a single state" in {

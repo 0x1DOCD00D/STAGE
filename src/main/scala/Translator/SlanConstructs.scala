@@ -10,6 +10,7 @@
 package Translator
 
 import Translator.SlanAbstractions.*
+import Translator.SlanConstruct.SlanValue
 
 /*
 * An agent is a basic computing unit in Stage. An agent is defined by its name and its behavior. Its specification defines its lifecycle,
@@ -21,136 +22,172 @@ import Translator.SlanAbstractions.*
 *
 *
 * */
-case class Agent(id: AgentReference, states: SlanConstructs) extends SlanConstruct
 
-case class State(id: StateReference, behavior: SlanConstructs) extends SlanConstruct
+enum SlanConstruct:
+  case Agent(id: AgentReference, states: SlanConstructs)
+  
+  case State(id: StateReference, behavior: SlanConstructs)
+  
+  case StateBehavior(behavior: BehaviorReference, switchTo: StateReference)
+  
+  case SlanValue(value: YamlPrimitiveTypes)
+  
+  case SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes)
+  
+  case Pdf(id: PdfReference, actions: SlanConstructs)
+  
+  case Behavior(id: BehaviorMandatoryReference, actions: SlanConstructs)
+  
+  case PeriodicBehavior(id: BehaviorMandatoryReference, actions: SlanConstructs)
+  
+  case MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs)
+  
+  case CorrelationToken(ID: SlanValue)
+  
+  case IfThenElse(body: SlanConstructs)
+  
+  case Then(thenActions: SlanConstructs)
+  
+  case Else(elseActions: SlanConstructs)
+  
+  case ElseIf(elseIfActions: SlanConstructs)
+  
+  case And(relops: SlanConstructs)
+  
+  case Or(relops: SlanConstructs)
+  
+  case Xor(relops: SlanConstructs)
+  
+  case Not(relops: SlanConstructs)
+  
+  case ROPEqual(operands: SlanConstructs)
+  
+  case ROPLessEqual(operands: SlanConstructs)
+  
+  case ROPGreaterEqual(operands: SlanConstructs)
+  
+  case ROPLess(operands: SlanConstructs)
+  
+  case ROPGreater(operands: SlanConstructs)
+  
+  case FnUpdate(operands: SlanConstructs)
+  
+  case FnRemove(operands: SlanConstructs)
+  
+  case FnCreate(operands: SlanConstructs)
+  
+  case FnDestroy(operands: SlanConstructs)
+  
+  case FnSend(operands: SlanConstructs)
+  
+  case FnSelect(operands: SlanConstructs)
+  
+  case FnForEach(operands: SlanConstructs)
+  
+  case FnAdd(operands: SlanConstructs)
+  
+  case FnInc(operands: SlanConstructs)
+  
+  case FnDec(operands: SlanConstructs)
+  
+  case FnSubstract(operands: SlanConstructs)
+  
+  case FnMultiply(operands: SlanConstructs)
+  
+  case FnDivide(operands: SlanConstructs)
+  
+  case FnJoin(operands: SlanConstructs)
+  
+  case FnLeave(operands: SlanConstructs)
+  
+  case Reference(key: Option[SlanConstruct], value: Option[SlanConstructs])
+  
+  case PeriodParameters(timeInterval: SlanValue, iterations: SlanValue)
+  
+  case Messages2Send(messages: SlanValues)
+  
+  case MixFrequence(elements: SlanConstructs)
+  
+  case GoTo(state: StateReference)
+  
+  case LocalResources(localResourceList: SlanConstructs)
+  
+  case Group(id: GroupReference, members: SlanConstructs)
+  
+  case GroupAgent(id: AgentReference, cardinality: SlanConstructs)
+  
+  case ResourceConsistencyModelInGroup(cmr: ConsistencyModelReference, id: ResourceReference)
+  
+  case ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanValue)
+  
+  case Channel(id: ChannelReference, behaviors: SlanConstructs)
+  
+  case Resource(id: SlanConstruct, attributes: SlanConstructs)
+  
+  case ResourceTag(id: ResourceReference, storageType: StorageTypeReference)
+  
+  case ResourcePeriodicGenerator(resourceTypes: SlanConstructs)
+  
+  case ResourceProbability(id: ResourceReference, probability: SlanValue)
+  
+  case ResourcePDFParameters(params: SlanConstructs)
+  
+  case ResourcePDFConstraintsAndSeed(constraints: SlanConstructs)
+  
+  case PdfSeed(seed: YamlPrimitiveTypes)
+  
+  case ResourceAttribute(id: SlanConstruct, value: SlanValues)
+  
+  case PeriodicBehaviorFiringDuration(timeInterval: SlanValue, howManyTimes2Fire: Option[SlanValue])
+  
+  case Message(id: SlanConstructs, fields: SlanConstructs)
+  
+  case MessageDeclaration(id: MessageReference, parent: Option[MessageReference])
+  
+  case Model(id: ModelReference, elements: SlanConstructs)
+  
+  case AgentPopulation(agent: AgentReference, instances: SlanConstructs)
+  
+  case ModelGraph(id: ModelGraphReference, vEv: SlanConstructs)
+  
+  case Agent2AgentViaChannel(agent: AgentReference, channel2Agent: SlanConstructs)
+  
+  case Channel2Agent(channel: ChannelReference, agent: AgentReference)
+  
+  case ModelDeployment(key: String, elements: SlanConstructs)
+  
+  case UnknownConstruct(key: String, typeOfConstruct: String, obj: String)
+
+/*
+* Describes an action of filtering out values based on some relational operator
+*     MixFrequence: {
+                  Rate: Normal, #create three probabilities for three messages
+                  Parameters: {
+                    1: 0.6,
+                    2: 0.2
+                  },
+                  Seed: 200,
+                  Constraints: [">=": 0, "<": 1]
+                }
+* */
+
+object ConstraintFilter:
+  def apply(key: String, v: YamlPrimitiveTypes): ConstraintFilter = key match {
+    case "<" => LESS(SlanValue(v))
+    case "<=" => LESSEQUAL(SlanValue(v))
+    case ">" => GREATER(SlanValue(v))
+    case ">=" => GREATEREQUAL(SlanValue(v))
+    case "=" => EQUAL(SlanValue(v))
+    case "==" => EQUAL(SlanValue(v))
+    case "===" => EQUAL(SlanValue(v))
+    case _ => UNDEFINED(SlanValue(v))
+  }
+
+enum ConstraintFilter(val boundary: SlanValue):
+  case LESS(v: SlanValue) extends ConstraintFilter(v)
+  case LESSEQUAL(v: SlanValue) extends ConstraintFilter(v)
+  case GREATER(v: SlanValue) extends ConstraintFilter(v)
+  case GREATEREQUAL(v: SlanValue) extends ConstraintFilter(v)
+  case EQUAL(v: SlanValue) extends ConstraintFilter(v)
+  case UNDEFINED(v: SlanValue) extends ConstraintFilter(v)
 
-case class StateBehavior(behavior: BehaviorReference, switchTo: StateReference) extends SlanConstruct
-
-case class SlanValue(value: YamlPrimitiveTypes) extends SlanConstruct
-
-case class SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes) extends SlanConstruct
-
-case class Pdf(id: PdfReference, actions: SlanConstructs) extends SlanConstruct
-
-case class Behavior(id: BehaviorMandatoryReference, actions: SlanConstructs) extends SlanConstruct
-
-case class PeriodicBehavior(id: BehaviorMandatoryReference, actions: SlanConstructs) extends SlanConstruct
-
-case class MessageResponseBehavior(messageIds: SlanConstructs, actions: SlanConstructs) extends SlanConstruct
-
-case class CorrelationToken(ID: SlanValue) extends SlanConstruct
-
-case class IfThenElse(body: SlanConstructs) extends SlanConstruct
-
-case class Then(thenActions: SlanConstructs) extends SlanConstruct
-
-case class Else(elseActions: SlanConstructs) extends SlanConstruct
-
-case class ElseIf(elseIfActions: SlanConstructs) extends SlanConstruct
-
-case class And(relops: SlanConstructs) extends SlanConstruct
-
-case class Or(relops: SlanConstructs) extends SlanConstruct
-
-case class Xor(relops: SlanConstructs) extends SlanConstruct
-
-case class Not(relops: SlanConstructs) extends SlanConstruct
-
-case class ROPEqual(operands: SlanConstructs) extends SlanConstruct
-
-case class ROPLessEqual(operands: SlanConstructs) extends SlanConstruct
-
-case class ROPGreaterEqual(operands: SlanConstructs) extends SlanConstruct
-
-case class ROPLess(operands: SlanConstructs) extends SlanConstruct
-
-case class ROPGreater(operands: SlanConstructs) extends SlanConstruct
-
-case class FnUpdate(operands: SlanConstructs) extends SlanConstruct
-
-case class FnRemove(operands: SlanConstructs) extends SlanConstruct
-
-case class FnCreate(operands: SlanConstructs) extends SlanConstruct
-
-case class FnDestroy(operands: SlanConstructs) extends SlanConstruct
-
-case class FnSend(operands: SlanConstructs) extends SlanConstruct
-
-case class FnSelect(operands: SlanConstructs) extends SlanConstruct
-
-case class FnForEach(operands: SlanConstructs) extends SlanConstruct
-
-case class FnAdd(operands: SlanConstructs) extends SlanConstruct
-
-case class FnInc(operands: SlanConstructs) extends SlanConstruct
-
-case class FnDec(operands: SlanConstructs) extends SlanConstruct
-
-case class FnSubstract(operands: SlanConstructs) extends SlanConstruct
-
-case class FnMultiply(operands: SlanConstructs) extends SlanConstruct
-
-case class FnDivide(operands: SlanConstructs) extends SlanConstruct
-
-case class FnJoin(operands: SlanConstructs) extends SlanConstruct
-
-case class FnLeave(operands: SlanConstructs) extends SlanConstruct
-
-case class Reference(key: Option[SlanConstruct], value: Option[SlanConstructs]) extends SlanConstruct
-
-case class PeriodParameters(timeInterval: SlanValue, iterations: SlanValue) extends SlanConstruct
-
-case class Messages2Send(messages: SlanValues) extends SlanConstruct
-
-case class MixFrequence(elements: SlanConstructs) extends SlanConstruct
-
-case class GoTo(state: StateReference) extends SlanConstruct
-
-case class LocalResources(localResourceList: SlanConstructs) extends SlanConstruct
-
-case class Group(id: GroupReference, members: SlanConstructs) extends SlanConstruct
-
-case class GroupAgent(id: AgentReference, cardinality: SlanConstructs) extends SlanConstruct
-
-case class ResourceConsistencyModelInGroup(cmr: ConsistencyModelReference, id: ResourceReference) extends SlanConstruct
-
-case class ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanValue) extends SlanConstruct
-
-case class Channel(id: ChannelReference, behaviors: SlanConstructs) extends SlanConstruct
-
-case class Resource(id: SlanConstruct, attributes: SlanConstructs) extends SlanConstruct
-
-case class ResourceTag(id: ResourceReference, storageType: StorageTypeReference) extends SlanConstruct
-
-case class ResourcePeriodicGenerator(resourceTypes: SlanConstructs) extends SlanConstruct
-
-case class ResourceProbability(id: ResourceReference, probability: SlanValue) extends SlanConstruct
-
-case class ResourcePDFParameters(params: SlanConstructs) extends SlanConstruct
-
-case class ResourcePDFConstraintsAndSeed(constraints: SlanConstructs) extends SlanConstruct
-
-case class PdfSeed(seed: YamlPrimitiveTypes) extends SlanConstruct
-
-case class ResourceAttribute(id: SlanConstruct, value: SlanValues) extends SlanConstruct
-
-case class PeriodicBehaviorFiringDuration(timeInterval: SlanValue, howManyTimes2Fire: Option[SlanValue]) extends SlanConstruct
-
-case class Message(id: SlanConstructs, fields: SlanConstructs) extends SlanConstruct
-
-case class MessageDeclaration(id: MessageReference, parent: Option[MessageReference]) extends SlanConstruct
-
-case class Model(id: ModelReference, elements: SlanConstructs) extends SlanConstruct
-
-case class AgentPopulation(agent: AgentReference, instances: SlanConstructs) extends SlanConstruct
-
-case class ModelGraph(id: ModelGraphReference, vEv: SlanConstructs) extends SlanConstruct
-
-case class Agent2AgentViaChannel(agent: AgentReference, channel2Agent: SlanConstructs) extends SlanConstruct
-
-case class Channel2Agent(channel: ChannelReference, agent: AgentReference) extends SlanConstruct
-
-case class ModelDeployment(key: String, elements: SlanConstructs) extends SlanConstruct
-
-case class UnknownConstruct(key: String, typeOfConstruct: String, obj: String) extends SlanConstruct

@@ -10,7 +10,8 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
+import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*

@@ -9,7 +9,8 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{SlanConstruct, YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*

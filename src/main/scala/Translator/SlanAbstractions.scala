@@ -12,7 +12,7 @@ package Translator
 import com.github.nscala_time.time.Imports.*
 
 object SlanAbstractions:
-  transparent trait SlanConstruct
+  import SlanConstruct.*
 
   type YamlPrimitiveTypes = String | Int | Double | Boolean | Long | DateTime
   type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_]

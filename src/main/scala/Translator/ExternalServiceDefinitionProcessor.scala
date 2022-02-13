@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -10,7 +10,7 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{SlanConstruct, YamlTypes}
+import Translator.SlanAbstractions.YamlTypes
 import Translator.SlanKeywords.{FnPrefix, IF}
 import Translator.SlantParser.convertJ2S
 import cats.implicits.*
