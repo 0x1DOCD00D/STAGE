@@ -54,6 +54,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
   val resources_v3 = "SlanFeatureTesting/Resources_v3.yaml"
   val resources_v4 = "SlanFeatureTesting/Resources_v4.yaml"
+  val resources_v4_1 = "SlanFeatureTesting/Resources_v4_1.yaml"
   val resources_v5 = "SlanFeatureTesting/Resources_v5.yaml"
   val resources_v6 = "SlanFeatureTesting/Resources_v6.yaml"
   val resources_v7 = "SlanFeatureTesting/Resources_v7.yaml"
@@ -225,6 +226,16 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     )
     val path = getClass.getClassLoader.getResource(resources_v4).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec with a composite list key whose attributes include a composite list and a simple resources" in {
+    val expected = List(
+      Resource(ResourceTag("compositeResourceList",Some("list")),
+        List(Resource(ResourceTag("instanceID",None),List()),
+          Resource(ResourceTag("someBasicResource1V",Some("list")),List()), SlanKeyValue("valueHolder4compositeResource",1)))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v4_1).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel))// shouldBe expected
   }
 
   it should "translate a complex resource spec for generating random distributions" in {

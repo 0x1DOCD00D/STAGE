@@ -28,6 +28,8 @@ class ResourceTagProcessor extends GenericProcessor {
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 
+    case None => List()
+
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }
 }

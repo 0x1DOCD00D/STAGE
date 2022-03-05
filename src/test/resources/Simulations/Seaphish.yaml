@@ -1,10 +1,15 @@
 Agents:
-  Person:
-    null:
-      ...SendMessage: respond2Messages
+  AppStore: # an appstore hosts apps and collects info about its behavior
+    Resources:
 
-    respond2Messages:
-      Respond2Message:
+  Smartphone: # a smartphone manages all GAPs as well as the Seaphish platform
+  TargetGAP: # the financial app that should be protected
+  PhishingGAP: # generated phishing apps that are dopplegangers of the target app
+  Seaphish: # the dbd platform
+  AssistiveGAP: # an assistive app that uses the accessibility technology to provide services for the target app
+  ExternalOperator: # a person or a machine that receives sensitive financial information stolen from an app
+  FinancialOrganization: # the financial organization that keeps the money of the smartphone user
+  MaliciousGAP: # an app that masks as a provider of assistive services but tries to steal sensitive info and send it to the external operator
 
   Behaviors:
     Respond2Message: #used

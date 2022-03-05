@@ -8,9 +8,9 @@ ThisBuild / scalaVersion := "3.1.1"
 
 ThisBuild / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard
+  case "reference.conf" => MergeStrategy.concat
   case x => MergeStrategy.first
 }
-
 
 val logbackVersion = "1.2.10"
 val sfl4sVersion = "2.0.0-alpha5"
@@ -41,6 +41,10 @@ lazy val root = (project in file("."))
     test / cinnamon := true,
     Test / parallelExecution := false,
     libraryDependencies ++= Seq(
+/*
+      ("io.kamon" %% "kamon-bundle" % "2.4.7").cross(CrossVersion.for3Use2_13),
+      ("io.kamon" %% "kamon-apm-reporter" % "2.4.7").cross(CrossVersion.for3Use2_13),
+*/
       "ch.qos.logback" % "logback-classic" % logbackVersion,
       "com.typesafe.scala-logging" %% "scala-logging" % typesafeScalaLogging,
       "com.typesafe" % "config" % typesafeConfigVersion,
@@ -63,6 +67,7 @@ lazy val root = (project in file("."))
     licenses := Seq("STAGE License" -> url("https://github.com/0x1DOCD00D/STAGE/LICENSE")),
     publishMavenStyle := false,
     Global / onChangedBuildSource := IgnoreSourceChanges
+//  ) aggregate runtimePlatform dependsOn runtimePlatform
   ).enablePlugins(Cinnamon) aggregate runtimePlatform dependsOn runtimePlatform
 
 lazy val runtimePlatform = (project in file("RuntimePlatform"))
@@ -91,6 +96,7 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
       Cinnamon.library.cinnamonAkkaHttp,
       // Use Akka gRPC instrumentation
       Cinnamon.library.cinnamonAkkaGrpc,
+
       "org.specs2" %% "specs2-core" % "4.13.2" % Test,
       "org.scala-lang" % "scala-reflect" % scalaReflectVersion,
       "org.scala-lang" % "scala-compiler" % scalaCompilerVersion
@@ -103,6 +109,6 @@ lazy val runtimePlatform = (project in file("RuntimePlatform"))
 
 assembly / assemblyJarName := "Stage_" + (ThisBuild / version).value + ".jar"
 
-Compile / run / mainClass := Some("Main")
+Compile / run / packageBin / mainClass := Some("Main")
 
 assembly / mainClass := Some("Main")

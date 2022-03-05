@@ -9,6 +9,7 @@
 
 import HelperUtils.*
 import com.typesafe.scalalogging.Logger
+//import kamon.Kamon
 
 //import org.slf4j.Logger
 
@@ -44,6 +45,7 @@ object Main:
 
   //@main def runSimulation(): Unit =
   def main(args: Array[String]): Unit =
+//    Kamon.init()
     val logger = Logger(Main.getClass.getName)
     logger.info("Constructing a cloud model...")
     logger.info("Finished cloud simulation...")

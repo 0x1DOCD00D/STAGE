@@ -33,10 +33,10 @@ object SpawnActor {
     val tree = toolbox.parse(code)
     val actorProps =  toolbox.compile(tree)().asInstanceOf[Props]
     val actorSystem = ActorSystem("system")
-    (1 to 20).foreach(_ =>{
+    (1 to 20000).foreach(_ =>{
       val helloActor = actorSystem.actorOf(actorProps)
       helloActor ! "changeX"
-      Thread.sleep(3000)
+      Thread.sleep( 100)
     })
     actorSystem.terminate()
   }

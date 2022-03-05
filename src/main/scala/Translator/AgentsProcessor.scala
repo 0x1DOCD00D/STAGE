@@ -27,9 +27,9 @@ class AgentsProcessor extends GenericProcessor :
       //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
       //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
       //otherwise it is a sequence of states each defining its own behavior
-      case cv: String => List(Agent(cv, (new StatesProcessor).commandProcessor(convertJ2S(v._2))))
+      case cv: String => List(Agent(cv, (new StatesResourcesProcessor).commandProcessor(convertJ2S(v._2))))
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
 
-    case unknown => (new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString))).constructSlanRecord
+    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }

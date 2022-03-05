@@ -17,7 +17,7 @@ import Translator.SlantParser.convertJ2S
 import cats.implicits.*
 import cats.kernel.Eq
 
-class StatesProcessor extends GenericProcessor {
+class StatesResourcesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       //each agent can be assigned local resources that are not generators

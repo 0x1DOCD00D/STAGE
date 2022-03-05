@@ -1,0 +1,11 @@
+Agents:
+  Resources:
+    # this is a composite resource list named compositeResourceList that contains a list of primitive resources
+    # named someBasicResource1V and this list is empty. The resource compositeResource has a resource named valueHolder4compositeResource
+    # that holds the value 1. In this general case we have different cardinalities for the contained objects.
+    ? list: compositeResourceList
+    :
+      instanceID: null
+      ? list: someBasicResource1V
+      : null
+      valueHolder4compositeResource: 1
