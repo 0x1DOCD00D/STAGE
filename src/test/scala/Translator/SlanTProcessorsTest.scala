@@ -31,6 +31,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val agentsFull_manyBehaviorsInState = "SlanFeatureTesting/Agents_Full_v3.yaml"
   val agentsFull_localResources_Flow = "SlanFeatureTesting/Agents_Full_v4.yaml"
   val agentsFull_probStates = "SlanFeatureTesting/Agents_Full_v5.yaml"
+  val agentsFull_smartphone = "SlanFeatureTesting/Agents_Full_v6.yaml"
   val agentsGroups1 = "SlanFeatureTesting/Agents_Groups_v1.yaml"
   val behaviorMessages_flow = "SlanFeatureTesting/Behavior_Messages_KeyFlow.yaml"
   val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
@@ -134,6 +135,44 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val path = getClass.getClassLoader.getResource(agentsFull_probStates).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
+
+  it should "translate a behavior spec with probabilistic state switches for a smartphone agent" in {
+    val expected = List(
+      Agent("Smartphone",List(
+        State(None,List(
+          StateProbBehavior(None,List(
+            StateProbabilitySwitch(Some("InstallApp"),SlanValue(0.9)),
+            StateProbabilitySwitch(Some("DisableApp"),SlanValue(0.08)),
+            StateProbabilitySwitch(Some("Leave"),SlanValue(0.02)))))),
+        State(Some("InstallApp"),List(
+          StateProbBehavior(Some("InstallApp"),List(
+            StateProbabilitySwitch(Some("UseApp"),SlanValue(0.9)),
+            StateProbabilitySwitch(Some("DisableApp"),SlanValue(0.08)),
+            StateProbabilitySwitch(Some("Leave"),SlanValue(0.02)))))),
+        State(Some("Leave"),List(
+          StateProbBehavior(Some("GoOfflineForSomeTime"),List(
+            StateProbabilitySwitch(Some("Leave"),SlanValue(0.7)),
+            StateProbabilitySwitch(None,SlanValue(0.2)),
+            StateProbabilitySwitch(Some("OffPermanently"),SlanValue(0.1)))))),
+        State(Some("DisableApp"),List(
+          StateProbBehavior(Some("DeactivateSomeApp"),List(
+            StateProbabilitySwitch(Some("UseApp"),SlanValue(0.9)),
+            StateProbabilitySwitch(Some("DisableApp"),SlanValue(0.08)),
+            StateProbabilitySwitch(Some("Leave"),SlanValue(0.02)))))),
+        State(Some("OffPermanently"),List()),
+        State(Some("UseApp"),List(
+          StateProbBehavior(Some("UseSomeApp"),List(
+            StateProbabilitySwitch(Some("UseApp"),SlanValue(0.7)),
+            StateProbabilitySwitch(Some("InstallApp"),SlanValue(0.2)),
+            StateProbabilitySwitch(Some("DisableApp"),SlanValue(0.08)),
+            StateProbabilitySwitch(Some("Leave"),SlanValue(0.02))))))
+      )
+      )
+    )
+    val path = getClass.getClassLoader.getResource(agentsFull_smartphone).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
 
   it should "translate a group spec" in {
     val expected = List(Group("Group Name", List(

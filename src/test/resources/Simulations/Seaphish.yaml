@@ -10,12 +10,11 @@ Agents:
 
   Smartphone: # a smartphone manages all GAPs as well as the Seaphish platform
   # smartphones join the network and drop out at some rate.
-    Join:
-      GenerateMessages X, W, and U:
-    InstallApp: [ stateAbehavior: State B ]
-    DisableApp: Respond to messages A and Y
-    Leave:
-      Last Behavior:
+    null: [InstallApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    InstallApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    UseApp: [UseApp: 0.7, InstallApp: 0.2, DisableApp: 0.08, Leave: 0.02]
+    DisableApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    Leave: [Leave: 0.7, null: 0.3]
 
   TargetGAP: # the financial app that should be protected
   # a gap is installed on some smartphone and then it's used

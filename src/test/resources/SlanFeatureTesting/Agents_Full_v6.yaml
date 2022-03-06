@@ -1,0 +1,13 @@
+Agents:
+  Smartphone:
+    null:
+      null: [InstallApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    InstallApp:
+      InstallApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    UseApp:
+      UseSomeApp: [UseApp: 0.7, InstallApp: 0.2, DisableApp: 0.08, Leave: 0.02]
+    DisableApp:
+      DeactivateSomeApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    Leave:
+      GoOfflineForSomeTime: [Leave: 0.7, null: 0.2, OffPermanently: 0.1]
+    OffPermanently:

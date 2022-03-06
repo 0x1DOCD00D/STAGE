@@ -9,7 +9,7 @@
 
 package Translator
 
-import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
+import HelperUtils.ErrorWarningMessages.{SlanInvalidConstruct, YamlKeyIsNotString}
 import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.InitState
@@ -28,9 +28,16 @@ class StateProcessor extends GenericProcessor {
         case None => List(StateBehavior(Some(behaviorRef),None))
         case unknown => List(StateProbBehavior(Some(behaviorRef),(new StateProbSwitchProcessor).commandProcessor(unknown)))
       }
+      case None => convertJ2S(v(1)) match {
+        case switchTo: String => List(StateBehavior(None,Some(switchTo)))
+        case None => throw new Exception(SlanInvalidConstruct("StateBehavior without behavior and the destination state"))
+        case unknown => List(StateProbBehavior(None,(new StateProbSwitchProcessor).commandProcessor(unknown)))
+      }
       case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
     }
     case behaviorRef: String => List(StateBehavior(Some(behaviorRef), None))
+
+    case None => List()
 
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
   }
