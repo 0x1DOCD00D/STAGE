@@ -30,6 +30,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val agentsFull_Flow = "SlanFeatureTesting/Agents_Full_v2.yaml"
   val agentsFull_manyBehaviorsInState = "SlanFeatureTesting/Agents_Full_v3.yaml"
   val agentsFull_localResources_Flow = "SlanFeatureTesting/Agents_Full_v4.yaml"
+  val agentsFull_probStates = "SlanFeatureTesting/Agents_Full_v5.yaml"
   val agentsGroups1 = "SlanFeatureTesting/Agents_Groups_v1.yaml"
   val behaviorMessages_flow = "SlanFeatureTesting/Behavior_Messages_KeyFlow.yaml"
   val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
@@ -55,6 +56,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v3 = "SlanFeatureTesting/Resources_v3.yaml"
   val resources_v4 = "SlanFeatureTesting/Resources_v4.yaml"
   val resources_v4_1 = "SlanFeatureTesting/Resources_v4_1.yaml"
+  val resources_v4_2 = "SlanFeatureTesting/Resources_v4_2.yaml"
   val resources_v5 = "SlanFeatureTesting/Resources_v5.yaml"
   val resources_v6 = "SlanFeatureTesting/Resources_v6.yaml"
   val resources_v7 = "SlanFeatureTesting/Resources_v7.yaml"
@@ -116,6 +118,20 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
         State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
     )
     val path = getClass.getClassLoader.getResource(agentsFull_localResources_Flow).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a behavior spec with probabilistic state switches in an agent" in {
+    val expected = List(
+      Agent("Agent Name X",
+        List(State(None,List(StateProbBehavior(Some("Some default behavior and then"),
+          List(StateProbabilitySwitch(Some("State A"),SlanValue(0.1)), StateProbabilitySwitch(Some("State B"),SlanValue(0.6)), StateProbabilitySwitch(Some("State X"),SlanValue("somePdfGenerator")))))),
+          State(Some("State A"),List(StateProbBehavior(Some("stateAbehavior"),
+            List(StateProbabilitySwitch(Some("State A"),SlanValue(0.01)), StateProbabilitySwitch(Some("State B"),SlanValue(0.3)), StateProbabilitySwitch(Some("State X"),SlanValue("somePdfGenerator")))))),
+          State(Some("State B"),List(StateBehavior(Some("Respond to messages A and Y"),Some("State X")))),
+          State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
+    )
+    val path = getClass.getClassLoader.getResource(agentsFull_probStates).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
@@ -237,6 +253,17 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val path = getClass.getClassLoader.getResource(resources_v4_1).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
+
+  it should "translate a resource spec with a composite resource map whose key is some id and the value is a composite object" in {
+    val expected = List(
+      Resource(ResourceTag("compositeResourceMap",Some("map")),
+        List(Resource(ResourceTag("instanceID",None),
+          List(SlanKeyValue("CPU",100), SlanKeyValue("RAM",0), SlanKeyValue("NetworkBandwidth",10000)))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v4_2).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
 
   it should "translate a complex resource spec for generating random distributions" in {
     val expected = List(

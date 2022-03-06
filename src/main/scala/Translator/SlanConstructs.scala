@@ -27,9 +27,13 @@ enum SlanConstruct:
   case Agent(id: AgentReference, states: SlanConstructs)
   
   case State(id: StateReference, behavior: SlanConstructs)
-  
+
   case StateBehavior(behavior: BehaviorReference, switchTo: StateReference)
-  
+
+  case StateProbBehavior(behavior: BehaviorReference, switchTo: SlanConstructs)
+
+  case StateProbabilitySwitch(stateId: StateReference, probSource: SlanValue)
+
   case SlanValue(value: YamlPrimitiveTypes)
   
   case SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes)

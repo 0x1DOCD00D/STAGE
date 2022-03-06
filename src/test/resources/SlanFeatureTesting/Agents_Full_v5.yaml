@@ -1,0 +1,13 @@
+# in some simulations it is important to create probabilistic state transitions
+# where an agent can switch to some other state with some probability. For example,
+# an agent named Professor can switch to the following states after having been in the
+# state of writing a paper: Sleep, Die, TeachClass, Eat, Travel. In addition,
+Agents:
+  Agent Name X:
+    null: #this is the initial state
+      Some default behavior and then: [ State A: 0.1, State B: 0.6, State X: somePdfGenerator]
+    State A: [ stateAbehavior: [ State A: 0.01, State B: 0.3, State X: somePdfGenerator] ]
+    State B:
+      Respond to messages A and Y: State X
+    State X:
+      Spawn Agent Y: null
