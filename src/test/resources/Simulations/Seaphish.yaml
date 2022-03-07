@@ -67,7 +67,7 @@ Agents:
     ? Uniform: App
     :
       ? [ 1, totalMessages ]
-        :
+      :
         200: [ ">": 0.1, "<": 0.8 ]
     messageCounter: 0
     responseCounter: 0
