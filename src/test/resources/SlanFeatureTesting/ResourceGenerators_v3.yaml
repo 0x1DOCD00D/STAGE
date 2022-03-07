@@ -1,0 +1,6 @@
+Agents:
+  Resources:
+    ? Uniform: SomeUniformGenerator
+    :
+      null:
+        200: null

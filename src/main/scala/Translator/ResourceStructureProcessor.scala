@@ -20,8 +20,11 @@ class ResourceStructureProcessor extends GenericProcessor :
 
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => List(SlanKeyValue(key, value))
+      case (key:YamlPrimitiveTypes, None) => List(SlanKeyNoValue(key))
       case (key: List[_], value:Map[_,_]) => List(ResourcePDFParameters(key.map(aV => SlanValue(convertJ2S(aV).toString))))
       :::  List(ResourcePDFConstraintsAndSeed((new ResourcePDFSeedConstraintsProcessor).commandProcessor(convertJ2S(value))))
+      case (key: List[_], None) => List(ResourcePDFParameters(key.map(aV => SlanValue(convertJ2S(aV).toString))))
+        :::  List()
       case _ => (new ResourcesProcessor).commandProcessor(convertJ2S(v))
     }
     case simpleValue: YamlPrimitiveTypes => List(SlanValue(simpleValue))

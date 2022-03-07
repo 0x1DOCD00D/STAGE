@@ -21,8 +21,9 @@ class ResourcesProcessor extends GenericProcessor {
     case v: (_, _) => convertJ2S(v(0)) match {
       case arr: List[_] => List(ResourcePeriodicGenerator((new ResourceGenerationProcessor).commandProcessor(convertJ2S(v(0)))
         ::: (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1)))))
-      case _ => List(Resource((new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).head,
-        (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1)))))
+      case _ => List(Resource(
+        if( convertJ2S(v(0)) != None)(new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).head
+        else SlanNoValue, (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1)))))
     }
 
     case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord

@@ -51,6 +51,9 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val messageYaml = "SlanFeatureTesting/Messages.yaml"
   val messageDerivedYaml = "SlanFeatureTesting/Message_Derived.yaml"
   val resource_generator = "SlanFeatureTesting/ResourceGenerators.yaml"
+  val resource_generator_v1 = "SlanFeatureTesting/ResourceGenerators_v1.yaml"
+  val resource_generator_v2 = "SlanFeatureTesting/ResourceGenerators_v2.yaml"
+  val resource_generator_v3 = "SlanFeatureTesting/ResourceGenerators_v3.yaml"
   val resources_v0 = "SlanFeatureTesting/Resources_v0.yaml"
   val resources_v1 = "SlanFeatureTesting/Resources_v1.yaml"
   val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
@@ -303,7 +306,6 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
-
   it should "translate a complex resource spec for generating random distributions" in {
     val expected = List(
         Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
@@ -311,6 +313,27 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
             ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8)))))
     )
     val path = getClass.getClassLoader.getResource(resource_generator).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)).toString() shouldBe expected.toString()
+  }
+
+  it should "translate a complex resource spec for generating a unique random integer starting with one" in {
+    val expected = List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))
+    val path = getClass.getClassLoader.getResource(resource_generator_v1).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)).toString() shouldBe expected.toString()
+  }
+
+  it should "translate a complex resource spec for generating a unique random integer without any constraints" in {
+    val expected = List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List()))
+    val path = getClass.getClassLoader.getResource(resource_generator_v2).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)).toString() shouldBe expected.toString()
+  }
+
+  it should "translate a complex resource spec for generating a unique random integer with a seed only" in {
+    val expected = List(
+      Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+        List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))))
+    )
+    val path = getClass.getClassLoader.getResource(resource_generator_v3).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)).toString() shouldBe expected.toString()
   }
 
@@ -322,8 +345,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
             List(SlanKeyValue("Item1","someGenerator"), SlanKeyValue("Item2",0.2), SlanKeyValue("Item3","someOtherGenerator"))))), SlanKeyValue("column2","someGenerator"), SlanKeyValue("column3","someBehavior"))),
       Resource(ResourceTag("dim4",None),
         List(Resource(ResourceTag("dim3",Some("list")),
-          List(SlanKeyValue("column4","generator200_500"), SlanKeyValue("column5","generator1_5"))),
-          Resource(ResourceTag("someOtherAttribute",None),List()))),
+          List(SlanKeyValue("column4","generator200_500"), SlanKeyValue("column5","generator1_5"))), SlanKeyNoValue("someOtherAttribute"))),
       Resource(ResourceTag("dim5",None),
         List(Resource(ResourceTag("dim4",Some("list")),List(SlanKeyValue("column6","generator0_1")))))
     )
@@ -346,12 +368,8 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val expected = List(
       Resource(ResourceTag("someTableResource",None),
         List(Resource(ResourceTag("columns",Some("list")),
-          List(Resource(ResourceTag("column3",None),List()),
-            Resource(ResourceTag("column1",None),List()),
-            Resource(ResourceTag("column6",None),List()),
-            Resource(ResourceTag("column2",None),List()),
-            Resource(ResourceTag("column5",None),List()),
-            Resource(ResourceTag("column4",None),List())))))
+          List(SlanKeyNoValue("column3"), SlanKeyNoValue("column1"),
+            SlanKeyNoValue("column6"), SlanKeyNoValue("column2"), SlanKeyNoValue("column5"), SlanKeyNoValue("column4")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v7).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -361,8 +379,10 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     val expected = List(
       Resource(ResourceTag("UniqueServiceId",Some("jar")),
         List(Resource(ResourceTag("http://url/to/Jar/name.jar",None),
-          List(Resource(ResourceTag("methodName",None),List(SlanValue("parm1"), SlanValue("parm2"))), SlanKeyValue("methodName","parm1"),
-            Resource(ResourceTag("methodName",None),List()), Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
+          List(Resource(ResourceTag("methodName",None),
+            List(SlanValue("parm1"), SlanValue("parm2"))), SlanKeyValue("methodName","parm1"),
+            SlanKeyNoValue("methodName"),
+            Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
     )
     val path = getClass.getClassLoader.getResource(resources_v8).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
@@ -474,7 +494,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   it should "translate a resource spec for a map of some agent to its coordinate resource" in {
     val expected = List(
       Resource(ResourceTag("Coordinates",None),
-        List(Resource(ResourceTag("x",None),List()), Resource(ResourceTag("y",None),List()))),
+        List(SlanKeyNoValue("x"), SlanKeyNoValue("y"))),
       Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),List(SlanKeyValue("Pedestrian","Coordinates")))
     )
     val path = getClass.getClassLoader.getResource(resources_v9).getPath

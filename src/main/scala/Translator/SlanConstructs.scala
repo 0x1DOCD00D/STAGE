@@ -36,8 +36,12 @@ enum SlanConstruct:
 
   case SlanValue(value: YamlPrimitiveTypes)
   
-  case SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes)
+  case SlanNoValue
   
+  case SlanKeyValue(key: YamlPrimitiveTypes, value: YamlPrimitiveTypes)
+
+  case SlanKeyNoValue(key: YamlPrimitiveTypes)
+
   case Pdf(id: PdfReference, actions: SlanConstructs)
   
   case Behavior(id: BehaviorMandatoryReference, actions: SlanConstructs)

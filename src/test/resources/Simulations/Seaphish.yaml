@@ -1,20 +1,19 @@
 Agents:
   AppStore: # an appstore hosts apps and collects info about its behavior
-    Resources:
-      ? map: smartphoneResourcesUsage
-      :
-        appID:
-          CPU: 100
-          RAM: 0
-          NetworkBandwidth: 10000
 
   Smartphone: # a smartphone manages all GAPs as well as the Seaphish platform
-  # smartphones join the network and drop out at some rate.
-    null: [InstallApp: 0.9, DisableApp: 0.08, Leave: 0.02]
-    InstallApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
-    UseApp: [UseApp: 0.7, InstallApp: 0.2, DisableApp: 0.08, Leave: 0.02]
-    DisableApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
-    Leave: [Leave: 0.7, null: 0.3]
+    # smartphones join the network and drop out at some rate.
+    null:
+      null: [InstallApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    InstallApp:
+      InstallApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    UseApp:
+      UseSomeApp: [UseApp: 0.7, InstallApp: 0.2, DisableApp: 0.08, Leave: 0.02]
+    DisableApp:
+      DeactivateSomeApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+    Leave:
+      GoOfflineForSomeTime: [Leave: 0.7, null: 0.2, OffPermanently: 0.1]
+    OffPermanently:
 
   TargetGAP: # the financial app that should be protected
   # a gap is installed on some smartphone and then it's used
@@ -29,7 +28,14 @@ Agents:
   MaliciousGAP: # an app that masks as a provider of assistive services but tries to steal sensitive info and send it to the external operator
 
   Behaviors:
-    Respond2Message: #used
+    ...AddNewApp2AppStore:
+      # keep adding new apps every 1000 time units indefinitely, i.e., the "howmanytimes" null
+      ? 1000: null
+      :
+        Fn_Send: MyOpinionAboutYou
+        Fn_Inc: messageCounter
+
+    Respond2Message:
       MyOpinionAboutYou:
         IF:
           ">=":
@@ -45,17 +51,24 @@ Agents:
       IdoNotCareResponse:
         Fn_Inc: responseCounter
 
-    ...SendMessage:
-      ? 1000: null
-        :
-        Fn_Send: MyOpinionAboutYou
-        Fn_Inc: messageCounter
 
   Channels:
     TalksT0:
       null: Transmissions
 
   Resources:
+    ? map: smartphoneResourcesUsage
+    :
+      appID:
+        CPU: 100
+        RAM: 0
+        NetworkBandwidth: 10000
+
+    ? Uniform: App
+    :
+      ? [ 1, totalMessages ]
+        :
+        200: [ ">": 0.1, "<": 0.8 ]
     messageCounter: 0
     responseCounter: 0
     maxMessagesThreshold: 10
