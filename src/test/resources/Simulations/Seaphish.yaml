@@ -1,39 +1,85 @@
 Agents:
   AppStore: # an appstore hosts apps and collects info about its behavior
+    null:
+      ...AddNewApp2AppStore: CollectAppsUsages
+      CollectAppsUsages:
 
   Smartphone: # a smartphone manages all GAPs as well as the Seaphish platform
     # smartphones join the network and drop out at some rate.
-    null:
-      null: [InstallApp: 0.9, DisableApp: 0.08, Leave: 0.02]
-    InstallApp:
+    # a smartphone simulates a user
+    null: #create the seaphish platform for a smartphone
+      null: [RequestApp: 0.98, Leave: 0.02]
+    RequestApp:
+      SendAppRequest2AppStore: InstallApp
+    InstallApp: #inform seaphish of the new installed app
       InstallApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
-    UseApp:
-      UseSomeApp: [UseApp: 0.7, InstallApp: 0.2, DisableApp: 0.08, Leave: 0.02]
+    UseApp: # smartphone users asks a targetgap to do something and selects a malicious or assistive gap to provide a service for the target gap
+      UseSomeApp: [UseApp: 0.7, RequestApp: 0.2, DisableApp: 0.08, Leave: 0.02]
     DisableApp:
-      DeactivateSomeApp: [UseApp: 0.9, DisableApp: 0.08, Leave: 0.02]
+      DeactivateSomeApp: [UseApp: 0.08, RequestApp: 0.9, Leave: 0.02]
     Leave:
-      GoOfflineForSomeTime: [Leave: 0.7, null: 0.2, OffPermanently: 0.1]
+      GoOfflineForSomeTime: [Leave: 0.7, RequestApp: 0.2, OffPermanently: 0.1]
     OffPermanently:
 
   TargetGAP: # the financial app that should be protected
   # a gap is installed on some smartphone and then it's used
-  #
+    null:
+      RealAppDefaultBehavior:
+
+    Resources:
 
   PhishingGAP: # generated phishing apps that are dopplegangers of the target app
+    # a phishing gap is spawned by the platform
+    null:
+      PhishingAppDefaultBehavior:
+
+    Resources:
+      TargetAppID: null #it will have the same ID as the real target GAP
+      StatesRatio: generateRatioZero2One
+      TransitionsRatio: generateRatioZero2One
+      ObjectsInState: generateRatioZero2One
 
   Seaphish: # the dbd platform
+    # for each installed TargetGAP the platform spawns phishing gaps.
+    # the platform monitors the behavior of all installed malicious and assistive apps and notified the smartphone
+    # from time to time seaphish launches phishing gaps and asks malicious or assistive gaps to provide a service
+    null:
+      ...DeceiveAndServe: # for each installed
+
+    Resources:
+      - DopplegangerGAPs # it is a map for each installed targetgap to its doppleganger gaps produced by seaphish
+
   AssistiveGAP: # an assistive app that uses the accessibility technology to provide services for the target app
+    null:
+      ...ProvideUsefulServices:
+
   ExternalOperator: # a person or a machine that receives sensitive financial information stolen from an app
+    null:
+      StealMoney:
+
   FinancialOrganization: # the financial organization that keeps the money of the smartphone user
+    null:
+      DetectFraud:
+
   MaliciousGAP: # an app that masks as a provider of assistive services but tries to steal sensitive info and send it to the external operator
+    null:
+      null: [ProvideUsefulServices: 0.5, ExploreApps: 0.4, Decide2Attack: 0.1]
+    ProvideUsefulServices2App: [ProvideUsefulServices: 0.3, ExploreApps: 0.6, Decide2Attack: 0.1]
+    SpyOnOtherApps: [ProvideUsefulServices: 0.6, ExploreApps: 0.3, Decide2Attack: 0.1]
+    ThinkAndAttack: [ProvideUsefulServices: 0.69, ExploreApps: 0.3, Decide2Attack: 0.01]
+
+  Groups:
+    PhishingGAPs4TargetGAP:
+      PhishingGAP: randomGenerator4PhishingGAPs
 
   Behaviors:
     ...AddNewApp2AppStore:
       # keep adding new apps every 1000 time units indefinitely, i.e., the "howmanytimes" null
-      ? 1000: null
+      ? 1000: TotalAppsInAppStore
       :
-        Fn_Send: MyOpinionAboutYou
-        Fn_Inc: messageCounter
+        Fn_Update: [smartphoneResourcesUsage: AppID, Fn_Create: [TargetGAP: 0.6, MaliciousGAP: 0.4]]
+    RealAppDefaultBehavior:
+      null:
 
     Respond2Message:
       MyOpinionAboutYou:
@@ -52,17 +98,34 @@ Agents:
         Fn_Inc: responseCounter
 
 
+
   Channels:
     TalksT0:
       null: Transmissions
 
   Resources:
+    UniqueAppID: 0
+    TotalAppsInAppStore: 1000000
+    ? map: TargetGAPStructure
+    :
+      AppID:
+        States: StateMachineGenerator
+        Transitions:
+          Uniform: [ States, Fn_Multiply[ States, 10 ] ]
+        ObjectsInState: ObjectStateGenerator
+
     ? map: smartphoneResourcesUsage
     :
       appID:
         CPU: 100
         RAM: 0
         NetworkBandwidth: 10000
+
+    ? map: DopplegangerGAPs
+      :
+      targetGapID:
+        ? list: phishingGaps
+          : []
 
     ? Uniform: App
     :
@@ -80,7 +143,7 @@ Messages:
 Models:
   SocialMediaSimulation:
     Agents:
-      Person: 2
+      AppStore: 1
 
     SimGraph:
       Person:

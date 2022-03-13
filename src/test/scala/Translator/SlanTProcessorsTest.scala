@@ -68,6 +68,7 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val resources_v9 = "SlanFeatureTesting/Resources_v9.yaml"
   val resources_v10 = "SlanFeatureTesting/Resources_v10.yaml"
   val resources_v11 = "SlanFeatureTesting/Resources_v11.yaml"
+  val resources_v12 = "SlanFeatureTesting/Resources_v12.yaml"
 
   val socialMediaCompanySimulation = "Simulations/SocialMediaCompany.yaml"
   val primitiveSimulation = "Simulations/PrimitiveMessageExchange.yaml"
@@ -509,6 +510,16 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
           ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
     )
     val path = getClass.getClassLoader.getResource(resources_v11).getPath
+    SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
+  }
+
+  it should "translate a resource spec for a map that constains an empty list as a value" in {
+    val expected = List(
+      Resource(ResourceTag("DopplegangerGAPs",Some("map")),
+        List(Resource(ResourceTag("targetGapID",None),
+          List(Resource(ResourceTag("phishingGaps",Some("list")),List())))))
+    )
+    val path = getClass.getClassLoader.getResource(resources_v12).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
   }
 
