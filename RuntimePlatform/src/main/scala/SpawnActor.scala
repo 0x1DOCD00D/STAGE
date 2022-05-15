@@ -13,6 +13,33 @@ import scala.reflect.runtime.universe
 import scala.tools.reflect.ToolBox
 
 object SpawnActor {
+  /*
+  import akka.actor._
+  import StageMessage.StageProtobufMessage
+
+    class HelloActor extends Actor {
+    override def receive: Receive = {
+      case protoMessage : ProtoMessage => {
+      println("I have received protobuf with name " + protoMessage.name)
+      protoMessage.name match {
+      
+        case "init" => NebulaScala3.Scala3Main.xxx = 10;  println("Changing X...")
+        case "authentication" => println("Authentication has been received!!!"); println(protoMessage.args)
+        case "getReference" => Thread.sleep(2000); println(NebulaScala2.Compiler.ActorCodeCompiler.reference); NebulaScala2.Compiler.ActorCodeCompiler.reference ! "hey!"
+      }
+}
+}
+
+    }
+
+object HelloActor {
+def props() : Props = Props(new HelloActor())
+}
+
+
+return HelloActor.props())
+  * */
+
   val toolbox:  ToolBox[scala.reflect.runtime.universe.type] = universe.runtimeMirror(getClass.getClassLoader).mkToolBox()
   val code:String =
     """

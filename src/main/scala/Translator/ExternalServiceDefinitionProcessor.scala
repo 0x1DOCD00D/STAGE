@@ -10,18 +10,19 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanKeywords.{FnPrefix, IF}
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class ExternalServiceDefinitionProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case entry: String if entry.toUpperCase === IF.toUpperCase => (new IfThenElseProcessor).commandProcessor(convertJ2S(v._2))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case entry: String if entry.toUpperCase === IF.toUpperCase => (new IfThenElseProcessor).commandProcessor(convertJ2S(v(1)))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }

@@ -34,6 +34,10 @@ enum SlanConstruct:
 
   case StateProbabilitySwitch(stateId: StateReference, probSource: SlanValue)
 
+  case SlanError(errorMessage: String)
+
+  case IncorrectYamlType(typeName: String)
+
   case SlanValue(value: YamlPrimitiveTypes)
   
   case SlanNoValue
@@ -126,7 +130,7 @@ enum SlanConstruct:
   
   case ResourceConsistencyModelInGroup(cmr: ConsistencyModelReference, id: ResourceReference)
   
-  case ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanValue)
+  case ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanConstructs)
   
   case Channel(id: ChannelReference, behaviors: SlanConstructs)
   

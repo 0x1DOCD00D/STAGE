@@ -10,20 +10,20 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString, YamlUnexpectedTypeFound}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class MessageInheritanceKeyProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+class MessageInheritanceKeyProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (msgId: String, parent: String) => List(MessageDeclaration(msgId,Some(parent)))
-      case (msgId: String, None) => List(MessageDeclaration(msgId,None))
-      case unknown => throw new Exception(YamlUnexpectedTypeFound(unknown.getClass.toString + ": " + unknown.toString))
+      case (msgId: String, parent: String) => Eval.now(List(MessageDeclaration(msgId,Some(parent))))
+      case (msgId: String, None) => Eval.now(List(MessageDeclaration(msgId,None)))
+      case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass.toString + ": " + unknown.toString)))
     }
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
   }
-}

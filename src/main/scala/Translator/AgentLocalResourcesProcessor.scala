@@ -10,21 +10,22 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class AgentLocalResourcesProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     //each agent can be assigned local resources that are not generators
-    case resourceId: String => List(SlanValue(resourceId))
+    case resourceId: String => Eval.now(List(SlanValue(resourceId)))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => List(SlanKeyValue(key, value))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+      case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(SlanKeyValue(key, value)))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
     }
-    case unknown => throw new Exception(SlanUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString))
+    case unknown => Eval.now(List(SlanUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString)))
   }
 }

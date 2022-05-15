@@ -9,10 +9,15 @@
 
 package Translator
 
-import Translator.SlanAbstractions.{BehaviorReference, StateReference}
+import Translator.SlanAbstractions.{BehaviorReference, SlanConstructs, StateReference, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.{SlanTranslator, SlantParser}
+import cats.Eval
+import cats.effect.IO
+import cats.effect.kernel.Outcome.{Errored, Succeeded}
+import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 import scalaz.Lens
 
@@ -21,10 +26,7 @@ import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.util.{Failure, Success, Try}
 
-class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
-
-  behavior of "the Slan traslator for SLAN Yaml specifications"
-
+class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val fullSimulation = "SlanFeatureTesting/Full_Simulation_v1.yaml"
   val agentsFull_Block = "SlanFeatureTesting/Agents_Full_v1.yaml"
   val agentsFull_Flow = "SlanFeatureTesting/Agents_Full_v2.yaml"
@@ -78,6 +80,43 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
   val floatScalarValue = 123450.6789
   val boolScalarValue = false
 
+  def translateSlanProgram(path: String): IO[SlanConstructs] =
+    for {
+      ymlModelFib <- SlantParser(path).start
+      ymlModel <- ymlModelFib.join
+      ymlIo = ymlModel match
+        case Succeeded(result) => for {
+          fa <- result
+          outyml = fa match
+            case Right(SlanYamlHandle(ymlref)) => ymlref
+            case err => IO.raiseError(new RuntimeException(s"Incorrect value computed: ${err.toString}"))
+        } yield outyml
+        case Errored(e) => IO.raiseError(e)
+        case _ => IO.raiseError(new RuntimeException("Fiber computation failure."))
+      yml <- ymlIo
+      reseval <- SlanTranslator(yml)
+    } yield reseval
+
+  "the Slan traslator for SLAN Yaml specifications" - {
+    val expected = Agent("Agent Name X",
+      List(
+        State(Some("Init"), List(StateBehavior(Some("GenerateMessages X, W, and U"), Some("State A")))),
+        State(Some("State A"), List(StateBehavior(Some("stateAbehavior"), Some("State B")))),
+        State(Some("State B"), List(StateBehavior(Some("Respond to messages A and Y"), None))),
+        State(Some("State X"), List(StateBehavior(Some("Last Behavior"), None)))))
+
+    "translate an agents spec with full flow structure" in {
+      val path = getClass.getClassLoader.getResource(agentsFull_Flow).getPath
+      translateSlanProgram(path).asserting(_.head shouldBe expected)
+    }
+
+    "translate an agents spec with a block structure" in {
+      val path = getClass.getClassLoader.getResource(agentsFull_Block).getPath
+      translateSlanProgram(path).asserting(_.head shouldBe expected)
+    }
+  }
+
+/*
   it should "translate an agents spec" in {
     val path1 = getClass.getClassLoader.getResource(agentsFull_Flow).getPath
     val path2 = getClass.getClassLoader.getResource(agentsFull_Block).getPath
@@ -1011,4 +1050,4 @@ class SlanTProcessorsTest extends AnyFlatSpec with Matchers :
     )
     val path = getClass.getClassLoader.getResource(primitiveSimulation).getPath
     SlanTranslator(SlantParser.convertJ2S(SlantParser(path).yamlModel)) shouldBe expected
-  }
+  }*/

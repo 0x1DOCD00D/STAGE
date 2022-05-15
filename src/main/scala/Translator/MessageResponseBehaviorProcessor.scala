@@ -10,39 +10,40 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 import scala.collection.mutable
 
 class MessageResponseBehaviorProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) if v._2 == null => convertJ2S(v._1) match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) if v(1) == null => convertJ2S(v(0)) match {
       //msgName: {blah blah behavior actions}
-      case msgId: String => List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //null defines a periodic behavior that is invoked at specified time intervals
-      case None => List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case None => Eval.now(List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //? [msg1, msg2, ..., msgN]: {blah blah behavior actions}
       case msgIdList: Map[_, _] =>
         val lst = msgIdList.toList
         val forcedConversion = (lst.head, lst.tail.toMap)
-        List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(forcedConversion._1)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(forcedConversion._2))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+        Eval.now(List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(forcedConversion._1)).value, (new BehaviorActionsProcessor).commandProcessor(convertJ2S(forcedConversion._2)).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
-    case v: (_, _) if v._2 != null => convertJ2S(v._1) match {
+    case v: (_, _) if v(1) != null => convertJ2S(v(0)) match {
       //msgName: {blah blah behavior actions}
-      case msgId: String => List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case None => List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case None => Eval.now(List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //? [msg1, msg2, ..., msgN]: {blah blah behavior actions}
-      case msgIdList: (_,_) => List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(v._1)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case msgIdList: List[_] => List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(v._1)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case msgIdList: (_,_) => Eval.now(List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(v(0))).value, (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case msgIdList: List[_] => Eval.now(List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(v(0))).value, (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

@@ -9,13 +9,17 @@
 
 package HelperUtils
 
+import Translator.SlanAbstractions.SlanConstructs
+import Translator.SlanConstruct.{IncorrectYamlType, SlanError}
 import org.slf4j.Logger
 
+type ErrorOrSlanConstructs = Either[SlanError, SlanConstructs]
+
 object ErrorWarningMessages:
-  def DistributionNameFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
+  def DistributionNameFailure[T](input: String, exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Incorrect distribution name is specified: $input - $exceptionMessage"
     logger.error(errorMsg)
-    errorMsg
+    SlanError(errorMsg)
 
   def YamlScriptFileFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
     val errorMsg = s"Error occured when loading input Yaml script $input: $exceptionMessage"
@@ -27,32 +31,32 @@ object ErrorWarningMessages:
     logger.error(errorMsg)
     errorMsg
 
-  def YamlUnexpectedTypeFound(exceptionMessage: String)(using logger: Logger): String =
+  def YamlUnexpectedTypeFound(exceptionMessage: String)(using logger: Logger): IncorrectYamlType =
     val errorMsg = s"The following type is not handled in the Yaml script: $exceptionMessage"
     logger.error(errorMsg)
-    errorMsg
+    IncorrectYamlType(errorMsg)
 
-  def SlanUnexpectedTypeFound(exceptionMessage: String)(using logger: Logger): String =
+  def SlanUnexpectedTypeFound(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"The following type $exceptionMessage is not expected at this location in Slan specification:"
     logger.error(errorMsg)
-    errorMsg
+    SlanError(errorMsg)
 
-  def SlanInvalidConstruct(exceptionMessage: String)(using logger: Logger): String =
+  def SlanInvalidConstruct(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"The following construct $exceptionMessage is not valid at this location in Slan specification:"
     logger.error(errorMsg)
-    errorMsg
+    SlanError(errorMsg)
 
-  def YamlKeyIsNotString(exceptionMessage: String)(using logger: Logger): String =
+  def YamlKeyIsNotString(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Yaml key $exceptionMessage is not a String"
     logger.error(errorMsg)
-    errorMsg
+    SlanError(errorMsg)
 
-  def YamlKeyIsMissing(exceptionMessage: String)(using logger: Logger): String =
+  def YamlKeyIsMissing(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Yaml key $exceptionMessage is not specified"
     logger.error(errorMsg)
-    errorMsg
+    SlanError(errorMsg)
 
-  def LogGenericMessage(cls: Class[_], message: String)(using logger: Logger): String =
+  def LogGenericMessage(cls: Class[_], message: String)(using logger: Logger): SlanError =
     val errorMsg = s"${cls.getName}: $message"
     logger.info(errorMsg)
-    errorMsg
+    SlanError(errorMsg)

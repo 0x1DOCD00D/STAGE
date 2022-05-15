@@ -10,23 +10,24 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class IfThenElseProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === THEN.toUpperCase => List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === ELSE.toUpperCase => List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === ELSEIF.toUpperCase => List(ElseIf((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === THEN.toUpperCase => Eval.now(List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === ELSE.toUpperCase => Eval.now(List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === ELSEIF.toUpperCase => Eval.now(List(ElseIf((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
     }
 
-    case entry: YamlPrimitiveTypes => List(SlanValue(entry))
+    case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }

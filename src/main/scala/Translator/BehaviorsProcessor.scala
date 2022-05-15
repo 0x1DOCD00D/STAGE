@@ -10,21 +10,22 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.PERIODICBEHAVIORDESIGNATOR
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class BehaviorsProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String if cv.startsWith(PERIODICBEHAVIORDESIGNATOR) => List(PeriodicBehavior(cv, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1)))))
-      case cv: String => List(Behavior(cv, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).asInstanceOf))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case cv: String if cv.startsWith(PERIODICBEHAVIORDESIGNATOR) => Eval.now(List(PeriodicBehavior(cv, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(Behavior(cv, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

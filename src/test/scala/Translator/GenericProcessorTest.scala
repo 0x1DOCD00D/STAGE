@@ -9,30 +9,48 @@
 
 package Translator
 
+import Translator.SlanAbstractions.YamlTypes
 import Translator.SlanKeywords.{Agents, Behavior, Models}
+import akka.actor.Status.Success
+import cats.effect.*
+import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
+import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
-class GenericProcessorTest extends AnyFlatSpec with Matchers {
-
-  behavior of "GenericProcessor"
+class GenericProcessorTest extends AsyncFreeSpec with AsyncIOSpec with Matchers {
   val basicYamlTemplate = "SlanFeatureTesting/Template_v1.yaml"
-
-  it should "load up and find the key Agents" in {
-    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    val ymlModel = SlantParser(path).yamlModel
-    new GenericProcessor {}.lookAhead(Agents, SlantParser.convertJ2S(ymlModel)) shouldBe true
+  val path: String = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
+  def parseObtainYamlRef(entry: String): IO[Boolean] = {
+    for {
+      ymlModelFib <- SlantParser(path).start
+      ymlModel <- ymlModelFib.join
+      ymlIo = ymlModel match
+        case Succeeded(result) => for {
+          fa <- result
+          outyml = fa match
+            case Right(SlanYamlHandle(ymlref)) => ymlref
+            case err => IO.raiseError( new RuntimeException(s"Incorrect value computed: ${err.toString}"))
+        } yield outyml
+        case Errored(e) => IO.raiseError(e)
+        case _ => IO.raiseError(new RuntimeException("Fiber computation failure."))
+      yml <- ymlIo
+      reseval = new GenericProcessor {}.lookAhead(entry, SlantParser.convertJ2S(yml))
+    } yield reseval
   }
 
-  it should "load up and fail to find the key Models" in {
-    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    val ymlModel = SlantParser(path).yamlModel
-    new GenericProcessor {}.lookAhead(Models, SlantParser.convertJ2S(ymlModel)) shouldBe false
-  }
+  "GenericProcessor" - {
+    "load up and find the key Agents" in {
+      parseObtainYamlRef(Agents).asserting(_ shouldBe true)
+    }
 
-  it should "load up and fail to find the key Behavior" in {
-    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    val ymlModel = SlantParser(path).yamlModel
-    new GenericProcessor {}.lookAhead(Behavior, SlantParser.convertJ2S(ymlModel)) shouldBe false
+    "load up and fail to find the key Models" in {
+      parseObtainYamlRef(Models).asserting(_ shouldBe false)
+    }
+
+    "load up and fail to find the key Behavior" in {
+      parseObtainYamlRef(Behavior).asserting(_ shouldBe false)
+    }
   }
 }

@@ -10,23 +10,24 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class PeriodicBehaviorKeyParamsProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case timeInterval: YamlPrimitiveTypes => List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None))
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case timeInterval: YamlPrimitiveTypes => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None)))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (timeInterval: YamlPrimitiveTypes, timesX: YamlPrimitiveTypes) => List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), Some(SlanValue(timesX))))
-      case (None, timesX: YamlPrimitiveTypes) => List(PeriodicBehaviorFiringDuration(SlanValue(0), Some(SlanValue(timesX))))
-      case (None, None) => List(PeriodicBehaviorFiringDuration(SlanValue(0), None))
-      case (timeInterval: YamlPrimitiveTypes, None) => List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+      case (timeInterval: YamlPrimitiveTypes, timesX: YamlPrimitiveTypes) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), Some(SlanValue(timesX)))))
+      case (None, timesX: YamlPrimitiveTypes) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(0), Some(SlanValue(timesX)))))
+      case (None, None) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(0), None)))
+      case (timeInterval: YamlPrimitiveTypes, None) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None)))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
     }
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

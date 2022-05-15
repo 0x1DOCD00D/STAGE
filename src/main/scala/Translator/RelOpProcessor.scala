@@ -10,26 +10,26 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{YamlKeyIsNotString, YamlUnexpectedTypeFound}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
-import cats.Eq
 import cats.implicits.*
+import cats.{Eq, Eval}
 
 class RelOpProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case entry: String if entry === LessThen => List(ROPLess((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry === LessEqual => List(ROPLessEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry === GreaterEqual => List(ROPGreaterEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry === GreaterThen => List(ROPGreater((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case entry: String if entry === LessThen => Eval.now(List(ROPLess((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry === LessEqual => Eval.now(List(ROPLessEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry === GreaterEqual => Eval.now(List(ROPGreaterEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry === GreaterThen => Eval.now(List(ROPGreater((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case entry: String if entry === EqualTo
-      => List(ROPEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      => Eval.now(List(ROPEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case entry: YamlPrimitiveTypes => List(SlanValue(entry))
+    case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))
 
-    case unknown => throw new Exception(YamlUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString))
+    case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString)))
   }

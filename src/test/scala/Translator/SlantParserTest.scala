@@ -9,16 +9,23 @@
 
 package Translator
 
+import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanConstruct.IncorrectYamlType
+import Translator.SlanKeywords.{Agents, Behavior, Models}
+import cats.effect.IO
+import cats.effect.kernel.Outcome.{Errored, Succeeded}
+import cats.effect.testing.scalatest.AsyncIOSpec
 import org.joda.time.DateTime
 import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
 
 import java.util.Date
+import scala.concurrent.Future
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 
-class SlantParserTest extends AnyFlatSpec with Matchers {
-  behavior of "the Slant parser for single value scalars"
+class SlantParserTest extends AsyncFreeSpec with AsyncIOSpec with Matchers {
   val complexYamlTemplate_2 = "SlanFeatureTesting/ComplexKey_v2.yaml"
   val complexYamlTemplate_1 = "SlanFeatureTesting/ComplexKey_v1.yaml"
   val basicYamlTemplate = "SlanFeatureTesting/Template_v1.yaml"
@@ -36,184 +43,247 @@ class SlantParserTest extends AnyFlatSpec with Matchers {
   val floatScalarValue = 123450.6789
   val boolScalarValue = false
 
-  the[IllegalArgumentException] thrownBy SlantParser(nonexistentYamlFile) should have message s"Error occured when loading input Yaml script $nonexistentYamlFile: $nonexistentYamlFile (No such file or directory)"
+  def parseObtainYamlRef(path: String): IO[YamlTypes] = {
+    for {
+      ymlModelFib <- SlantParser(path).start
+      ymlModel <- ymlModelFib.join
+      ymlIo = ymlModel match
+        case Succeeded(result) => for {
+          fa <- result
+          outyml = fa match
+            case Right(SlanYamlHandle(ymlref)) => ymlref
+            case err => IO.raiseError(new RuntimeException(s"Incorrect value computed: ${err.toString}"))
+        } yield outyml
+        case Errored(e) => IO.raiseError(e)
+        case _ => IO.raiseError(new RuntimeException("Fiber computation failure."))
+      yml <- ymlIo
+      reseval = SlantParser.convertJ2S(yml)
+    } yield reseval
+  }
 
-
-  it should "load up and extract the content of the single null entry in yaml" in {
-    val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Option[_] => None
-      case _ => Some(path)
+  "Loading and Parsing Slan Programs" - {
+    "issue an error if the file does not exist" in {
+      val errMsg = for {
+        parsed <- SlantParser(nonexistentYamlFile)
+        failed = parsed match
+          case Left(FileRuntimeError(e)) => e.getMessage
+          case err => IO.raiseError(new RuntimeException(s"Incorrect value computed: ${err.toString}"))
+      } yield failed
+      errMsg.asserting(_ shouldBe "Hades.yaml (No such file or directory)")
     }
 
-    res shouldBe None
-  }
+    "load up and extract the content of the single null entry in yaml" in {
+      val path = getClass.getClassLoader.getResource(singleScalarNullValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Option[_] => None
+          case err => Some(err)
+        }
+      } yield res
 
-
-  it should "load up and extract the content of the single scalar string value incorrectly treated as boolean" in {
-    val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Boolean => v
-      case _ => None
+      yr.asserting(_ shouldBe None)
     }
-    res shouldBe None
-  }
 
-  it should "load up and extract the content of the single scalar boolean value" in {
-    val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Boolean => v
-      case _ => !boolScalarValue
+    "load up and extract the content of the single scalar string value incorrectly treated as boolean" in {
+      val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Boolean => v
+          case _ => None
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe None)
     }
-    res shouldBe boolScalarValue
-  }
 
-  it should "load up and extract the content of the single scalar date value" in {
-    val wrongDate = new DateTime(new Date())
-    val oracle = DateTime.parse("2021-11-06T00:00:00.000-05:00")
-    val path = getClass.getClassLoader.getResource(singleScalarDateValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: String => DateTime.parse(v)
-      case v: DateTime => v
-      case _ => wrongDate
+    "load up and extract the content of the single scalar boolean value" in {
+      val path = getClass.getClassLoader.getResource(singleScalarBooleanValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Boolean => v
+          case _ => !boolScalarValue
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe boolScalarValue)
     }
-    res.toString() shouldBe oracle.toString()
-  }
 
-  it should "load up and extract the content of the single scalar string value yaml" in {
-    val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: String => v
-      case _ => null
+    "load up and extract the content of the single scalar date value" in {
+      val wrongDate = new DateTime(new Date())
+      val oracle = DateTime.parse("2021-11-06T00:00:00.000-05:00")
+      val path = getClass.getClassLoader.getResource(singleScalarDateValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: String => DateTime.parse(v)
+          case v: DateTime => v
+          case _ => wrongDate
+        }
+      } yield res
+
+      yr.asserting(_.toString shouldBe oracle.toString())
     }
-    res shouldBe stringScalarValue
-  }
 
-  it should "load up and extract the content of the single scalar floating point value yaml" in {
-    val path = getClass.getClassLoader.getResource(singleScalarFloatingPointValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Double => v
-      case _ => -floatScalarValue
+    "load up and extract the content of the single scalar string value yaml" in {
+      val path = getClass.getClassLoader.getResource(singleScalarStringValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: String => v
+          case _ => null
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe stringScalarValue)
     }
-    res shouldBe floatScalarValue
-  }
 
-  it should "load up and extract the content of the single scalar int value yaml" in {
-    val path = getClass.getClassLoader.getResource(singleScalarIntValueFile).getPath
-    val res = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Int => v
-      case _ => -intScalarValue
+    "load up and extract the content of the single scalar floating point value yaml" in {
+      val path = getClass.getClassLoader.getResource(singleScalarFloatingPointValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Double => v
+          case _ => -floatScalarValue
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe floatScalarValue)
     }
-    res shouldBe intScalarValue
-  }
 
-  it should "throw an exception for ill-formed yaml" in {
-    val path = getClass.getClassLoader.getResource(illFormedYaml).getPath
-    the[java.lang.IllegalArgumentException] thrownBy SlantParser(path) should have message
-      """Error occured when parsing input Yaml script: mapping values are not allowed here
-        | in reader, line 2, column 4:
-        |    key: scalar2
-        |       ^
-        |""".stripMargin
-  }
+    "load up and extract the content of the single scalar int value yaml" in {
+      val path = getClass.getClassLoader.getResource(singleScalarIntValueFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Int => v
+          case _ => -intScalarValue
+        }
+      } yield res
 
-  behavior of "the Slant parser for lists of values"
-  val seqOfScalarsFile = "SlanFeatureTesting/SeqOfScalars.yaml"
-  val seqFlowOfScalarsFile = "SlanFeatureTesting/SeqFlowScalars.yaml"
-  val seqOfSeqOfScalarsFile = "SlanFeatureTesting/SeqOfSeqOfScalars.yaml"
-
-  it should "load up and extract the content of the sequence of scalars from a yaml file" in {
-    val path = getClass.getClassLoader.getResource(seqOfScalarsFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: List[_] => v
-      case _ => null
+      yr.asserting(_ shouldBe intScalarValue)
     }
-    result.asInstanceOf[List[_]] shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
-  }
 
-  it should "load up and extract the content of the flow sequence of scalars from a yaml file" in {
-    val path = getClass.getClassLoader.getResource(seqFlowOfScalarsFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: List[_] => v
-      case _ => null
+    "throw an exception for ill-formed yaml" in {
+      val path = getClass.getClassLoader.getResource(illFormedYaml).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: IncorrectYamlType => v.typeName
+          case err => err.getClass().getName
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe "The following type is not handled in the Yaml script: cats.effect.IO$Error")
     }
-    result.asInstanceOf[List[_]] shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
   }
 
-  it should "load up and extract the content of the sequence of flow sequences of scalars from a yaml file" in {
-    val path = getClass.getClassLoader.getResource(seqOfSeqOfScalarsFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: List[_] => v
-      case _ => List()
+  "the Slant parser for lists of values" - {
+    val seqOfScalarsFile = "SlanFeatureTesting/SeqOfScalars.yaml"
+    val seqFlowOfScalarsFile = "SlanFeatureTesting/SeqFlowScalars.yaml"
+    val seqOfSeqOfScalarsFile = "SlanFeatureTesting/SeqOfSeqOfScalars.yaml"
+
+    "load up and extract the content of the single scalar int value yaml" in {
+      val path = getClass.getClassLoader.getResource(seqOfScalarsFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: List[_] => v.asInstanceOf[List[_]]
+          case _ => null
+        }
+      } yield res
+
+      yr.asserting(_ shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null))
     }
-    result should not be List()
-    result.length shouldBe 3
-    result.head.asInstanceOf[java.util.ArrayList[_]].asScala.toList shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null)
-  }
 
-  behavior of "the Slant parser for complex yaml scripts"
-  val simpleMapFile = "SlanFeatureTesting/OneSimpleMap.yaml"
-  val keyName = "key"
-  val keyValue = "value"
-  val threeSimpleMapsFile = "SlanFeatureTesting/ThreeSimpleMaps.yaml"
+    "load up and extract the content of the flow sequence of scalars from a yaml file" in {
+      val path = getClass.getClassLoader.getResource(seqFlowOfScalarsFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: List[_] => v.asInstanceOf[List[_]]
+          case _ => null
+        }
+      } yield res
 
-  it should "load up and extract the content of one simple map from a yaml file" in {
-    val path = getClass.getClassLoader.getResource(simpleMapFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Map[_, _] => v
-      case _ => Map()
+      yr.asserting(_ shouldBe List(stringScalarValue, intScalarValue, floatScalarValue, boolScalarValue, null))
     }
-    result should not be null
-    val convResult = result.asInstanceOf[Map[String, String]]
-    convResult.get(keyName) shouldBe Option(keyValue)
-  }
 
-  it should "load up and extract the content of three simple maps from a yaml file" in {
-    val path = getClass.getClassLoader.getResource(threeSimpleMapsFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: Map[_, _] => v
-      case _ => Map()
+    "load up and extract the content of the sequence of flow sequences of scalars from a yaml file" in {
+      val path = getClass.getClassLoader.getResource(seqOfSeqOfScalarsFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: List[_] => v.asInstanceOf[List[_]]
+          case _ => List()
+        }
+      } yield res
+
+      yr.asserting(_ should not be List())
+      yr.asserting(_.length shouldBe 3)
     }
-    result should not be null
-    val convResult = result.asInstanceOf[Map[String, String]]
-    (1 to 3).foreach(iter => {
-      convResult.get(keyName + iter.toString) shouldBe Option(keyValue + iter.toString)
-    })
   }
 
-  it should "load up and extract the content of the yaml script from a script file" in {
-    val path = getClass.getClassLoader.getResource(basicYamlTemplate).getPath
-    //    SlantParser(path).visit
-  }
+  "the Slant parser for complex yaml scripts" - {
+    val simpleMapFile = "SlanFeatureTesting/OneSimpleMap.yaml"
+    val keyName = "key"
+    val keyValue = "value"
+    val threeSimpleMapsFile = "SlanFeatureTesting/ThreeSimpleMaps.yaml"
 
-  it should "load up and extract the content of block sequences with dashes from a script file" in {
-    val path = getClass.getClassLoader.getResource(blockSequenceFile).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel) match {
-      case v: List[_] => v
-      case _ => List()
+    "load up and extract the content of one simple map from a yaml file" in {
+      val path = getClass.getClassLoader.getResource(simpleMapFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Map[_, _] => v.asInstanceOf[Map[String, String]]
+          case _ => Map()
+        }
+      } yield res
+
+      yr.asserting(_ should not be null)
+      yr.asserting(_.get(keyName) shouldBe Option(keyValue))
     }
-    result.length shouldBe 4
-  }
 
-  it should "extract the content of a complex key as a list of entries" in {
-    val key1 = "Key entry 1"
-    val key2 = "Key entry 2"
-    val path = getClass.getClassLoader.getResource(complexYamlTemplate_1).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel).asInstanceOf[Map[_,_]].toList
-    val rs = SlantParser.convertJ2S(result.head._1)
-    val rs1 = SlantParser.convertJ2S(rs)
-    rs1.asInstanceOf[List[_]].head shouldBe key1
-    rs1.asInstanceOf[List[_]].reverse.head shouldBe key2
-  }
+    "load up and extract the content of three simple maps from a yaml file" in {
+      val path = getClass.getClassLoader.getResource(threeSimpleMapsFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Map[_, _] => v.asInstanceOf[Map[String, String]]
+          case _ => Map()
+        }
+      } yield res
 
-  it should "extract the content of a complex key as key value pairs" in {
-    val key = "key"
-    val value = "value"
-    val path = getClass.getClassLoader.getResource(complexYamlTemplate_2).getPath
-    val result = SlantParser.convertJ2S(SlantParser(path).yamlModel).asInstanceOf[Map[_,_]].toList
+      yr.asserting(_.toList shouldBe List(("key1","value1"), ("key2","value2"), ("key3","value3")))
+    }
 
-    val keymap = SlantParser.convertJ2S(result.head._1).asInstanceOf[Map[_,_]].toList
-    keymap.head._1 shouldBe key
-    keymap.head._2 shouldBe value
+    "load up and extract the content of block sequences with dashes from a script file" in {
+      val path = getClass.getClassLoader.getResource(blockSequenceFile).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: List[_] => v
+          case _ => List()
+        }
+      } yield res
+
+      yr.asserting(_.length shouldBe 4)
+    }
+
+    "extract the content of a complex key as a list of entries" in {
+      val key = "[Key entry 1, Key entry 2]"
+      val path = getClass.getClassLoader.getResource(complexYamlTemplate_1).getPath
+      val yr = for {
+        yamlRefIo <- parseObtainYamlRef(path)
+        res = yamlRefIo match {
+          case v: Map[_,_] => v.asInstanceOf[Map[_,_]].toList
+          case _ => List()
+        }
+      } yield res
+
+      yr.asserting(_.head._1.toString shouldBe key)
+    }
   }
 }

@@ -12,6 +12,11 @@ package Translator
 
 import HelperUtils.{CreateLogger, ErrorWarningMessages}
 import Translator.SlanAbstractions.*
+import cats.effect.kernel.Sync
+import cats.effect.{ExitCode, IO, IOApp, Resource}
+import cats.instances.either.*
+import cats.syntax.all.*
+import cats.{Eval, MonadError}
 import org.joda.time.DateTime
 import org.slf4j.Logger
 import org.snakeyaml.engine.*
@@ -20,35 +25,64 @@ import org.snakeyaml.engine.v2.api.*
 
 import java.util.*
 import scala.collection.immutable
-import scala.io.Source
+import scala.io.{BufferedSource, Source}
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.runtime.Nothing$
 import scala.util.{Failure, Success, Try}
 
-given logger: Logger = CreateLogger(classOf[SlantParser])
+trait SlanProgramFailed
+trait SlanProgramPassed
+final case class ErrorSlanInput(msg:String) extends SlanProgramFailed
+final case class FileRuntimeError(e: Throwable) extends SlanProgramFailed
+case class ContentSlanProgram(program:String) extends SlanProgramPassed:
+  require(program != null)
+case class SlanYamlHandle(yaml: Any) extends SlanProgramPassed
+//  require(yaml != null)
 
-class SlantParser(content: String):
-  require(content != null)
-//  private val yaml = new Yaml
+type ParsingPassedOrFailed = Either[SlanProgramFailed, SlanProgramPassed]
+type SlanProgramParsingResult = IO[ParsingPassedOrFailed]
 
-  private val yaml = new Load(LoadSettings.builder.setAllowDuplicateKeys(true).setAllowRecursiveKeys(true).build)
-
-
-  val yamlModel: Any = Try(yaml.loadFromString(content): Any) match {
-    case Success(parser) => parser
-    case Failure(exception) => throw new IllegalArgumentException(ErrorWarningMessages.YamlParsingFailed(exception.getMessage))
-  }
+given logger: Logger = CreateLogger(classOf[SlantParser.type])
 
 object SlantParser:
-  def apply(inputPath: String): SlantParser =
-    Try(Source.fromFile(inputPath)) match {
-      case Success(file) =>
-        val content = file.toList.mkString
-        file.close()
-        new SlantParser(content)
+  def apply(inputPath: String): SlanProgramParsingResult =
+    require(inputPath != null)
+    logger.info(s"Input Slan specification is specified as $inputPath")
+    processSlanProgram(inputPath)
 
-      case Failure(exception) => throw new IllegalArgumentException(ErrorWarningMessages.YamlScriptFileFailure(inputPath, exception.getMessage))
+  private def CreateSlanInputResource(inputPath: String): Resource[IO, BufferedSource] =
+    Resource.make {
+      IO.blocking { Source.fromFile(inputPath) }
+    } {
+      file => IO.blocking { file.close()  }
     }
+
+  private def processSlanProgram(inputPath: String): SlanProgramParsingResult = for {
+      result <- CreateSlanInputResource(inputPath).use {
+        file => IO.blocking {
+          ContentSlanProgram(file.toList.mkString)
+        }
+      }.attempt.map(_.leftMap(FileRuntimeError.apply))
+      output <- parseSlanProgram(result)
+    } yield output
+
+  private def parseSlanProgram(content: ParsingPassedOrFailed): SlanProgramParsingResult =
+    content match
+      case Left(err) => IO(content)
+      case Right(slanContent) => IO.delay(yamlModel(slanContent))
+
+  private def yamlModel(yamlprg: SlanProgramPassed): ParsingPassedOrFailed =
+    yamlprg match
+      case ContentSlanProgram(program) => Try(new Load(LoadSettings.
+        builder.
+        setAllowDuplicateKeys(true).
+        setAllowRecursiveKeys(true).
+        build).loadFromString(program): Any) match {
+          case Success(parser) => SlanYamlHandle(parser).asRight
+          case Failure(exception) => ErrorSlanInput(ErrorWarningMessages.YamlParsingFailed(exception.getMessage)).asLeft
+      }
+      case _ => ErrorSlanInput(ErrorWarningMessages.YamlParsingFailed(yamlprg.toString)).asLeft
+
 
   private[Translator] def convertJ2S(yamlInstance: Any): YamlTypes = yamlInstance match {
     case v: YamlTypes => v
@@ -62,6 +96,6 @@ object SlantParser:
       case c if c == classOf[java.lang.Double] => yamlInstance.asInstanceOf[Double]
       case c if c == classOf[java.lang.Boolean] => yamlInstance.asInstanceOf[Boolean]
       case c if c == classOf[Date] => new DateTime(yamlInstance.asInstanceOf[Date])
-      case c => throw new RuntimeException(ErrorWarningMessages.YamlUnexpectedTypeFound(c.getName))
+      case c => ErrorWarningMessages.YamlUnexpectedTypeFound(c.getName)
     }
   }

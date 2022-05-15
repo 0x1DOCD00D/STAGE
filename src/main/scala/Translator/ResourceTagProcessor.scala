@@ -10,26 +10,26 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class ResourceTagProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case resourceId: String => List(ResourceTag(resourceId, None))
-    case v: (_, _) => convertJ2S(v._1) match {
-      case storageType: String => convertJ2S(v._2) match {
-        case resourceId: String => List(ResourceTag(resourceId, Some(storageType)))
-        case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+class ResourceTagProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case resourceId: String => Eval.now(List(ResourceTag(resourceId, None)))
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case storageType: String => convertJ2S(v(1)) match {
+        case resourceId: String => Eval.now(List(ResourceTag(resourceId, Some(storageType))))
+        case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
       }
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case None => List()
+    case None => Eval.now(List())
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-}

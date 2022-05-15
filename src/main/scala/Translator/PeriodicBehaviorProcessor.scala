@@ -10,20 +10,21 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 import scala.collection.mutable
 
 class PeriodicBehaviorProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => (new PeriodicBehaviorKeyParamsProcessor).commandProcessor(convertJ2S(v(0)))
-      ::: (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1)))
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) => Eval.now((new PeriodicBehaviorKeyParamsProcessor).commandProcessor(convertJ2S(v(0))).value
+      ::: (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

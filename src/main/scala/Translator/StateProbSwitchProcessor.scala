@@ -10,21 +10,21 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class StateProbSwitchProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case stateId: String => List(StateProbabilitySwitch(Some(stateId), SlanValue(1.0)))
+class StateProbSwitchProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case stateId: String => Eval.now(List(StateProbabilitySwitch(Some(stateId), SlanValue(1.0))))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (stateId: String, valIfAny: YamlPrimitiveTypes) => List(StateProbabilitySwitch(Some(stateId), SlanValue(valIfAny)))
-      case (None, valIfAny: YamlPrimitiveTypes) => List(StateProbabilitySwitch(None, SlanValue(valIfAny)))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+      case (stateId: String, valIfAny: YamlPrimitiveTypes) => Eval.now(List(StateProbabilitySwitch(Some(stateId), SlanValue(valIfAny))))
+      case (None, valIfAny: YamlPrimitiveTypes) => Eval.now(List(StateProbabilitySwitch(None, SlanValue(valIfAny))))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
     }
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-}

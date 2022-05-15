@@ -10,15 +10,17 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
+
 class AgentsProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       case entry: String if entry.toUpperCase === Groups.toUpperCase => (new GroupsProcessor).commandProcessor(convertJ2S(v(1)))
       case entry: String if entry.toUpperCase === Behaviors.toUpperCase => (new BehaviorsProcessor).commandProcessor(convertJ2S(v(1)))
@@ -27,9 +29,9 @@ class AgentsProcessor extends GenericProcessor :
       //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
       //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
       //otherwise it is a sequence of states each defining its own behavior
-      case cv: String => List(Agent(cv, (new StatesResourcesProcessor).commandProcessor(convertJ2S(v(1)))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case cv: String => Eval.now(List(Agent(cv, (new StatesResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }

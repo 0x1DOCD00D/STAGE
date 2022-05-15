@@ -9,40 +9,41 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class BehaviorActionsProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       case entry: String if isBooleanOp(entry) => (new BooleanOpsProcessor).commandProcessor(convertJ2S(v))
       case entry: String if isRelationalOp(entry) => (new RelOpProcessor).commandProcessor(convertJ2S(v))
-      case entry: String if entry.toUpperCase === IF.toUpperCase => List(IfThenElse((new IfThenElseProcessor).commandProcessor(convertJ2S(v._2))))
+      case entry: String if entry.toUpperCase === IF.toUpperCase => Eval.now(List(IfThenElse((new IfThenElseProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case entry: String if entry.toUpperCase.startsWith(FnPrefix.toUpperCase) => (new FunctionProcessor).commandProcessor(convertJ2S(v))
       case period: Map[_, _] if period.size == 1 => //only one entry is allowed for intervalTime: howManytimes
         (convertJ2S(period.toList.head._1), convertJ2S(period.toList.head._2)) match {
-        case (timeInterval, iterations): (YamlPrimitiveTypes, YamlPrimitiveTypes) => List(PeriodParameters(SlanValue(timeInterval), SlanValue(iterations))) ::: (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))
-        case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+        case (timeInterval, iterations): (YamlPrimitiveTypes, YamlPrimitiveTypes) => Eval.now(List(PeriodParameters(SlanValue(timeInterval), SlanValue(iterations))) ::: (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)
+        case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
       }
       case wrongEntry: String if wrongEntry.toUpperCase === THEN.toUpperCase || wrongEntry.toUpperCase === ELSE.toUpperCase || wrongEntry.toUpperCase === ELSEIF.toUpperCase =>
-      throw new Exception(SlanUnexpectedTypeFound(wrongEntry.getClass.toString + ": " + wrongEntry))
+        Eval.now(List(SlanUnexpectedTypeFound(wrongEntry.getClass.toString + ": " + wrongEntry)))
 
       //some custom external function
       //TODO: implement an external function processor
       case entry: String => (new FunctionProcessor).commandProcessor(convertJ2S(v))
 
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case entry: YamlPrimitiveTypes => List(SlanValue(entry))
+    case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))
 
-    case None => List()
+    case None => Eval.now(List())
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 
   def isBooleanOp(yamlOp: String): Boolean = yamlOp match {

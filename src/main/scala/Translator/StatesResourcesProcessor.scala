@@ -10,25 +10,26 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class StatesResourcesProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       //each agent can be assigned local resources that are not generators
-      case resources: String if resources.toLowerCase === Resources.toLowerCase => List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1)))))
-      case stateRef: String => List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v(1)))))
-      case None => List(State(None, (new StateProcessor).commandProcessor(convertJ2S(v(1)))))
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case resources: String if resources.toLowerCase === Resources.toLowerCase => Eval.now(List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case stateRef: String => Eval.now(List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case None => Eval.now(List(State(None, (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
-    case None => List(State(None, List()))
+    case None => Eval.now(List(State(None, List())))
     //there is the single anonymous state whose behavior is defined by the behavior reference
-    case behaviorRef: String => List(State(None, List(StateBehavior(Some(behaviorRef), None))))
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case behaviorRef: String => Eval.now(List(State(None, List(StateBehavior(Some(behaviorRef), None)))))
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

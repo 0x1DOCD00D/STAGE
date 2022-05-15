@@ -10,20 +10,20 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class ResourceGenerationProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case resourceId: String => List(ResourceProbability(resourceId, SlanValue(0)))
-    case v: (_, _) => (convertJ2S(v._1), convertJ2S(v._2)) match {
-      case (resId: String, valIfAny: YamlPrimitiveTypes) => List(ResourceProbability(resId, SlanValue(valIfAny)))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+class ResourceGenerationProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case resourceId: String => Eval.now(List(ResourceProbability(resourceId, SlanValue(0))))
+    case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
+      case (resId: String, valIfAny: YamlPrimitiveTypes) => Eval.now(List(ResourceProbability(resId, SlanValue(valIfAny))))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
     }
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-}

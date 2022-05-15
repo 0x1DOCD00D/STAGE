@@ -15,7 +15,7 @@ object SlanAbstractions:
   import SlanConstruct.*
 
   type YamlPrimitiveTypes = String | Int | Double | Boolean | Long | DateTime
-  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_]
+  type YamlTypes = List[_] | Map[_, _] | Tuple2[_, _] | YamlPrimitiveTypes | Option[_] | IncorrectYamlType
   type BehaviorReference = Option[String]
   type BehaviorMandatoryReference = String
   type StateReference = Option[String]

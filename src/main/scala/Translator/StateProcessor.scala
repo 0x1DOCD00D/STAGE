@@ -10,36 +10,36 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanInvalidConstruct, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.InitState
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
 class StateProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     //there are two cases to process: a key/value pair where the key designates the behavior reference
     //and the value is the state reference to switch to or null; or simply a string value that designates
     //the behavior reference in case when the state for this behavior is terminal.
     case v: (_, _) => convertJ2S(v(0)) match {
       case behaviorRef: String => convertJ2S(v(1)) match {
-        case switchTo: String => List(StateBehavior(Some(behaviorRef),Some(switchTo)))
-        case None => List(StateBehavior(Some(behaviorRef),None))
-        case unknown => List(StateProbBehavior(Some(behaviorRef),(new StateProbSwitchProcessor).commandProcessor(unknown)))
+        case switchTo: String => Eval.now(List(StateBehavior(Some(behaviorRef),Some(switchTo))))
+        case None => Eval.now(List(StateBehavior(Some(behaviorRef),None)))
+        case unknown => Eval.now(List(StateProbBehavior(Some(behaviorRef),(new StateProbSwitchProcessor).commandProcessor(unknown).value)))
       }
       case None => convertJ2S(v(1)) match {
-        case switchTo: String => List(StateBehavior(None,Some(switchTo)))
-        case None => throw new Exception(SlanInvalidConstruct("StateBehavior without behavior and the destination state"))
-        case unknown => List(StateProbBehavior(None,(new StateProbSwitchProcessor).commandProcessor(unknown)))
+        case switchTo: String => Eval.now(List(StateBehavior(None,Some(switchTo))))
+        case None => Eval.now(List(SlanInvalidConstruct("StateBehavior without behavior and the destination state")))
+        case unknown => Eval.now(List(StateProbBehavior(None,(new StateProbSwitchProcessor).commandProcessor(unknown).value)))
       }
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
-    case behaviorRef: String => List(StateBehavior(Some(behaviorRef), None))
+    case behaviorRef: String => Eval.now(List(StateBehavior(Some(behaviorRef), None)))
 
-    case None => List()
+    case None => Eval.now(List())
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-
 }

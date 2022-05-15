@@ -10,21 +10,22 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class FunctionContentProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+class FunctionContentProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (entry: String, value:String) if entry === Correlation => List(CorrelationToken(SlanValue(value)))
+      case (entry: String, value:String) if entry === Correlation => Eval.now(List(CorrelationToken(SlanValue(value))))
       case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
     }
 
-    case entry: YamlPrimitiveTypes => List(SlanValue(entry))
+    case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }

@@ -10,10 +10,11 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{LogGenericMessage, YamlKeyIsNotString}
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.Agents
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
@@ -35,19 +36,19 @@ import cats.kernel.Eq
 * */
 
 abstract class GenericProcessor:
-  final def commandProcessor(yamlObj: YamlTypes): List[SlanConstruct] =
+  final def commandProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] =
     LogGenericMessage(getClass, s"commandProcessor: ${convertJ2S(yamlObj)}")
-    if isContainerizedContent(yamlObj) then containerContentProcessor(yamlObj)
-    else yamlContentProcessor(yamlObj)
+    if isContainerizedContent(yamlObj) then Eval.defer(containerContentProcessor(yamlObj))
+    else Eval.defer(yamlContentProcessor(yamlObj))
 
-  protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] =
+  protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] =
     yamlObj match {
-      case v: (_, _) => convertJ2S(v._1) match {
-        case cv: String => new UnknownEntryProcessor(convertJ2S(v._2), Some(cv)).constructSlanRecord
-        case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case v: (_, _) => convertJ2S(v(0)) match {
+        case cv: String => Eval.now(new UnknownEntryProcessor(convertJ2S(v(1)), Some(cv)).constructSlanRecord)
+        case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
       }
 
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }
 
   protected final def isContainerizedContent(yamlObj: Any): Boolean = convertJ2S(yamlObj) match {
@@ -56,10 +57,10 @@ abstract class GenericProcessor:
     case _ => false
   }
 
-  protected final def containerContentProcessor(yamlObj: YamlTypes, key: Option[String] = None): List[SlanConstruct] = convertJ2S(yamlObj) match {
-    case v: List[_] => v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
-    case v: Map[_, _] => v.foldLeft(List[SlanConstruct]())((a, e) => a ::: commandProcessor(convertJ2S(e)))
-    case unknown => new UnknownEntryProcessor(unknown, key).constructSlanRecord
+  protected final def containerContentProcessor(yamlObj: YamlTypes, key: Option[String] = None): Eval[SlanConstructs] = convertJ2S(yamlObj) match {
+    case v: List[_] => v.foldLeft(Eval.now(List[SlanConstruct]()))((a, e) => Eval.now(a.value ::: commandProcessor(convertJ2S(e)).value))
+    case v: Map[_, _] => v.foldLeft(Eval.now(List[SlanConstruct]()))((a, e) => Eval.now(a.value ::: commandProcessor(convertJ2S(e)).value))
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown, key).constructSlanRecord)
   }
 
   protected[Translator] final def lookAhead(key: String, yamlObj: YamlTypes): Boolean =
@@ -69,7 +70,7 @@ abstract class GenericProcessor:
       case unknown => false
     }
     else yamlObj match {
-      case v: (_, _) => convertJ2S(v._1) match {
+      case v: (_, _) => convertJ2S(v(0)) match {
         case cv: String if cv.toLowerCase === key.toLowerCase => true
         case unknown => false
       }

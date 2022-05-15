@@ -9,13 +9,13 @@
 
 package Translator
 
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
+import cats.Eval
 
-class GroupResourceReplicationCoeffProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case cv: YamlPrimitiveTypes => List(SlanValue(cv))
-    case None => List()
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+class GroupResourceReplicationCoeffProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case cv: YamlPrimitiveTypes => Eval.now(List(SlanValue(cv)))
+    case None => Eval.now(List())
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-}

@@ -10,24 +10,25 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.YamlTypes
+import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.Eventual
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 
 class GroupResourcesProcessor extends GenericProcessor {
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case cv: String => List(ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup(Eventual, cv)), SlanValue(convertJ2S(v._2).asInstanceOf)))
-      case compositeKey: (Map[_, _] | List[_]) => List(ResourceReferenceInGroup(new GroupResourceConsistencyModelKeyProcessor().commandProcessor(compositeKey), SlanValue(convertJ2S(v._2).asInstanceOf)))
-      case compositeKey: (_, _) => List(
-        ResourceReferenceInGroup(new GroupResourceConsistencyModelKeyProcessor().commandProcessor(compositeKey),
-          new GroupResourceReplicationCoeffProcessor().commandProcessor(convertJ2S(v._2)).asInstanceOf
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case cv: String => Eval.now(List(ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup(Eventual, cv)), List(SlanValue(convertJ2S(v(1)).asInstanceOf)))))
+      case compositeKey: (Map[_, _] | List[_]) => Eval.now(List(ResourceReferenceInGroup(new GroupResourceConsistencyModelKeyProcessor().commandProcessor(compositeKey).value, List(SlanValue(convertJ2S(v(1)).asInstanceOf)))))
+      case compositeKey: (_, _) => Eval.now(List(
+        ResourceReferenceInGroup(new GroupResourceConsistencyModelKeyProcessor().commandProcessor(compositeKey).value,
+          new GroupResourceReplicationCoeffProcessor().commandProcessor(convertJ2S(v(1))).value
         )
-      )
-      case unknown => (new GroupResourcesProcessor).commandProcessor(convertJ2S(v._1)).asInstanceOf
+      ))
+      case unknown => (new GroupResourcesProcessor).commandProcessor(convertJ2S(v(0)))
     }
 
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

@@ -10,20 +10,21 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 
 class ResourcePDFSeedConstraintsProcessor extends GenericProcessor:
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (seed:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => List(PdfSeed(seed)) ::: List(SlanValue(value))
-      case (seed:YamlPrimitiveTypes, constraints:Map[_,_]) => List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints))
-      case (seed:YamlPrimitiveTypes, constraints:List[_]) => List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints))
-      case (None, value:Map[_,_]) => List()
-      case _ => List()
+      case (seed:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(PdfSeed(seed)) ::: List(SlanValue(value)))
+      case (seed:YamlPrimitiveTypes, constraints:Map[_,_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
+      case (seed:YamlPrimitiveTypes, constraints:List[_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
+      case (None, value:Map[_,_]) => Eval.now(List())
+      case _ => Eval.now(List())
     }
-    case simpleValue: YamlPrimitiveTypes => List(SlanValue(simpleValue))
-    case None => List()
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case simpleValue: YamlPrimitiveTypes => Eval.now(List(SlanValue(simpleValue)))
+    case None => Eval.now(List())
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }

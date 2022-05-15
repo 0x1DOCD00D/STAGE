@@ -10,17 +10,18 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 
 class ResourcePDFConstraintProcessor extends GenericProcessor:
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => List(SlanKeyValue(key, value))
-      case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+      case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(SlanKeyValue(key, value)))
+      case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
     }
-    case simpleValue: YamlPrimitiveTypes => List(SlanValue(simpleValue))
-    case None => List()
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord
+    case simpleValue: YamlPrimitiveTypes => Eval.now(List(SlanValue(simpleValue)))
+    case None => Eval.now(List())
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)
   }

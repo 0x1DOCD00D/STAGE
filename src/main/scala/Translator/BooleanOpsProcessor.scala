@@ -10,23 +10,23 @@
 package Translator
 
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlanKeywords.*
 import Translator.SlantParser.convertJ2S
-import cats.Eq
 import cats.implicits.*
+import cats.{Eq, Eval}
 
 class BooleanOpsProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: (_, _) => convertJ2S(v._1) match {
-      case entry: String if entry.toUpperCase === NOT.toUpperCase => List(Not((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === AND.toUpperCase => List(And((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === OR.toUpperCase => List(Or((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
-      case entry: String if entry.toUpperCase === XOR.toUpperCase => List(Xor((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v._2))))
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: (_, _) => convertJ2S(v(0)) match {
+      case entry: String if entry.toUpperCase === NOT.toUpperCase => Eval.now(List(Not((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === AND.toUpperCase => Eval.now(List(And((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === OR.toUpperCase => Eval.now(List(Or((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === XOR.toUpperCase => Eval.now(List(Xor((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
 
-      case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+      case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 
-    case unknown => throw new Exception(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString))
+    case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
   }

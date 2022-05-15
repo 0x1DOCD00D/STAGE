@@ -16,10 +16,10 @@ import java.nio.ByteBuffer
   This implementation is required for NIO memory mapped files.
  */
 class CsvInputStream(val buffer: ByteBuffer) extends InputStream:
-  override def read(): Int = if (buffer.hasRemaining) buffer.get else -1
+  override def read(): Int = if buffer.hasRemaining then buffer.get else -1
 
   override def read(b: Array[Byte], off: Int, len: Int): Int = {
-    if (buffer.hasRemaining) {
+    if buffer.hasRemaining then {
       val len2get = math.min(len, buffer.remaining())
       buffer.get(b, off, math.min(len, len2get))
       len2get

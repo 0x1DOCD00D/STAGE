@@ -9,15 +9,16 @@
 
 package Translator
 
-import Translator.SlanAbstractions.{YamlPrimitiveTypes, YamlTypes}
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlantParser.convertJ2S
+import cats.Eval
 
-class MessageFieldsProcessor extends GenericProcessor :
-  override protected def yamlContentProcessor(yamlObj: YamlTypes): List[SlanConstruct] = yamlObj match {
-    case v: List[_] => v.map(aV => SlanValue(convertJ2S(aV).toString))
+class MessageFieldsProcessor extends GenericProcessor:
+  override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case v: List[_] => Eval.now(v.map(aV => SlanValue(convertJ2S(aV).toString)))
     case v: (_, _) => (new ResourcesProcessor).commandProcessor(convertJ2S(v))
-    case simpleValue: YamlPrimitiveTypes => List(SlanValue(simpleValue))
-    case None => List()
-    case unknown => new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord
+    case simpleValue: YamlPrimitiveTypes => Eval.now(List(SlanValue(simpleValue)))
+    case None => Eval.now(List())
+    case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
