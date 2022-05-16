@@ -41,6 +41,11 @@ object ErrorWarningMessages:
     logger.error(errorMsg)
     SlanError(errorMsg)
 
+  def SlanProcessingFailure(path:String, exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Slan program $path failed for reason $exceptionMessage"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+
   def SlanInvalidConstruct(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"The following construct $exceptionMessage is not valid at this location in Slan specification:"
     logger.error(errorMsg)

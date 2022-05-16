@@ -9,12 +9,13 @@
 
 package Translator
 
+import HelperUtils.ErrorWarningMessages.SlanProcessingFailure
 import Translator.SlanAbstractions.{BehaviorReference, SlanConstructs, StateReference, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.{SlanTranslator, SlantParser}
 import cats.Eval
 import cats.effect.IO
-import cats.effect.kernel.Outcome.{Errored, Succeeded}
+import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
 import cats.effect.testing.scalatest.AsyncIOSpec
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.freespec.AsyncFreeSpec
@@ -80,22 +81,31 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val floatScalarValue = 123450.6789
   val boolScalarValue = false
 
-  def translateSlanProgram(path: String): IO[SlanConstructs] =
+  private def processResultsFromFiber[A](io: IO[A]): IO[A] = {
+    val ioResult = for {
+      fib <- io.start
+      result <- fib.join
+    } yield result
+
+    ioResult.flatMap {
+      case Succeeded(fa) => fa
+      case Errored(e) => IO.raiseError(e)
+      case Canceled() => IO.raiseError(new RuntimeException("Computation canceled."))
+    }
+  }
+
+  private def translateSlanProgram(path: String): IO[SlanConstructs] =
+    val parsedProgram = processResultsFromFiber(SlantParser(path))
+    val yml = for {
+      parseResult <- parsedProgram
+      ymlOut = parseResult match
+        case Right(SlanYamlHandle(ymlref)) => ymlref
+        case Left(_) | Right(_) => IO.raiseError(new RuntimeException("Parsing failed"))
+    } yield ymlOut
     for {
-      ymlModelFib <- SlantParser(path).start
-      ymlModel <- ymlModelFib.join
-      ymlIo = ymlModel match
-        case Succeeded(result) => for {
-          fa <- result
-          outyml = fa match
-            case Right(SlanYamlHandle(ymlref)) => ymlref
-            case err => IO.raiseError(new RuntimeException(s"Incorrect value computed: ${err.toString}"))
-        } yield outyml
-        case Errored(e) => IO.raiseError(e)
-        case _ => IO.raiseError(new RuntimeException("Fiber computation failure."))
-      yml <- ymlIo
-      reseval <- SlanTranslator(yml)
-    } yield reseval
+      yaml <- yml
+      slan <- processResultsFromFiber(SlanTranslator(yaml))
+    } yield slan
 
   "the Slan traslator for SLAN Yaml specifications" - {
     val expected = Agent("Agent Name X",
