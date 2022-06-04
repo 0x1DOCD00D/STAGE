@@ -57,7 +57,6 @@ object SlanKeywords:
   val PARENT = "parent"
   val CHILDREN = "children"
   val SENDER = "sender"
-  val PERIODICBEHAVIORDESIGNATOR = "."
 
   val FnPrefix = "fn_"
   //update the value of some resource

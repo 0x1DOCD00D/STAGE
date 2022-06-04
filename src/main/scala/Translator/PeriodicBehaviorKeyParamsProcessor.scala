@@ -20,7 +20,7 @@ import cats.kernel.Eq
 
 class PeriodicBehaviorKeyParamsProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
-    case timeInterval: YamlPrimitiveTypes => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None)))
+//    case timeInterval: YamlPrimitiveTypes => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), None)))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (timeInterval: YamlPrimitiveTypes, timesX: YamlPrimitiveTypes) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(timeInterval), Some(SlanValue(timesX)))))
       case (None, timesX: YamlPrimitiveTypes) => Eval.now(List(PeriodicBehaviorFiringDuration(SlanValue(0), Some(SlanValue(timesX)))))

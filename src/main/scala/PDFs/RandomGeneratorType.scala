@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -11,12 +11,12 @@ package PDFs
 
 import HelperUtils.ErrorWarningMessages.LogGenericMessage
 import HelperUtils.Parameters.config
-import org.apache.commons.math3.random.{ISAACRandom, JDKRandomGenerator, MersenneTwister, RandomGenerator, Well1024a, Well19937a, Well19937c, Well44497a, Well44497b, Well512a}
+import org.apache.commons.math3.random.*
 
 import scala.util.{Failure, Success, Try}
 
 
-trait RandomGeneratorType {
+trait RandomGeneratorType:
   private val defaultSeed: Long = System.currentTimeMillis()
 
   def createRandomGenerator(seed: Option[Long]): RandomGenerator =
@@ -30,7 +30,7 @@ trait RandomGeneratorType {
     val rgWell44497a = "Well44497a".toUpperCase
     val rgWell44497b = "Well44497b".toUpperCase
 
-    val randomGenerator: RandomGenerator = Try(config.getString("Stage.Random.generator")) match {
+    val randomGenerator: RandomGenerator = Try(config.getString("Stage.Random.generator")) match
       case Success(rgName) => rgName.toUpperCase match {
         case `rgISAACRandom` => new ISAACRandom
         case `rgJDKRandomGenerator` => new JDKRandomGenerator
@@ -43,7 +43,7 @@ trait RandomGeneratorType {
         case `rgWell44497b` => new Well44497b
       }
       case Failure(exception) => new Well1024a
-    }
+
     randomGenerator.setSeed {
       if seed.exists(v => v > 0) then seed.getOrElse(System.currentTimeMillis()) else Try(config.getLong("Stage.Random.seed")) match {
         case Success(value) => value
@@ -55,4 +55,3 @@ trait RandomGeneratorType {
     randomGenerator
 
   end createRandomGenerator
-}
