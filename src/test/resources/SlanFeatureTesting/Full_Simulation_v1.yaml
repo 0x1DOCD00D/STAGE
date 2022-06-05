@@ -14,11 +14,7 @@ Agents:
         : 2
 
   Channels:
-    TalksT0:
-      ? [ MessageX, MessageY ]: behaviorAttached2Channel
-      ? - MessageXX
-        - MessageYY
-      : moreBehaviors
+    TalksT0: [behaviorAttached2Channel, moreBehaviors]
 
   Behaviors:
     Behavior 4 Messages 1:

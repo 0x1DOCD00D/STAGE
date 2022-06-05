@@ -100,8 +100,7 @@ Agents:
 
 
   Channels:
-    TalksT0:
-      null: Transmissions
+    TalksT0: Transmissions
 
   Resources:
     UniqueAppID: 0

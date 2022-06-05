@@ -50,7 +50,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val model_v1 = "SlanFeatureTesting/Model_v1.yaml"
   val basicYamlTemplate_v1 = "SlanFeatureTesting/Template_v1.yaml"
   val basicYamlTemplate_v2 = "SlanFeatureTesting/Template_v2.yaml"
-  val channelYaml = "SlanFeatureTesting/Channels.yaml"
+  val channelYaml_v1 = "SlanFeatureTesting/Channels_v1.yaml"
+  val channelYaml_v2 = "SlanFeatureTesting/Channels_v2.yaml"
   val messageYaml = "SlanFeatureTesting/Messages.yaml"
   val messageDerivedYaml = "SlanFeatureTesting/Message_Derived.yaml"
   val resource_generator = "SlanFeatureTesting/ResourceGenerators.yaml"
@@ -423,19 +424,10 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a channel spec with multiple behaviors for different messages" in {
-    val expected = List(
-      Channel("Sensors2CloudChannel",
-        List(MessageResponseBehavior(
-          List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY")),
-            List(SlanValue("behaviorAttached2Channel")))),List()),
-          MessageResponseBehavior(List(
-            MessageResponseBehavior(List(SlanValue("MessageZ")),
-              List(SlanValue("otherBehaviorAttached2Channel")))),List()),
-          MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY")),
-            List(SlanValue("moreBehaviors"))),
-          MessageResponseBehavior(List(SlanValue("MessageW")),List(SlanValue("someWierdBehavior")))))
-    )
-    val path = getClass.getClassLoader.getResource(channelYaml).getPath
+    val expected = List(Channel("Sensors2CloudChannel",
+      List(
+        SlanValue("behaviorAttached2Channel"), SlanValue("otherBehaviorAttached2Channel"), SlanValue("moreBehaviors"), SlanValue("someWierdBehavior"))))
+    val path = getClass.getClassLoader.getResource(channelYaml_v1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
@@ -579,20 +571,21 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a full semantically meaningless simulation" in {
-    val expected = List(
-      Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
-      Agent("Agent Name X",List(State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))), State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
+    val expected = List(Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+      Agent("Agent Name X",List(State(None,
+        List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))),
+        State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
       Group("Group Name",List(GroupAgent("Agent Name X",List()),
         ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),List(SlanValue(2))))),
       Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))),
       Agent("Agent Name Y",List(State(None,List()))),
-      Channel("TalksT0",List(MessageResponseBehavior(List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY")),
-        List(SlanValue("behaviorAttached2Channel")))),List()), MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY")), List(SlanValue("moreBehaviors"))))),
-      Message(List(MessageDeclaration("Message Name",None)),List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))),
-      ModelGraph("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))), AgentPopulation("Agent Name Y",List()),
-        ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y")))))))
-    )
+      Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))),
+      Message(List(MessageDeclaration("Message Name",None)),
+        List(Resource(ResourceTag("Some Fixed Value",None), List(SlanValue(100))))),
+      ModelGraph("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))),
+        AgentPopulation("Agent Name Y",List()),
+        ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y"))))))))
     val path = getClass.getClassLoader.getResource(fullSimulation).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -895,7 +888,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           TalksT0:
             null: Transmissions
       */
-      Channel("TalksT0",List(MessageResponseBehavior(List(),List(SlanValue("Transmissions"))))),
+      Channel("TalksT0",List(SlanValue("Transmissions"))),
 
       /*
         Messages:
@@ -944,83 +937,82 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
 
   "translate a primitive simulation for two agents exchanging messages" in {
     val expected = List(
-      /*
-        Person:
-          null:
-            ...SendMessage: respond2Messages
+    /*
+      Person:
+        null:
+          ...SendMessage: respond2Messages
 
-          respond2Messages:
-            Respond2Message:
-      * */
-      Agent("Person",
-        List(State(None,List(StateBehavior(Some("...SendMessage"),Some("respond2Messages")))),
-          State(Some("respond2Messages"),List(StateBehavior(Some("Respond2Message"),None))))),
+        respond2Messages:
+          Respond2Message:
+    * */
+    Agent("Person",
+    List(State(None,List(StateBehavior(Some("...SendMessage"),Some("respond2Messages")))),
+    State(Some("respond2Messages"),List(StateBehavior(Some("Respond2Message"),None))))),
 
-      /*
-          Respond2Message: #used
-            MyOpinionAboutYou:
-              IF:
-                ">=":
-                  - messageCounter
-                  - maxMessagesThreshold
-                THEN:
-                  Fn_Send: IdoNotCareResponse
-                  Fn_Destroy: this
-                ELSE:
-                  Fn_Send: IdoNotCareResponse
-      * */
-      Behavior("Respond2Message",
-        List(MessageResponseBehavior(List(SlanValue("MyOpinionAboutYou")),
-          List(IfThenElse(
-            List(ROPGreaterEqual(
-              List(SlanValue("messageCounter"), SlanValue("maxMessagesThreshold"))),
-              Then(List(FnSend(List(SlanValue("IdoNotCareResponse"))),
-                FnDestroy(List(SlanValue("this"))))),
-              Else(List(FnSend(List(SlanValue("IdoNotCareResponse"))))))))))),
-      /*
-        Transmissions:
-          IdoNotCareResponse:
-            Fn_Inc: responseCounter
-      * */
-      Behavior("Transmissions",
-        List(MessageResponseBehavior(List(SlanValue("IdoNotCareResponse")),
-          List(FnInc(List(SlanValue("responseCounter"))))))),
-
-      /*
-          ...SendMessage:
-            ? 1000: null
-            :
-              Fn_Send: MyOpinionAboutYou
-              Fn_Inc: messageCounter
-      * */
-      PeriodicBehavior("...SendMessage",
-        List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
-          FnSend(List(SlanValue("MyOpinionAboutYou"))), FnInc(List(SlanValue("messageCounter"))))),
-
-      /*
-        Channels:
-          TalksT0:
-            null: Transmissions
-      * */
-      Channel("TalksT0",List(MessageResponseBehavior(List(),List(SlanValue("Transmissions"))))),
-
-      /*
-        Resources:
-          messageCounter: 0
-          responseCounter: 0
-          maxMessagesThreshold: 10
-      * */
-      Resource(ResourceTag("messageCounter",None),List(SlanValue(0))),
-      Resource(ResourceTag("responseCounter",None),List(SlanValue(0))),
-      Resource(ResourceTag("maxMessagesThreshold",None),List(SlanValue(10))),
-
-      /*
-      Messages:
-        MyOpinionAboutYou:
+    /*
+        Respond2Message: #used
+          MyOpinionAboutYou:
+            IF:
+              ">=":
+                - messageCounter
+                - maxMessagesThreshold
+              THEN:
+                Fn_Send: IdoNotCareResponse
+                Fn_Destroy: this
+              ELSE:
+                Fn_Send: IdoNotCareResponse
+    * */
+    Behavior("Respond2Message",
+    List(MessageResponseBehavior(List(SlanValue("MyOpinionAboutYou")),
+    List(IfThenElse(
+      List(ROPGreaterEqual(
+      List(SlanValue("messageCounter"), SlanValue("maxMessagesThreshold"))),
+      Then(List(FnSend(List(SlanValue("IdoNotCareResponse"))),
+      FnDestroy(List(SlanValue("this"))))),
+      Else(List(FnSend(List(SlanValue("IdoNotCareResponse"))))))))))),
+    /*
+      Transmissions:
         IdoNotCareResponse:
-      * */
-      Message(List(MessageDeclaration("MyOpinionAboutYou",None)),List()),
-      Message(List(MessageDeclaration("IdoNotCareResponse",None)),List()),
+          Fn_Inc: responseCounter
+    * */
+    Behavior("Transmissions",
+    List(MessageResponseBehavior(List(SlanValue("IdoNotCareResponse")),
+    List(FnInc(List(SlanValue("responseCounter"))))))),
+
+    /*
+        ...SendMessage:
+          ? 1000: null
+          :
+            Fn_Send: MyOpinionAboutYou
+            Fn_Inc: messageCounter
+    * */
+    PeriodicBehavior("...SendMessage",
+      List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
+        FnSend(List(SlanValue("MyOpinionAboutYou"))), FnInc(List(SlanValue("messageCounter"))))),
+
+    /*
+      Channels:
+        TalksT0:
+          null: Transmissions
+    * */
+    Channel("TalksT0",List(SlanValue("Transmissions"))),
+    /*
+      Resources:
+        messageCounter: 0
+        responseCounter: 0
+        maxMessagesThreshold: 10
+    * */
+    Resource(ResourceTag("messageCounter",None),List(SlanValue(0))),
+    Resource(ResourceTag("responseCounter",None),List(SlanValue(0))),
+    Resource(ResourceTag("maxMessagesThreshold",None),List(SlanValue(10))),
+
+    /*
+    Messages:
+      MyOpinionAboutYou:
+      IdoNotCareResponse:
+    * */
+    Message(List(MessageDeclaration("MyOpinionAboutYou",None)),List()),
+    Message(List(MessageDeclaration("IdoNotCareResponse",None)),List()),
 
       /*
         Models:

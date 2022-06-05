@@ -20,7 +20,7 @@ import cats.kernel.Eq
 class ChannelsProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String => Eval.now(List(Channel(cv, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(Channel(cv, (new ChannelBehaviorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case None => Eval.now(List(YamlKeyIsMissing(convertJ2S(v(1)).toString)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

@@ -30,8 +30,7 @@ Agents:
         Fn_Inc: messageCounter
 
   Channels:
-    TalksT0:
-      null: Transmissions
+    TalksT0: Transmissions
 
   Resources:
     messageCounter: 0
