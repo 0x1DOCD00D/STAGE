@@ -212,15 +212,19 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     }
 
     "translate a group spec" in {
-      val expected = List(Group("Group Name", List(
-        GroupAgent("agentname1", List(SlanValue("randomGenerator4Agent1"))),
-        GroupAgent("agentname2", List(SlanValue(100))),
-        GroupAgent("bubba", List()),
-        ResourceReferenceInGroup(List(
-          ResourceConsistencyModelInGroup("Causal", "hdd")), List(SlanValue(2))),
-        ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("eventual", "vNic")), List(SlanValue(3))),
-        ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Eventual", "varX")), List(SlanValue("randomGenerator1")))))
+      val expected = List(
+        Group(List(GroupDesignators("Group Name",Some("behaviorName"))),
+          List(
+            GroupAgent("agentname1",List(SlanValue("randomGenerator4Agent1"))),
+            GroupAgent("agentname2",List(SlanValue(100))),
+            GroupAgent("bubbaSubgroupName",List(SlanValue(1))),
+            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","hdd")),List(SlanValue(2))),
+            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("eventual","vNic")),List(SlanValue(3))),
+            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Eventual","varX")),List(SlanValue("randomGenerator1")))
+          )
+        )
       )
+
       val path = getClass.getClassLoader.getResource(agentsGroups1).getPath
       translateSlanProgram(path).asserting(_ shouldBe expected)
     }
@@ -575,7 +579,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Agent("Agent Name X",List(State(None,
         List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))),
         State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
-      Group("Group Name",List(GroupAgent("Agent Name X",List()),
+      Group(List(GroupDesignators("Group Name",Some("behavior"))),List(
+        GroupAgent("Agent Name X",List()),
         ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),List(SlanValue(2))))),
       Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))),

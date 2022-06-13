@@ -10,10 +10,11 @@
 # Agents can leave a group by executing the function Fn_Leave: GroupName as part of the behavior or they can be created when a group is created.
 Agents:
   Groups:
-    Group Name:
+    ? Group Name: behaviorName
+    :
       agentname1: randomGenerator4Agent1
       agentname2: 100 # fixed number of agents
-      bubba:
+      bubbaSubgroupName: 1
       # Consistency models are important to determine the value of a replicated resource that is written to by multiple agents in some order.
       # For a resource with the replication coefficient greater than one it is important to specify the level of its consistency. For Strict or
       # Sequential consistency the simulation approximates the latency times to zero and linearizes all client requests by designating an agent

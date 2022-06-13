@@ -10,7 +10,7 @@
 package Translator
 
 import Translator.SlanAbstractions.*
-import Translator.SlanConstruct.SlanValue
+import Translator.SlanConstruct.{GroupDesignators, SlanValue}
 
 /*
 * An agent is a basic computing unit in Stage. An agent is defined by its name and its behavior. Its specification defines its lifecycle,
@@ -124,10 +124,12 @@ enum SlanConstruct:
   
   case LocalResources(localResourceList: SlanConstructs)
   
-  case Group(id: GroupReference, members: SlanConstructs)
-  
+  case Group(id: SlanConstructs, members: SlanConstructs)
+
+  case GroupDesignators(id: GroupReference, behaviorRef: BehaviorReference)
+
   case GroupAgent(id: AgentReference, cardinality: SlanConstructs)
-  
+
   case ResourceConsistencyModelInGroup(cmr: ConsistencyModelReference, id: ResourceReference)
   
   case ResourceReferenceInGroup(resource: SlanConstructs, replicationCoeff: SlanConstructs)

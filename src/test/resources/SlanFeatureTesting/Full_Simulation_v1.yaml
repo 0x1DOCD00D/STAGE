@@ -7,7 +7,8 @@ Agents:
   Agent Name Y:
 
   Groups:
-    Group Name:
+    ? Group Name: behavior
+    :
       Agent Name X:
       Resources:
         ? Causal: someBasicResourceListOfValues
