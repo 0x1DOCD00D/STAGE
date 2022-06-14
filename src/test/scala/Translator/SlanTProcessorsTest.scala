@@ -501,10 +501,16 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
           List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))),
           MessageResponseBehavior(List(SlanValue("MessageW")),
-            List(FnUpdate(List(SlanValue("resourceName2Update"), SlanValue("MessageW.field"))))),
+            List(FnUpdate(List(SlanValue("resourceName2Update"), Reference(Some(SlanValue("MessageW")),Some(List(Reference(Some(SlanValue("fieldW")),None))))
+            )))),
           MessageResponseBehavior(List(SlanValue("MessageC"), SlanValue("MessageB")),
-            List(FnUpdate(List(SlanValue("resourceName2Update"), SlanValue("MessageA.field")))))))
+            List(FnUpdate(List(SlanValue("resourceName2Update"),
+              Reference(Some(SlanValue("MessageA")),Some(List(Reference(Some(SlanValue("fieldA")),None)))))))
+          )
+        )
+      )
     )
+
     val path = getClass.getClassLoader.getResource(behaviorMultipleMessages).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
