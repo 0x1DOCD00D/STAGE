@@ -11,7 +11,7 @@ package Translator
 
 import Translator.SlanAbstractions.YamlTypes
 import Translator.SlanConstruct.IncorrectYamlType
-import Translator.SlanKeywords.{Agents, Behavior, Models}
+import Translator.SlanKeywords.{AgentsSection, Behavior, ModelsSection}
 import cats.effect.IO
 import cats.effect.kernel.Outcome.{Errored, Succeeded}
 import cats.effect.testing.scalatest.AsyncIOSpec

@@ -10,13 +10,13 @@
 package Translator
 
 object SlanKeywords:
-  val Agents = "agents"
+  val AgentsSection = "agents"
   val Groups = "groups"
   val Behaviors = "behaviors"
   val Channels = "channels"
   val Resources = "resources"
-  val Messages = "messages"
-  val Models = "models"
+  val MessagesSection = "messages"
+  val ModelsSection = "models"
   val Deployment = "deployment"
 
   val InitState = "init"

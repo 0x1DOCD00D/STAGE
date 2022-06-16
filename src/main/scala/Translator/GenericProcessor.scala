@@ -12,7 +12,7 @@ package Translator
 import HelperUtils.ErrorWarningMessages.{LogGenericMessage, YamlKeyIsNotString}
 import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
-import Translator.SlanKeywords.Agents
+import Translator.SlanKeywords.AgentsSection
 import Translator.SlantParser.convertJ2S
 import cats.Eval
 import cats.implicits.*

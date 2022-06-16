@@ -24,6 +24,12 @@ import Translator.SlanConstruct.{GroupDesignators, SlanValue}
 * */
 
 enum SlanConstruct:
+  case Agents(agents: SlanConstructs)
+
+  case Messages(messages: SlanConstructs)
+
+  case Models(models: SlanConstructs)
+
   case Agent(id: AgentReference, states: SlanConstructs)
   
   case State(id: StateReference, behavior: SlanConstructs)

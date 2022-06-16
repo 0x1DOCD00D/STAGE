@@ -10,7 +10,7 @@
 package Translator
 
 import Translator.SlanAbstractions.YamlTypes
-import Translator.SlanKeywords.{Agents, Behavior, Models}
+import Translator.SlanKeywords.{AgentsSection, Behavior, ModelsSection}
 import akka.actor.Status.Success
 import cats.effect.*
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
@@ -42,11 +42,11 @@ class GenericProcessorTest extends AsyncFreeSpec with AsyncIOSpec with Matchers 
 
   "GenericProcessor" - {
     "load up and find the key Agents" in {
-      parseObtainYamlRef(Agents).asserting(_ shouldBe true)
+      parseObtainYamlRef(AgentsSection).asserting(_ shouldBe true)
     }
 
     "load up and fail to find the key Models" in {
-      parseObtainYamlRef(Models).asserting(_ shouldBe false)
+      parseObtainYamlRef(ModelsSection).asserting(_ shouldBe false)
     }
 
     "load up and fail to find the key Behavior" in {

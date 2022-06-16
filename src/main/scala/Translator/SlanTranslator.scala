@@ -13,7 +13,7 @@ import HelperUtils.ErrorOrSlanConstructs
 import HelperUtils.ErrorWarningMessages.YamlKeyIsNotString
 import Translator.SlanAbstractions.{SlanConstructs, YamlTypes}
 import Translator.SlanConstruct.*
-import Translator.SlanKeywords.{Agents, Messages, Models}
+import Translator.SlanKeywords.{AgentsSection, MessagesSection, ModelsSection}
 import Translator.SlantParser.convertJ2S
 import cats.Eval
 import cats.effect.IO
@@ -25,9 +25,9 @@ object SlanTranslator extends GenericProcessor:
 
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String if cv.toLowerCase === Agents.toLowerCase => (new AgentsProcessor).commandProcessor(convertJ2S(v(1)))
-      case cv: String if cv.toLowerCase === Messages.toLowerCase => (new MessagesProcessor).commandProcessor(convertJ2S(v(1)))
-      case cv: String if cv.toLowerCase === Models.toLowerCase => (new ModelsProcessor).commandProcessor(convertJ2S(v(1)))
+      case cv: String if cv.toLowerCase === AgentsSection.toLowerCase => Eval.now(List(Agents((new AgentsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String if cv.toLowerCase === MessagesSection.toLowerCase => Eval.now(List(Messages((new MessagesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String if cv.toLowerCase === ModelsSection.toLowerCase => Eval.now(List(Models((new ModelsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown: String => Eval.now(new UnknownEntryProcessor(unknown, Some(unknown.getClass.toString)).constructSlanRecord)
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
