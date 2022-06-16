@@ -45,6 +45,9 @@ object SlanKeywords:
   val Population = "population"
   val Eventual = "eventual"
 
+  val Nodes = "nodes"
+  val AkkaConfiguration = "Akka Configuration"
+
   val ExternalService = "externalservice"
   val IF = "if"
   val THEN = "then"

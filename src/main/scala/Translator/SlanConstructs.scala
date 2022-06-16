@@ -169,7 +169,19 @@ enum SlanConstruct:
   case Channel2Agent(channel: ChannelReference, agent: AgentReference)
   
   case ModelDeployment(key: String, elements: SlanConstructs)
-  
+
+  case ComputingNodes(nodes: SlanConstructs)
+
+  case AkkaConfigurationParameters(akka: SlanConstructs)
+
+  case ResourceConstructors(ingesters: SlanConstructs)
+
+  case TableLoader(resourceName: ResourceReference, table: SlanConstructs)
+
+  case ResourceCsvTable(table: SlanConstructs)
+
+  case ResourceDatabaseTable(table: SlanConstructs)
+
   case UnknownConstruct(key: String, typeOfConstruct: String, obj: String)
 
 /*

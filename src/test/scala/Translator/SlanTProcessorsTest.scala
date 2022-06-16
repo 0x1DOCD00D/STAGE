@@ -48,6 +48,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val behaviorPeriodic_null_timeInterval = "SlanFeatureTesting/Behavior_Period_null_timeInterval.yaml"
   val behaviorPeriodic_null_allParams = "SlanFeatureTesting/Behavior_Period_null_allParams.yaml"
   val model_v1 = "SlanFeatureTesting/Model_v1.yaml"
+  val model_v2 = "SlanFeatureTesting/Model_v2.yaml"
   val basicYamlTemplate_v1 = "SlanFeatureTesting/Template_v1.yaml"
   val basicYamlTemplate_v2 = "SlanFeatureTesting/Template_v2.yaml"
   val channelYaml_v1 = "SlanFeatureTesting/Channels_v1.yaml"
@@ -560,23 +561,33 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
 
   "translate a model for pedestrians, vehicles and buildings" in {
     val expected = List(
-      ModelGraph("Model Name",
-        List(AgentPopulation("Pedestrian",
-          List(SlanValue("quantity 1"))),
-          AgentPopulation("Vehicle",List(SlanValue(1000))),
-          AgentPopulation("Building",List(Pdf("Normal",
-            List(SlanValue(500), SlanValue(10))))),
-          ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Pedestrian",
-            List(Channel2Agent("TalksT0","Pedestrian"),
-              Channel2Agent("Enters","Building"))),
-            Agent2AgentViaChannel("Vehicle",List(Channel2Agent("Yields","Pedestrian"),
-              Channel2Agent("ParksBy","Building"))), Agent2AgentViaChannel("Building",
-              List(Channel2Agent("ConnectedByUndergroundPassagewayTo","Building"),
-                Channel2Agent("Alerts","Pedestrian"))))),
-          ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))),
-          ModelDeployment("Akka Configuration",List())))
-    )
+      Model("Model Name",List(
+        AgentPopulation("Pedestrian",List(SlanValue("quantity 1"))),
+        AgentPopulation("Vehicle",List(SlanValue(1000))),
+        AgentPopulation("Building",List(Pdf("Normal",List(SlanValue(500), SlanValue(10))))),
+        ModelGraph("Graph Name X",List(
+          Agent2AgentViaChannel("Pedestrian",List(Channel2Agent("TalksT0","Pedestrian"), Channel2Agent("Enters","Building"))),
+          Agent2AgentViaChannel("Vehicle",List(Channel2Agent("Yields","Pedestrian"), Channel2Agent("ParksBy","Building"))),
+          Agent2AgentViaChannel("Building",List(Channel2Agent("ConnectedByUndergroundPassagewayTo","Building"), Channel2Agent("Alerts","Pedestrian"))))),
+        ComputingNodes(List(SlanValue("cancun"), SlanValue("austin"))), AkkaConfigurationParameters(List()))))
     val path = getClass.getClassLoader.getResource(model_v1).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a model where resources are loaded with data from external tables" in {
+    val expected = List(
+      Model("Model Name",List(
+        AgentPopulation("Professor",List(SlanValue("DrMark"))),
+        AgentPopulation("Student",List(SlanValue(1000))),
+        ModelGraph("Graph Name X",List(
+          Agent2AgentViaChannel("Professor",List(Channel2Agent("Teaches","Student"))))),
+        ComputingNodes(List()),
+        AkkaConfigurationParameters(List()),
+        ResourceConstructors(List(
+          TableLoader("resourceCsvTableName",List(ResourceCsvTable(List(SlanValue(raw"/path/to/gradebook.csv"), SlanValue(false))))),
+          TableLoader("resourceCsvOtherTableName",List(ResourceCsvTable(List(SlanValue(raw"/path/to/gradebook.csv"), SlanValue(false))))),
+          TableLoader("resourceDbTableName",List(ResourceDatabaseTable(List(SlanValue("User Id=scott;password=tiger;data source=oracle: defined"), SlanValue("tableName"))))))))))
+    val path = getClass.getClassLoader.getResource(model_v2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
@@ -594,7 +605,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))),
       Message(List(MessageDeclaration("Message Name",None)),
         List(Resource(ResourceTag("Some Fixed Value",None), List(SlanValue(100))))),
-      ModelGraph("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))),
+      Model("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))),
         AgentPopulation("Agent Name Y",List()),
         ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y"))))))))
     val path = getClass.getClassLoader.getResource(fullSimulation).getPath
@@ -936,12 +947,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
                 - austin
               Akka Configuration: # this section will contain akka configuration data provided in app.conf files.
       */
-      ModelGraph("SocialMediaSimulation",
+      Model("SocialMediaSimulation",
         List(AgentPopulation("TheCompany",List(SlanValue(1))),
           ModelGraph("SimGraph",List(Agent2AgentViaChannel("Person",List(Channel2Agent("TalksT0","Person"))))),
-          ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))),
-          ModelDeployment("Akka Configuration",List())))
-    )
+          ComputingNodes(List(SlanValue("cancun"), SlanValue("austin"))), AkkaConfigurationParameters(List()))
+      ))
     val path = getClass.getClassLoader.getResource(socialMediaCompanySimulation).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -1041,9 +1051,9 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
                 - austin
               Akka Configuration: # this section will contain akka configuration data provided in app.conf files.
       * */
-      ModelGraph("SocialMediaSimulation",List(AgentPopulation("Person",List(SlanValue(2))),
+      Model("SocialMediaSimulation",List(AgentPopulation("Person",List(SlanValue(2))),
         ModelGraph("SimGraph",List(Agent2AgentViaChannel("Person",List(Channel2Agent("TalksT0","Person"))))),
-        ModelDeployment("Nodes",List(SlanValue("cancun"), SlanValue("austin"))), ModelDeployment("Akka Configuration",List())))
+        ComputingNodes(List(SlanValue("cancun"), SlanValue("austin"))), AkkaConfigurationParameters(List())))
     )
     val path = getClass.getClassLoader.getResource(primitiveSimulation).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)

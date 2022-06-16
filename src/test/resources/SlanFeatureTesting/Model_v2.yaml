@@ -1,0 +1,22 @@
+Models:
+  Model Name:
+    Agents:
+      Professor: DrMark
+      Student: 1000
+
+    Graph Name X:
+      # this is a source agent
+      Professor:
+        # that is connected via this channel to a sink agent
+        Teaches: Student
+
+    Deployment:
+      Nodes: # if no names or ip addresses provided then switch to autodiscovery
+      Akka Configuration: # this section will contain akka configuration data provided in app.conf files.
+      Resources:
+        # check each object in the resource and if it is not initialized then load the data from the external table
+        resourceCsvTableName:
+          /path/to/gradebook.csv: false # they key is the path to the file and the value is the boolean true if the csv file contains the header
+        resourceCsvOtherTableName: /path/to/gradebook.csv
+        resourceDbTableName:
+          tableName: "User Id=scott;password=tiger;data source=oracle: defined"
