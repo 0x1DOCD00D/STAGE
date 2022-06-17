@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class GroupProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String if cv.toUpperCase === Resources.toUpperCase => (new GroupResourcesProcessor).commandProcessor(convertJ2S(v(1)))
+      case cv: String if cv.toUpperCase === ResourcesSection.toUpperCase => (new GroupResourcesProcessor).commandProcessor(convertJ2S(v(1)))
       case cv: String => Eval.now(List(GroupAgent(cv, (new GroupAgentsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

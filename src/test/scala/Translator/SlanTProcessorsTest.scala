@@ -215,14 +215,16 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
 
     "translate a group spec" in {
       val expected = List(Agents(List(
+        Groups(List(
         Group(List(GroupDesignators("Group Name",Some("behaviorName"))),
           List(
-            GroupAgent("agentname1",List(SlanValue("randomGenerator4Agent1"))),
-            GroupAgent("agentname2",List(SlanValue(100))),
-            GroupAgent("bubbaSubgroupName",List(SlanValue(1))),
-            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","hdd")),List(SlanValue(2))),
-            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("eventual","vNic")),List(SlanValue(3))),
-            ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Eventual","varX")),List(SlanValue("randomGenerator1")))
+              GroupAgent("agentname1",List(SlanValue("randomGenerator4Agent1"))),
+              GroupAgent("agentname2",List(SlanValue(100))),
+              GroupAgent("bubbaSubgroupName",List(SlanValue(1))),
+              ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","hdd")),List(SlanValue(2))),
+              ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("eventual","vNic")),List(SlanValue(3))),
+              ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Eventual","varX")),List(SlanValue("randomGenerator1")))
+            ))
           )
         )
       )))
@@ -233,40 +235,45 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a behavior spec with multiple messages as the key flow sequence" in {
-    val expected = List(Agents(List(Behavior("Behavior 4 Messages 1",
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("Behavior 4 Messages 1",
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_flow).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a behavior spec with multiple messages as the key list" in {
-    val expected = List(Agents(List(Behavior("Behavior 4 Messages 2",
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("Behavior 4 Messages 2",
       List(MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY"), SlanValue("MessageZZ")),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_list).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a behavior spec with one message response" in {
-    val expected = List(Agents(List(Behavior("Behavior 4 Messages 3",
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("Behavior 4 Messages 3",
                         List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
                         List(FnUpdate(List(SlanValue("resourceName2Update"),
-                          FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))
+                          FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorOneMessage).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a default behavior spec for null message" in {
-    val expected = List(Agents(List(Behavior("Default Behavior 4 All Messages",
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("Default Behavior 4 All Messages",
       List(MessageResponseBehavior(List(),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorNullMessage).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate an if-then-else behavior" in {
-    val expected = List(Agents(List(Behavior("BehaviorIfThenElse",
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("BehaviorIfThenElse",
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
         List(IfThenElse(List(
           And(List(ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
@@ -276,110 +283,111 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           Then(List(
             FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
             FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(Reference(Some(SlanValue("MessageY")),Some(List(Reference(Some(SlanValue("field")),None)))), SlanValue("generatorRefId")))))
-          )))))))))))
+          )))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a simple resource spec with a fixed value" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("autoInitializedPrimitiveResource",None),
-        List(SlanValue(10))))))
+        List(SlanValue(10))))))))
     val path = getClass.getClassLoader.getResource(resources_v0).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a simple resource spec with a randomly generated value" in {
-    val expected = List(Agents(List(Resource(ResourceTag("autoInitializedPrimitiveResource",None),
+    val expected = List(Agents(List(Resources(List(
+      Resource(ResourceTag("autoInitializedPrimitiveResource",None),
         List(
           Resource(ResourceTag("Uniform",None),
-            List(SlanValue(0), SlanValue(1))))))))
+            List(SlanValue(0), SlanValue(1))))))))))
     val path = getClass.getClassLoader.getResource(resources_v1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a composite key and a randomly generated value" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
         List(SlanValue("aUniformGeneratorReference")))
-      )))
+      )))))
     val path = getClass.getClassLoader.getResource(resources_v2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a composite key and a list of fixed values" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
         List(SlanValue(1), SlanValue(10), SlanValue(100)))
-      )))
+      )))))
     val path = getClass.getClassLoader.getResource(resources_v3).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a composite key whose attributes include a composite and a simple resources" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResource",None),
         List(Resource(ResourceTag("someBasicResource1V",Some("list")),
           List(SlanValue(100), SlanValue(1000))),
           SlanKeyValue("valueHolder4compositeResource",1)))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v4).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a composite resource map whose key is some id and the value is a composite list" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResourceMap",Some("map")),
         List(Resource(ResourceTag("instanceID",None),
           List(Resource(ResourceTag("someBasicResource1V",Some("list")),List())))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v4_1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a composite resource map whose key is some id and the value is a composite object" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResourceMap",Some("map")),
         List(Resource(ResourceTag("instanceID",None),
           List(SlanKeyValue("CPU",100), SlanKeyValue("RAM",0), SlanKeyValue("NetworkBandwidth",10000)))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v4_2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a complex resource spec for generating random distributions" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
         Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
           List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
             ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8)))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resource_generator).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec for generating a unique random integer starting with one" in {
-    val expected = List(Agents(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))))
+    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v1).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec for generating a unique random integer without any constraints" in {
-    val expected = List(Agents(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List()))))
+    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List()))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v2).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec for generating a unique random integer with a seed only" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
         List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resource_generator_v3).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec that describes a table populated with random data" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("dim3",None),
         List(Resource(ResourceTag("column1",None),
           List(Resource(ResourceTag("Enum",None),
@@ -389,50 +397,51 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           List(SlanKeyValue("column4","generator200_500"), SlanKeyValue("column5","generator1_5"))), SlanKeyNoValue("someOtherAttribute"))),
       Resource(ResourceTag("dim5",None),
         List(Resource(ResourceTag("dim4",Some("list")),List(SlanKeyValue("column6","generator0_1")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v5).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a list of the instances of a composite resources that contains a queue initialized with some values" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("HDD",Some("list")), List(SlanKeyValue("Size","pdfgenerator"),
         Resource(ResourceTag("Utilization",None),List(SlanKeyValue(">=",0), SlanKeyValue("<","Size"))),
         Resource(ResourceTag("ItemCount",None),List(SlanValue(0), SlanKeyValue(">=",0))),
         Resource(ResourceTag("DataStore",Some("queue")),List(SlanValue(100), SlanValue(1000), SlanValue(100000)))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v6).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec that is a direct representation of a table with columns" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("someTableResource",None),
         List(Resource(ResourceTag("columns",Some("list")),
           List(SlanKeyNoValue("column3"), SlanKeyNoValue("column1"),
             SlanKeyNoValue("column6"), SlanKeyNoValue("column2"), SlanKeyNoValue("column5"), SlanKeyNoValue("column4")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v7).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec for designating an external service: RESTful or JAR" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("UniqueServiceId",Some("jar")),
         List(Resource(ResourceTag("http://url/to/Jar/name.jar",None),
           List(Resource(ResourceTag("methodName",None),
             List(SlanValue("parm1"), SlanValue("parm2"))), SlanKeyValue("methodName","parm1"),
             SlanKeyNoValue("methodName"),
             Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v8).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a channel spec with multiple behaviors for different messages" in {
-    val expected = List(Agents(List(Channel("Sensors2CloudChannel",
+    val expected = List(Agents(List(Channels(List(
+      Channel("Sensors2CloudChannel",
       List(
-        SlanValue("behaviorAttached2Channel"), SlanValue("otherBehaviorAttached2Channel"), SlanValue("moreBehaviors"), SlanValue("someWierdBehavior"))))))
+        SlanValue("behaviorAttached2Channel"), SlanValue("otherBehaviorAttached2Channel"), SlanValue("moreBehaviors"), SlanValue("someWierdBehavior"))))))))
     val path = getClass.getClassLoader.getResource(channelYaml_v1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -465,40 +474,42 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a spec for a periodic behavior" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Behaviors(
+      List(
       PeriodicBehavior("...Some Periodic Behavior",
         List(PeriodicBehaviorFiringDuration(SlanValue(10),Some(SlanValue("howManyTimes"))),
           FnSend(List(SlanValue("generatorResourceOfMessages"))),
           FnCreate(List(SlanValue("generatorResourceOfAgents")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(behaviorPeriodic).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a spec for a periodic behavior without params" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Behaviors(List(
       PeriodicBehavior("...Some Periodic Behavior",
         List(PeriodicBehaviorFiringDuration(SlanValue(0),None),
           FnSend(List(SlanValue("generatorResourceOfMessages"))),
           FnCreate(List(SlanValue("generatorResourceOfAgents")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_allParams).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a spec for a periodic behavior without a time interval" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Behaviors(List(
       PeriodicBehavior("...Some Periodic Behavior",
         List(PeriodicBehaviorFiringDuration(SlanValue(0),Some(SlanValue("howManyTimes"))),
           FnSend(List(SlanValue("generatorResourceOfMessages"))),
           FnCreate(List(SlanValue("generatorResourceOfAgents")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_timeInterval).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a spec for a behavior with multiple messages" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Behaviors(
+      List(
       Behavior("Behavior 4 Multiple Messages",
         List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
           List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))),
@@ -511,7 +522,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           )
         )
       )
-    )))
+    )))))
 
     val path = getClass.getClassLoader.getResource(behaviorMultipleMessages).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
@@ -519,43 +530,47 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
 
 
   "translate a spec for a periodic behavior without duration" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Behaviors(
+      List(
       PeriodicBehavior("...Some Periodic Behavior",
         List(PeriodicBehaviorFiringDuration(SlanValue(10),None),
           FnSend(List(SlanValue("generatorResourceOfMessages"))),
           FnCreate(List(SlanValue("generatorResourceOfAgents")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(behaviorPeriodic_null_duration).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec for a map of some agent to its coordinate resource" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(
+      List(
       Resource(ResourceTag("Coordinates",None),
         List(SlanKeyNoValue("x"), SlanKeyNoValue("y"))),
       Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),List(SlanKeyValue("Pedestrian","Coordinates")))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec for a generator of messages or agents with given probabilities" in {
     val expected = List(Agents(List(
+      Resources(List(
       Resource(ResourceTag("generatorOfMessagesXYZ",None),
         List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(0)),
           ResourceProbability("MessageY",SlanValue(0.6)),
           ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v11).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec for a map that constains an empty list as a value" in {
     val expected = List(Agents(List(
+      Resources(List(
       Resource(ResourceTag("DopplegangerGAPs",Some("map")),
         List(Resource(ResourceTag("targetGapID",None),
           List(Resource(ResourceTag("phishingGaps",Some("list")),List())))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v12).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -593,44 +608,42 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a full semantically meaningless simulation" in {
-    val expected = List(Agents(List(Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
-      Agent("Agent Name X",List(State(None,
-        List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))),
-        State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
-      Group(List(GroupDesignators("Group Name",Some("behavior"))),List(
-        GroupAgent("Agent Name X",List()),
-        ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),List(SlanValue(2))))),
-      Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))),
-      Agent("Agent Name Y",List(State(None,List()))),
-      Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))))),
-      Messages(List(
-      Message(List(MessageDeclaration("Message Name",None)),
-        List(Resource(ResourceTag("Some Fixed Value",None), List(SlanValue(100))))))),
-      Models(List(Model("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))),
-        AgentPopulation("Agent Name Y",List()),
-        ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y")))))))))
-    )
+    val expected = List(Agents(
+      List(Resources(
+        List(Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))))
+      ),
+        Agent("Agent Name X",List(State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),Some("State A")))),
+          State(Some("State A"),List(StateBehavior(Some("stateAbehavior"),None))))),
+        Groups(List(Group(List(GroupDesignators("Group Name",Some("behavior"))),List(GroupAgent("Agent Name X",List()),
+          ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),List(SlanValue(2))))))),
+        Behaviors(List(Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))),
+        Agent("Agent Name Y",List(State(None,List()))), Channels(List(Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))))))),
+      Messages(List(Message(List(MessageDeclaration("Message Name",None)),
+        List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))))),
+      Models(List(Model("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))), AgentPopulation("Agent Name Y",List()),
+        ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y"))))))))))
+
     val path = getClass.getClassLoader.getResource(fullSimulation).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a behavior with a graph resource and a single message to respond" in {
     val expected = List(
-      Agents(List(
+      Agents(List(Behaviors(List(
       Behavior("HandleFriendRequests",List(MessageResponseBehavior(List(SlanValue("BeMyFriend")),
         List(IfThenElse(List(ROPEqual(List(FnSend(List(SlanValue("generatorOfFriendAcceptances"), CorrelationToken(SlanValue("friendRequestCorrID")))), SlanValue("AcceptedFriend"))),
           Then(List(FnUpdate(List(Reference(Some(SlanValue("TheFriendsGraph")),
             Some(List(Reference(Some(SlanValue("AddEdge")),Some(List(Reference(Some(SlanValue("this")),Some(List(Reference(Some(SlanValue("sender")),
               Some(List(Reference(Some(SlanValue(true)),None)))))))))))))))))))))))
-    )))
+    )))))
     val path = getClass.getClassLoader.getResource(behaviorOneMessageIFTHEN).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
 
   "translate a simulation of the social media company" in {
-    val expected = List(Agents(List(
+    val expected = List(Agents(List(Resources(List(
     /*
         generatorOfInsultResponseMessages:
           ? [Opinion: 0.2, Fact: 0.1, Insult: 0.7]
@@ -709,7 +722,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         Poisson: [3, 14]
       * */
       Resource(ResourceTag("arrivalGenerator",None),
-        List(Resource(ResourceTag("Poisson",None),List(SlanValue(3), SlanValue(14))))),
+        List(Resource(ResourceTag("Poisson",None),List(SlanValue(3), SlanValue(14))))))),
 
       /*
         TheCompany:
@@ -727,7 +740,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
               - Fn_Send: [generatorOfEncouragementResponseMessages, "~>": messageResponseCorrID]
               - Fn_Send: [generatorOfInsultResponseMessages]
       */
-      Behavior("Respond2FactsAndOpinions",
+      Behaviors(List(Behavior("Respond2FactsAndOpinions",
         List(MessageResponseBehavior(List(SlanValue("Insult")),
           List(FnSend(List(SlanValue("generatorOfEncouragementResponseMessages"), CorrelationToken(SlanValue("messageResponseCorrID")))),
             FnSend(List(SlanValue("generatorOfInsultResponseMessages"))))))),
@@ -869,7 +882,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
           FnAdd(
             List(FnCreate(List(SlanValue("generatorOfAgents"))),
-              Reference(Some(SlanValue("TheFriendsGraph")),Some(List(Reference(None,None)))))))),
+              Reference(Some(SlanValue("TheFriendsGraph")),Some(List(Reference(None,None)))))))))),
 
       /*
         Person:
@@ -913,7 +926,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           TalksT0:
             null: Transmissions
       */
-      Channel("TalksT0",List(SlanValue("Transmissions"))))),
+      Channels(List(Channel("TalksT0",List(SlanValue("Transmissions"))))))),
 
       /*
         Messages:
@@ -988,7 +1001,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
               ELSE:
                 Fn_Send: IdoNotCareResponse
     * */
-    Behavior("Respond2Message",
+      Behaviors(List(Behavior("Respond2Message",
     List(MessageResponseBehavior(List(SlanValue("MyOpinionAboutYou")),
     List(IfThenElse(
       List(ROPGreaterEqual(
@@ -1014,23 +1027,23 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     * */
     PeriodicBehavior("...SendMessage",
       List(PeriodicBehaviorFiringDuration(SlanValue(1000),None),
-        FnSend(List(SlanValue("MyOpinionAboutYou"))), FnInc(List(SlanValue("messageCounter"))))),
+        FnSend(List(SlanValue("MyOpinionAboutYou"))), FnInc(List(SlanValue("messageCounter"))))))),
 
     /*
       Channels:
         TalksT0:
           null: Transmissions
     * */
-    Channel("TalksT0",List(SlanValue("Transmissions"))),
+    Channels(List(Channel("TalksT0",List(SlanValue("Transmissions"))))),
     /*
       Resources:
         messageCounter: 0
         responseCounter: 0
         maxMessagesThreshold: 10
     * */
-    Resource(ResourceTag("messageCounter",None),List(SlanValue(0))),
+    Resources(List(Resource(ResourceTag("messageCounter",None),List(SlanValue(0))),
     Resource(ResourceTag("responseCounter",None),List(SlanValue(0))),
-    Resource(ResourceTag("maxMessagesThreshold",None),List(SlanValue(10))),
+    Resource(ResourceTag("maxMessagesThreshold",None),List(SlanValue(10))))),
     )),
 
     /*

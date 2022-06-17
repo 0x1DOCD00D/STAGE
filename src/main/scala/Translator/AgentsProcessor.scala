@@ -22,10 +22,10 @@ import cats.kernel.Eq
 class AgentsProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === Groups.toUpperCase => (new GroupsProcessor).commandProcessor(convertJ2S(v(1)))
-      case entry: String if entry.toUpperCase === Behaviors.toUpperCase => (new BehaviorsProcessor).commandProcessor(convertJ2S(v(1)))
-      case entry: String if entry.toUpperCase === Channels.toUpperCase => (new ChannelsProcessor).commandProcessor(convertJ2S(v(1)))
-      case entry: String if entry.toUpperCase === Resources.toUpperCase => (new ResourcesProcessor).commandProcessor(convertJ2S(v(1)))
+      case entry: String if entry.toUpperCase === GroupsSection.toUpperCase => Eval.now(List(Groups((new GroupsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === BehaviorsSection.toUpperCase => Eval.now(List(Behaviors((new BehaviorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === ChannelsSection.toUpperCase => Eval.now(List(Channels((new ChannelsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.toUpperCase === ResourcesSection.toUpperCase => Eval.now(List(Resources((new ResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
       //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
       //otherwise it is a sequence of states each defining its own behavior

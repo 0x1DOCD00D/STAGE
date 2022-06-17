@@ -22,7 +22,7 @@ class ModelGraphProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       case entry: String if entry.toUpperCase === SlanKeywords.AgentsSection.toUpperCase => (new AgentsPopulationProcessor).commandProcessor(convertJ2S(v(1)))
-      case entry: String if entry.toUpperCase === Deployment.toUpperCase => (new ModelDeploymentProcessor).commandProcessor(convertJ2S(v(1)))
+      case entry: String if entry.toUpperCase === DeploymentSection.toUpperCase => (new ModelDeploymentProcessor).commandProcessor(convertJ2S(v(1)))
       case cv: String => Eval.now(List(ModelGraph(cv, (new Agent2AgentViaChannelProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

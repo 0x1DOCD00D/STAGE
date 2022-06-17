@@ -22,7 +22,7 @@ class StatesResourcesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       //each agent can be assigned local resources that are not generators
-      case resources: String if resources.toLowerCase === Resources.toLowerCase => Eval.now(List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case resources: String if resources.toLowerCase === ResourcesSection.toLowerCase => Eval.now(List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case stateRef: String => Eval.now(List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case None => Eval.now(List(State(None, (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
