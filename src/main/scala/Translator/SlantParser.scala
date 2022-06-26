@@ -37,7 +37,6 @@ final case class FileRuntimeError(e: Throwable) extends SlanProgramFailed
 case class ContentSlanProgram(program:String) extends SlanProgramPassed:
   require(program != null)
 case class SlanYamlHandle(yaml: Any) extends SlanProgramPassed
-//  require(yaml != null)
 
 type ParsingPassedOrFailed = Either[SlanProgramFailed, SlanProgramPassed]
 type SlanProgramParsingResult = IO[ParsingPassedOrFailed]

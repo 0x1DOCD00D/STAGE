@@ -89,3 +89,10 @@ object SlanKeywords:
   val Fn_Divide: String = FnPrefix + "divide"
   val Fn_Join: String = FnPrefix + "join"
   val Fn_Leave: String = FnPrefix + "leave"
+
+  val QUEUE = "queue"
+  val MAP = "list"
+  val STACK = "stack"
+  val LIST = "list"
+  val JAR = "jar"
+  val REST = "rest"

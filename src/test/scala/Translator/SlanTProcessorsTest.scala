@@ -325,12 +325,10 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite key whose attributes include a composite and a simple resources" in {
-    val expected = List(Agents(List(Resources(List(
-      Resource(ResourceTag("compositeResource",None),
-        List(Resource(ResourceTag("someBasicResource1V",Some("list")),
-          List(SlanValue(100), SlanValue(1000))),
-          SlanKeyValue("valueHolder4compositeResource",1)))
-    )))))
+    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("compositeResource",None),
+      List(Resource(ResourceTag("someBasicResource1V",Some("list")),
+        List(SlanValue(100), SlanValue(1000))),
+        Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1))))))))))
     val path = getClass.getClassLoader.getResource(resources_v4).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -349,8 +347,9 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResourceMap",Some("map")),
         List(Resource(ResourceTag("instanceID",None),
-          List(SlanKeyValue("CPU",100), SlanKeyValue("RAM",0), SlanKeyValue("NetworkBandwidth",10000)))))
-    )))))
+          List(Resource(ResourceTag("CPU",None),List(SlanValue(100))),
+            Resource(ResourceTag("RAM",None),List(SlanValue(0))),
+            Resource(ResourceTag("NetworkBandwidth",None),List(SlanValue(10000))))))))))))
     val path = getClass.getClassLoader.getResource(resources_v4_2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -380,8 +379,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a complex resource spec for generating a unique random integer with a seed only" in {
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
-        List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))))
-    )))))
+        List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))
+    )))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v3).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
@@ -391,24 +390,32 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Resource(ResourceTag("dim3",None),
         List(Resource(ResourceTag("column1",None),
           List(Resource(ResourceTag("Enum",None),
-            List(SlanKeyValue("Item1","someGenerator"), SlanKeyValue("Item2",0.2), SlanKeyValue("Item3","someOtherGenerator"))))), SlanKeyValue("column2","someGenerator"), SlanKeyValue("column3","someBehavior"))),
-      Resource(ResourceTag("dim4",None),
-        List(Resource(ResourceTag("dim3",Some("list")),
-          List(SlanKeyValue("column4","generator200_500"), SlanKeyValue("column5","generator1_5"))), SlanKeyNoValue("someOtherAttribute"))),
+            List(Resource(ResourceTag("Item1",None),List(SlanValue("someGenerator"))),
+              Resource(ResourceTag("Item2",None),List(SlanValue(0.2))),
+              Resource(ResourceTag("Item3",None),List(SlanValue("someOtherGenerator"))))))),
+          Resource(ResourceTag("column2",None),List(SlanValue("someGenerator"))),
+          Resource(ResourceTag("column3",None),List(SlanValue("someBehavior"))))),
+      Resource(ResourceTag("dim4",None),List(Resource(ResourceTag("dim3",Some("list")),
+        List(Resource(ResourceTag("column4",None),List(SlanValue("generator200_500"))),
+          Resource(ResourceTag("column5",None),List(SlanValue("generator1_5"))))),
+        Resource(ResourceTag("someOtherAttribute",None),List()))),
       Resource(ResourceTag("dim5",None),
-        List(Resource(ResourceTag("dim4",Some("list")),List(SlanKeyValue("column6","generator0_1")))))
-    )))))
+        List(Resource(ResourceTag("dim4",Some("list")),
+          List(Resource(ResourceTag("column6",None),List(SlanValue("generator0_1"))))))))))))
+
     val path = getClass.getClassLoader.getResource(resources_v5).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a resource spec with a list of the instances of a composite resources that contains a queue initialized with some values" in {
     val expected = List(Agents(List(Resources(List(
-      Resource(ResourceTag("HDD",Some("list")), List(SlanKeyValue("Size","pdfgenerator"),
-        Resource(ResourceTag("Utilization",None),List(SlanKeyValue(">=",0), SlanKeyValue("<","Size"))),
-        Resource(ResourceTag("ItemCount",None),List(SlanValue(0), SlanKeyValue(">=",0))),
-        Resource(ResourceTag("DataStore",Some("queue")),List(SlanValue(100), SlanValue(1000), SlanValue(100000)))))
-    )))))
+      Resource(ResourceTag("HDD",Some("list")),List(Resource(ResourceTag("Size",None),List(SlanValue("pdfgenerator"))),
+        Resource(ResourceTag("Utilization",None),
+          List(Resource(ResourceTag(">=",None),List(SlanValue(0))),
+          Resource(ResourceTag("<",None),List(SlanValue("Size"))))),
+        Resource(ResourceTag("ItemCount",None),List(SlanValue(0),
+          Resource(ResourceTag(">=",None),List(SlanValue(0))))),
+        Resource(ResourceTag("DataStore",Some("queue")),List(SlanValue(100), SlanValue(1000), SlanValue(100000))))))))))
     val path = getClass.getClassLoader.getResource(resources_v6).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -417,9 +424,15 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("someTableResource",None),
         List(Resource(ResourceTag("columns",Some("list")),
-          List(SlanKeyNoValue("column3"), SlanKeyNoValue("column1"),
-            SlanKeyNoValue("column6"), SlanKeyNoValue("column2"), SlanKeyNoValue("column5"), SlanKeyNoValue("column4")))))
-    )))))
+          List(Resource(ResourceTag("column3",None),List()),
+            Resource(ResourceTag("column1",None),List()),
+            Resource(ResourceTag("column6",None),List()),
+            Resource(ResourceTag("column2",None),List()),
+            Resource(ResourceTag("column5",None),List()),
+            Resource(ResourceTag("column4",None),List())
+          )
+        )
+        )))))))
     val path = getClass.getClassLoader.getResource(resources_v7).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -428,11 +441,10 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("UniqueServiceId",Some("jar")),
         List(Resource(ResourceTag("http://url/to/Jar/name.jar",None),
-          List(Resource(ResourceTag("methodName",None),
-            List(SlanValue("parm1"), SlanValue("parm2"))), SlanKeyValue("methodName","parm1"),
-            SlanKeyNoValue("methodName"),
-            Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3")))))))
-    )))))
+          List(Resource(ResourceTag("methodName",None),List(SlanValue("parm1"), SlanValue("parm2"))),
+            Resource(ResourceTag("methodName",None),List(SlanValue("parm1"))),
+            Resource(ResourceTag("methodName",None),List()),
+            Resource(ResourceTag("otherMethodName",None),List(SlanValue("parm1"), SlanValue("parm2"), SlanValue("parm3"))))))))))))
     val path = getClass.getClassLoader.getResource(resources_v8).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -449,12 +461,12 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a message spec with multiple fields" in {
     val expected = List(Messages(List(
       Message(List(MessageDeclaration("Message Name",None)),
-        List(Resource(ResourceTag("Recursive Field",None),List(SlanKeyValue("Message Name",3))),
+        List(Resource(ResourceTag("Recursive Field",None),List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
           Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
           Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))),
-          Resource(ResourceTag("Another Recursive Field",None),List(SlanKeyValue("Message Name",10))),
-          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf")))))
-    )))
+          Resource(ResourceTag("Another Recursive Field",None),
+            List(Resource(ResourceTag("Message Name",None),List(SlanValue(10))))),
+          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf"))))))))
     val path = getClass.getClassLoader.getResource(messageYaml).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -544,10 +556,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a resource spec for a map of some agent to its coordinate resource" in {
     val expected = List(Agents(List(Resources(
       List(
-      Resource(ResourceTag("Coordinates",None),
-        List(SlanKeyNoValue("x"), SlanKeyNoValue("y"))),
-      Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),List(SlanKeyValue("Pedestrian","Coordinates")))
-    )))))
+        Resource(ResourceTag("Coordinates",None),
+          List(Resource(ResourceTag("x",None),List()),
+            Resource(ResourceTag("y",None),List()))),
+        Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),
+          List(Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates"))))))))))
     val path = getClass.getClassLoader.getResource(resources_v9).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -556,7 +569,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(
       Resources(List(
       Resource(ResourceTag("generatorOfMessagesXYZ",None),
-        List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(0)),
+        List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(true)),
           ResourceProbability("MessageY",SlanValue(0.6)),
           ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
     )))))
@@ -698,7 +711,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         generatorOfAgents:
           Person: arrivalGenerator
       * */
-      Resource(ResourceTag("generatorOfAgents",None),List(SlanKeyValue("Person","arrivalGenerator"))),
+      Resource(ResourceTag("generatorOfAgents",None),List(Resource(ResourceTag("Person",None),List(SlanValue("arrivalGenerator"))))),
 
       /*
         generatorOfEncouragementResponseMessages:
@@ -715,7 +728,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         generatorOfFriends:
           BeMyFriend: arrivalGenerator
       * */
-      Resource(ResourceTag("generatorOfFriends",None),List(SlanKeyValue("BeMyFriend","arrivalGenerator"))),
+      Resource(ResourceTag("generatorOfFriends",None),List(Resource(ResourceTag("BeMyFriend",None),List(SlanValue("arrivalGenerator"))))),
 
       /*
       arrivalGenerator:

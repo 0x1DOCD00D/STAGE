@@ -16,12 +16,12 @@ import org.slf4j.Logger
 type ErrorOrSlanConstructs = Either[SlanError, SlanConstructs]
 
 object ErrorWarningMessages:
-  def DistributionNameFailure[T](input: String, exceptionMessage: String)(using logger: Logger): SlanError =
+  def DistributionNameFailure(input: String, exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Incorrect distribution name is specified: $input - $exceptionMessage"
     logger.error(errorMsg)
     SlanError(errorMsg)
 
-  def YamlScriptFileFailure[T](input: String, exceptionMessage: String)(using logger: Logger): String =
+  def YamlScriptFileFailure(input: String, exceptionMessage: String)(using logger: Logger): String =
     val errorMsg = s"Error occured when loading input Yaml script $input: $exceptionMessage"
     logger.error(errorMsg)
     errorMsg
@@ -64,4 +64,19 @@ object ErrorWarningMessages:
   def LogGenericMessage(cls: Class[_], message: String)(using logger: Logger): SlanError =
     val errorMsg = s"${cls.getName}: $message"
     logger.info(errorMsg)
+    SlanError(errorMsg)
+
+  def MissingDefinition(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Definition $exceptionMessage is not specified"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+
+  def DuplicateDefinition(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Definition $exceptionMessage is already specified"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+
+  def IncorrectParameter(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Incorrect parameter $exceptionMessage is given"
+    logger.error(errorMsg)
     SlanError(errorMsg)

@@ -20,7 +20,7 @@ import cats.kernel.Eq
 
 class ResourceGenerationProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
-    case resourceId: String => Eval.now(List(ResourceProbability(resourceId, SlanValue(0))))
+    case resourceId: String => Eval.now(List(ResourceProbability(resourceId, SlanValue(true))))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (resId: String, valIfAny: YamlPrimitiveTypes) => Eval.now(List(ResourceProbability(resId, SlanValue(valIfAny))))
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)

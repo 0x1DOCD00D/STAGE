@@ -9,5 +9,17 @@
 
 package SlanIR
 
-trait Agent(val name: String):
-  private val stateTable: Map[String, String] = Map()
+import SlanIR.{EntityId, SlanEntity}
+
+import scala.collection.mutable.SortedSet
+
+case class Agent(val id: EntityId, val resources: List[Resource]) extends SlanEntity(id)
+//  private val stateTable: Map[String, String] = Map()
+
+object Agent:
+  private val AllAgents: SortedSet[EntityId] = SortedSet()
+
+  def apply(id: EntityId, resources: List[Resource]): Option[Agent] =
+    if AllAgents.contains(id) then None else
+      AllAgents += id
+      Some(new Agent(id, resources))
