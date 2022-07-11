@@ -22,14 +22,14 @@ class StatesResourcesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       //each agent can be assigned local resources that are not generators
-      case resources: String if resources.toLowerCase === ResourcesSection.toLowerCase => Eval.now(List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case resources: String if resources.trim.toLowerCase === ResourcesSection.toLowerCase => Eval.now(List(LocalResources((new AgentLocalResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case stateRef: String => Eval.now(List(State(Some(stateRef), (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case None => Eval.now(List(State(None, (new StateProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
     case None => Eval.now(List(State(None, List())))
     //there is the single anonymous state whose behavior is defined by the behavior reference
-    case behaviorRef: String => Eval.now(List(State(None, List(StateBehavior(Some(behaviorRef), None)))))
+    case behaviorRef: String => Eval.now(List(State(None, List(StateBehavior(Some(behaviorRef.trim), None)))))
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }

@@ -20,11 +20,11 @@ import cats.{Eq, Eval}
 class IfThenElseBehaviorProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === THEN.toUpperCase => Eval.now(List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === ELSE.toUpperCase => Eval.now(List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === AND.toUpperCase || entry.toUpperCase === OR.toUpperCase || entry.toUpperCase === NOT.toUpperCase ||
-                            entry.toUpperCase === LessThen.toUpperCase || entry.toUpperCase === LessEqual.toUpperCase || entry.toUpperCase === GreaterThen.toUpperCase ||
-                            entry.toUpperCase === GreaterEqual.toUpperCase || entry.toUpperCase === EqualTo.toUpperCase => (new RelOpProcessor).commandProcessor(convertJ2S(v))
+      case entry: String if entry.trim.toUpperCase === THEN.toUpperCase => Eval.now(List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ELSE.toUpperCase => Eval.now(List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === AND.toUpperCase || entry.trim.toUpperCase === OR.toUpperCase || entry.trim.toUpperCase === NOT.toUpperCase ||
+                            entry.trim.toUpperCase === LessThen.toUpperCase || entry.trim.toUpperCase === LessEqual.toUpperCase || entry.trim.toUpperCase === GreaterThen.toUpperCase ||
+                            entry.trim.toUpperCase === GreaterEqual.toUpperCase || entry.trim.toUpperCase === EqualTo.toUpperCase => (new RelOpProcessor).commandProcessor(convertJ2S(v))
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }
 

@@ -21,8 +21,8 @@ import cats.kernel.Eq
 class ResourceIngesterTableProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)),convertJ2S(v(1))) match {
-      case (path2Csv: String, header: Boolean) => Eval.now(List(ResourceCsvTable(List(SlanValue(path2Csv), SlanValue(header)))))
-      case (tableName: String, connectionString: String) => Eval.now(List(ResourceDatabaseTable(List(SlanValue(connectionString), SlanValue(tableName)))))
+      case (path2Csv: String, header: Boolean) => Eval.now(List(ResourceCsvTable(List(SlanValue(path2Csv.trim), SlanValue(header)))))
+      case (tableName: String, connectionString: String) => Eval.now(List(ResourceDatabaseTable(List(SlanValue(connectionString.trim), SlanValue(tableName.trim)))))
       case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString)))
     }
     case None => Eval.now(List())

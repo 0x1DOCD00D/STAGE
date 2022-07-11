@@ -21,10 +21,10 @@ import cats.kernel.Eq
 class ModelDeploymentProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === ResourcesSection.toUpperCase => Eval.now(List(ResourceConstructors((new ResourceConstructorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === Nodes.toUpperCase => Eval.now(List(ComputingNodes((new ComputingNodesProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === AkkaConfiguration.toUpperCase => Eval.now(List(AkkaConfigurationParameters((new AkkaConfigurationProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case cv: String => Eval.now(List(ModelDeployment(cv, (new ModelDeploymentProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ResourcesSection.toUpperCase => Eval.now(List(ResourceConstructors((new ResourceConstructorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === Nodes.toUpperCase => Eval.now(List(ComputingNodes((new ComputingNodesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === AkkaConfiguration.toUpperCase => Eval.now(List(AkkaConfigurationParameters((new AkkaConfigurationProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(ModelDeployment(cv.trim, (new ModelDeploymentProcessor).commandProcessor(convertJ2S(v(1))).value)))
 
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

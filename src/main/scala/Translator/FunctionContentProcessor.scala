@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class FunctionContentProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (entry: String, value:String) if entry === Correlation => Eval.now(List(CorrelationToken(SlanValue(value))))
+      case (entry: String, value:String) if entry.trim.toUpperCase === Correlation.toUpperCase => Eval.now(List(CorrelationToken(SlanValue(value))))
       case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
     }
 

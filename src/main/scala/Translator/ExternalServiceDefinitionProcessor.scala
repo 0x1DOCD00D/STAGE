@@ -20,7 +20,7 @@ import cats.kernel.Eq
 class ExternalServiceDefinitionProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === IF.toUpperCase => (new IfThenElseProcessor).commandProcessor(convertJ2S(v(1)))
+      case entry: String if entry.trim.toUpperCase === IF.toUpperCase => (new IfThenElseProcessor).commandProcessor(convertJ2S(v(1)))
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }
 

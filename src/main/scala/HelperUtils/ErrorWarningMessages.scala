@@ -71,12 +71,27 @@ object ErrorWarningMessages:
     logger.error(errorMsg)
     SlanError(errorMsg)
 
+  def EmptyWarning(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Empty value: $exceptionMessage"
+    logger.warn(errorMsg)
+    SlanError(errorMsg)
+  
   def DuplicateDefinition(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Definition $exceptionMessage is already specified"
     logger.error(errorMsg)
     SlanError(errorMsg)
 
+  def WrongCardinality(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Incorrect number of entities: $exceptionMessage"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+  
   def IncorrectParameter(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Incorrect parameter $exceptionMessage is given"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+
+  def SeriousInternalError(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Internal error: $exceptionMessage"
     logger.error(errorMsg)
     SlanError(errorMsg)

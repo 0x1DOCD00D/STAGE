@@ -21,8 +21,8 @@ import cats.kernel.Eq
 class ResourceConstructorsProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)),convertJ2S(v(1))) match {
-      case (resourceName: String, path2Csv: String) => Eval.now(List(TableLoader(resourceName, List(ResourceCsvTable(List(SlanValue(path2Csv), SlanValue(false)))))))
-      case (resourceName: String, _ @ params) => Eval.now(List(TableLoader(resourceName, (new ResourceIngesterTableProcessor).commandProcessor(params).value)))
+      case (resourceName: String, path2Csv: String) => Eval.now(List(TableLoader(resourceName.trim, List(ResourceCsvTable(List(SlanValue(path2Csv.trim), SlanValue(false)))))))
+      case (resourceName: String, _ @ params) => Eval.now(List(TableLoader(resourceName.trim, (new ResourceIngesterTableProcessor).commandProcessor(params).value)))
       case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString)))
     }
     case None => Eval.now(List())

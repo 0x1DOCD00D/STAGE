@@ -21,8 +21,8 @@ import cats.kernel.Eq
 class ComputingNodesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)),convertJ2S(v(1))) match {
-      case (node: String, params: String) => Eval.now(List(SlanKeyValue(node, params)))
-      case (node: String, None) => Eval.now(List(SlanValue(node)))
+      case (node: String, params: String) => Eval.now(List(SlanKeyValue(node.trim, params.trim)))
+      case (node: String, None) => Eval.now(List(SlanValue(node.trim)))
       case (None,None) => Eval.now(List())
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

@@ -19,22 +19,22 @@ import scala.collection.mutable.Map
 
 trait Resource extends SlanEntity
 
-case class ProducerConsumer(id: EntityId, storage: ResourceStorage, composites: Option[List[Resource]]) extends SlanEntity(id), Resource
+case class ProducerConsumer(id: EntityId, storage: Option[ResourceStorage], composites: Option[List[Resource]]) extends SlanEntity(id), Resource
 
 case class Generator(id: EntityId, pdf: String) extends SlanEntity(id), Resource
 
 object Resource:
   private val bookkeeper = new EntityBookkeeper[Resource]
-  def apply(id: EntityId): Option[Resource] = bookkeeper.get(id).asInstanceOf
+  def apply(id: EntityId): Option[Resource] = bookkeeper.get(id)
 
-  def apply(id: EntityId, storageOrPdf: String, composites: Option[List[Resource]], inits: Option[List[ValueInResource[Long]]]): EntityOrError[Resource] =
-    if bookkeeper.contains(id) then
-      DuplicateDefinition(s"resource $id")
-    else
-      ResourceStorage(storageOrPdf) match
-           case ResourceStorage.UNRECOGNIZED =>
-              if PDFs.PdfStreamGenerator.listOfSupportedDistributions.contains(storageOrPdf.toUpperCase) then
-                bookkeeper.set(id, Generator(id, storageOrPdf.toUpperCase))
-              else
-                IncorrectParameter(s"$storageOrPdf in resource definition")
-           case rs => bookkeeper.set(id, ProducerConsumer(id, rs, composites))
+  def apply(id: EntityId, storageOrPdf: Option[String], composites: Option[List[Resource]], inits: Option[List[ValueInResource[Long]]]): EntityOrError[Resource] =
+    storageOrPdf match
+      case None => bookkeeper.set(id, ProducerConsumer(id, None, composites))
+      case Some(sp) =>
+        ResourceStorage(sp) match
+             case ResourceStorage.UNRECOGNIZED =>
+                if PDFs.PdfStreamGenerator.listOfSupportedDistributions.contains(sp.toUpperCase) then
+                  bookkeeper.set(id, Generator(id, sp.toUpperCase))
+                else
+                  IncorrectParameter(s"$storageOrPdf in resource definition")
+             case rs => bookkeeper.set(id, ProducerConsumer(id, Option(rs), composites))

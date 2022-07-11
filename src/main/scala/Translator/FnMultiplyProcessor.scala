@@ -20,7 +20,7 @@ import cats.kernel.Eq
 
 class FnMultiplyProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = convertJ2S(yamlObj) match {
-    case simpleOperand: String => Eval.now(List(SlanValue(simpleOperand)))
+    case simpleOperand: String => Eval.now(List(SlanValue(simpleOperand.trim)))
     case v: (_, _) =>(new FunctionProcessor).commandProcessor(convertJ2S(v))
     case None => Eval.now(List())
     case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))

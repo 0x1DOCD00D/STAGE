@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class AgentLocalResourcesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     //each agent can be assigned local resources that are not generators
-    case resourceId: String => Eval.now(List(SlanValue(resourceId)))
+    case resourceId: String => Eval.now(List(SlanValue(resourceId.trim)))
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (key:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(SlanKeyValue(key, value)))
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)

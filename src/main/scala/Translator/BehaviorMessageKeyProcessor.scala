@@ -18,7 +18,7 @@ import cats.Eval
 
 class BehaviorMessageKeyProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
-    case cv: String => Eval.now(List(SlanValue(cv)))
+    case cv: String => Eval.now(List(SlanValue(cv.trim)))
     case v: (_, _) if v(1) != null => convertJ2S(v(0)) match {
       case compositeMessageKey: List[_] =>
         val msgIds = for {

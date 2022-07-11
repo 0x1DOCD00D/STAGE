@@ -461,25 +461,26 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a message spec with multiple fields" in {
     val expected = List(Messages(List(
       Message(List(MessageDeclaration("Message Name",None)),
-        List(Resource(ResourceTag("Recursive Field",None),List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
+        List(Resources(List(Resource(ResourceTag("Recursive Field",None),List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
           Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
           Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))),
           Resource(ResourceTag("Another Recursive Field",None),
             List(Resource(ResourceTag("Message Name",None),List(SlanValue(10))))),
-          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf"))))))))
+          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf"))))))))))
     val path = getClass.getClassLoader.getResource(messageYaml).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
   "translate a derived message spec" in {
     val expected = List(Messages(List(
-      Message(List(MessageDeclaration("Message Name",None)),List(Resource(ResourceTag("Field Name",None),
+      Message(List(MessageDeclaration("Message Name",None)), List(Resources(
+        List(Resource(ResourceTag("Field Name",None),
         List(Resource(ResourceTag("Uniform",None),List(SlanValue(1), SlanValue(200))))),
         Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
-        Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))),
+        Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))))),
       Message(List(MessageDeclaration("Derived Message",Some("Message Name"))),
-        List(Resource(ResourceTag("FieldX",None),
-          List(Resource(ResourceTag("Discrete",None),List(SlanKeyValue(1,0.3), SlanKeyValue(2,0.5), SlanKeyValue(3,0.6)))))))
+        List(Resources(List(Resource(ResourceTag("FieldX",None),
+          List(Resource(ResourceTag("Discrete",None),List(SlanKeyValue(1,0.3), SlanKeyValue(2,0.5), SlanKeyValue(3,0.6)))))))))
     )))
     val path = getClass.getClassLoader.getResource(messageDerivedYaml).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
@@ -632,8 +633,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         Behaviors(List(Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
           List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))),
         Agent("Agent Name Y",List(State(None,List()))), Channels(List(Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))))))),
-      Messages(List(Message(List(MessageDeclaration("Message Name",None)),
-        List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))))),
+      Messages(List(Message(List(MessageDeclaration("Message Name",None)), List(Resources(
+        List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))))))),
       Models(List(Model("Model Name",List(AgentPopulation("Agent Name X",List(SlanValue("quantity 1"))), AgentPopulation("Agent Name Y",List()),
         ModelGraph("Graph Name X",List(Agent2AgentViaChannel("Agent Name X",List(Channel2Agent("TalksT0","Agent Name Y"))))))))))
 
@@ -953,14 +954,14 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           StrongSupport:
       */
       Messages(List(
-      Message(List(MessageDeclaration("Opinion",None)),List()),
-      Message(List(MessageDeclaration("StrongSupport",None)),List()),
-      Message(List(MessageDeclaration("Unfriend",None)),List()),
-      Message(List(MessageDeclaration("AcceptedFriend",None)),List()),
-      Message(List(MessageDeclaration("RejectedFriend",None)),List()),
-      Message(List(MessageDeclaration("Insult",None)),List()),
-      Message(List(MessageDeclaration("BeMyFriend",None)),List()),
-      Message(List(MessageDeclaration("Fact",None)),List()))),
+      Message(List(MessageDeclaration("Opinion",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("StrongSupport",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("Unfriend",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("AcceptedFriend",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("RejectedFriend",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("Insult",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("BeMyFriend",None)),List(Resources(List()))),
+      Message(List(MessageDeclaration("Fact",None)),List(Resources(List()))))),
       /*
         Models:
           SocialMediaSimulation:
@@ -1065,8 +1066,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       IdoNotCareResponse:
     * */
     Messages(List(
-    Message(List(MessageDeclaration("MyOpinionAboutYou",None)),List()),
-    Message(List(MessageDeclaration("IdoNotCareResponse",None)),List()))),
+    Message(List(MessageDeclaration("MyOpinionAboutYou",None)),List(Resources(List()))),
+    Message(List(MessageDeclaration("IdoNotCareResponse",None)),List(Resources(List()))))),
 
       /*
         Models:

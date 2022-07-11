@@ -24,7 +24,7 @@ class MessageResponseBehaviorProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) if v(1) == null => convertJ2S(v(0)) match {
       //msgName: {blah blah behavior actions}
-      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId.trim)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //null defines a periodic behavior that is invoked at specified time intervals
       case None => Eval.now(List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //? [msg1, msg2, ..., msgN]: {blah blah behavior actions}
@@ -36,7 +36,7 @@ class MessageResponseBehaviorProcessor extends GenericProcessor {
     }
     case v: (_, _) if v(1) != null => convertJ2S(v(0)) match {
       //msgName: {blah blah behavior actions}
-      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case msgId: String => Eval.now(List(MessageResponseBehavior(List(SlanValue(msgId.trim)), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case None => Eval.now(List(MessageResponseBehavior(List(), (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //? [msg1, msg2, ..., msgN]: {blah blah behavior actions}
       case msgIdList: (_,_) => Eval.now(List(MessageResponseBehavior((new CompositeMessageKeyProcessor).commandProcessor(convertJ2S(v(0))).value, (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))

@@ -20,7 +20,7 @@ import cats.kernel.Eq
 class ValueAssignmentProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case pdfName: String => Eval.now(List(Pdf(pdfName,(new ValueAssignmentProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case pdfName: String => Eval.now(List(Pdf(pdfName.trim,(new ValueAssignmentProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }
     case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))

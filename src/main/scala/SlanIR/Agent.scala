@@ -9,17 +9,32 @@
 
 package SlanIR
 
+import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, EmptyWarning, MissingDefinition}
 import SlanIR.{EntityId, SlanEntity}
 
 import scala.collection.mutable.SortedSet
 
-case class Agent(val id: EntityId, val resources: List[Resource]) extends SlanEntity(id)
-//  private val stateTable: Map[String, String] = Map()
+/*
+* An agent is defined not only by its unique name but also by its resources, behaviors and the state machine.
+* An agent is constructed in stages - first, its object is created with resources if any and then
+* a state machine is added to the object with state transitions and the corresponding behaviors.
+* */
+case class Agent(id: EntityId, stateMachine: Option[StateMachine], resources: List[Resource]) extends SlanEntity(id):
+  def withStateMachine(stateMachine4Agent: Option[StateMachine]): Agent =
+    Agent(id, stateMachine4Agent, resources)
 
 object Agent:
-  private val AllAgents: SortedSet[EntityId] = SortedSet()
+  private val bookkeeper = new EntityBookkeeper[Agent]
 
-  def apply(id: EntityId, resources: List[Resource]): Option[Agent] =
-    if AllAgents.contains(id) then None else
-      AllAgents += id
-      Some(new Agent(id, resources))
+  def apply(id: EntityId): Option[Agent] = bookkeeper.get(id)
+
+  def apply(id: EntityId, stateMachine: Option[StateMachine]): EntityOrError[Agent] =
+    bookkeeper.get(id) match
+      case Some(agent) => agent.withStateMachine(stateMachine)
+      case None => MissingDefinition(s"agent $id")
+
+  def apply(id: EntityId, resources: List[Resource]): EntityOrError[Agent] =
+    if bookkeeper.contains(id) then
+      DuplicateDefinition(s"agent $id")
+    else
+      bookkeeper.set(id, Agent(id, None, resources))

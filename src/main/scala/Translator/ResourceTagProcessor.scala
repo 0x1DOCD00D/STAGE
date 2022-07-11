@@ -20,7 +20,7 @@ import cats.kernel.Eq
 
 class ResourceTagProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
-    case resourceId: String => Eval.now(List(ResourceTag(resourceId, None)))
+    case resourceId: String => Eval.now(List(ResourceTag(resourceId.trim, None)))
     case v: (_, _) => convertJ2S(v(0)) match {
       case storageType: String => convertJ2S(v(1)) match {
         case resourceId: String => Eval.now(List(ResourceTag(resourceId, Some(storageType))))

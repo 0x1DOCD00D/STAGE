@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class Agent2AgentViaChannelProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case agent: String => Eval.now(List(Agent2AgentViaChannel(agent,
+      case agent: String => Eval.now(List(Agent2AgentViaChannel(agent.trim,
         (new Channel2AgentProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

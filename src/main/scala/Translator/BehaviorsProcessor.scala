@@ -20,8 +20,8 @@ import cats.kernel.Eq
 class BehaviorsProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String if lookAhead4Periodic(convertJ2S(v(1))) => Eval.now(List(PeriodicBehavior(cv, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case cv: String => Eval.now(List(Behavior(cv, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String if lookAhead4Periodic(convertJ2S(v(1))) => Eval.now(List(PeriodicBehavior(cv.trim, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(Behavior(cv.trim, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 

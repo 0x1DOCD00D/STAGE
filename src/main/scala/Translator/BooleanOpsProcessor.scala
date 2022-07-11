@@ -20,10 +20,10 @@ import cats.{Eq, Eval}
 class BooleanOpsProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === NOT.toUpperCase => Eval.now(List(Not((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === AND.toUpperCase => Eval.now(List(And((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === OR.toUpperCase => Eval.now(List(Or((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === XOR.toUpperCase => Eval.now(List(Xor((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === NOT.toUpperCase => Eval.now(List(Not((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === AND.toUpperCase => Eval.now(List(And((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === OR.toUpperCase => Eval.now(List(Or((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === XOR.toUpperCase => Eval.now(List(Xor((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
 
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

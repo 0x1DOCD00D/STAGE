@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class ModelsProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String => Eval.now(List(Model(cv, (new ModelGraphProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(Model(cv.trim, (new ModelGraphProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 

@@ -22,7 +22,7 @@ class ChannelBehaviorsProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match
     case bref: String => Eval.now(List(SlanValue(bref)))
     case v: (_, _) => convertJ2S(v(0)) match
-      case cv: String => Eval.now(List(SlanValue(cv)))
+      case cv: String => Eval.now(List(SlanValue(cv.trim)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
 
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)

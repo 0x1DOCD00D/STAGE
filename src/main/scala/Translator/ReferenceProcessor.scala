@@ -21,7 +21,7 @@ import cats.kernel.Eq
 class ReferenceProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-        case ref: String => Eval.now(List(Reference(Some(SlanValue(ref)), Option((new ReferenceProcessor).commandProcessor(convertJ2S(v(1))).value))))
+        case ref: String => Eval.now(List(Reference(Some(SlanValue(ref.trim)), Option((new ReferenceProcessor).commandProcessor(convertJ2S(v(1))).value))))
         case None => Eval.now(List(Reference(None, Option((new ReferenceProcessor).commandProcessor(convertJ2S(v(1))).value))))
         case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
       }

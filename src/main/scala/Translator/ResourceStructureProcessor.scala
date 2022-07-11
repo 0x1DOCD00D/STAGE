@@ -21,11 +21,11 @@ class ResourceStructureProcessor extends GenericProcessor :
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (key:YamlPrimitiveTypesNoString, value:YamlPrimitiveTypes) => Eval.now(List(SlanKeyValue(key, value)))
       case (key:String, value:YamlPrimitiveTypes) => Eval.now(List(Resource(
-        ResourceTag(key, None), List(SlanValue(value))
+        ResourceTag(key.trim, None), List(SlanValue(value))
       )))
       case (key:YamlPrimitiveTypesNoString, None) =>Eval.now(List(SlanKeyNoValue(key)))
       case (key:String, None) =>Eval.now(List(Resource(
-        ResourceTag(key, None), List()
+        ResourceTag(key.trim, None), List()
       )))
       case (key: List[_], value:Map[_,_]) => Eval.now(List(ResourcePDFParameters(key.map(aV => SlanValue(convertJ2S(aV).toString))))
       :::  List(ResourcePDFConstraintsAndSeed((new ResourcePDFSeedConstraintsProcessor).commandProcessor(convertJ2S(value)).value)))

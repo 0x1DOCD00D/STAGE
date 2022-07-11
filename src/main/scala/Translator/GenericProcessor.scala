@@ -44,7 +44,7 @@ abstract class GenericProcessor:
   protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] =
     yamlObj match {
       case v: (_, _) => convertJ2S(v(0)) match {
-        case cv: String => Eval.now(new UnknownEntryProcessor(convertJ2S(v(1)), Some(cv)).constructSlanRecord)
+        case cv: String => Eval.now(new UnknownEntryProcessor(convertJ2S(v(1)), Some(cv.trim)).constructSlanRecord)
         case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
       }
 

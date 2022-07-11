@@ -21,8 +21,8 @@ import cats.kernel.Eq
 class AkkaConfigurationProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)),convertJ2S(v(1))) match {
-      case (key: String, params: String) => Eval.now(List(SlanKeyValue(key, params)))
-      case (key: String, None) => Eval.now(List(SlanValue(key)))
+      case (key: String, params: String) => Eval.now(List(SlanKeyValue(key.trim, params.trim)))
+      case (key: String, None) => Eval.now(List(SlanValue(key.trim)))
       case (None,None) => Eval.now(List())
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }

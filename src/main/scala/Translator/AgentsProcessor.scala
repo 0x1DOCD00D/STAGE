@@ -22,14 +22,14 @@ import cats.kernel.Eq
 class AgentsProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === GroupsSection.toUpperCase => Eval.now(List(Groups((new GroupsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === BehaviorsSection.toUpperCase => Eval.now(List(Behaviors((new BehaviorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === ChannelsSection.toUpperCase => Eval.now(List(Channels((new ChannelsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === ResourcesSection.toUpperCase => Eval.now(List(Resources((new ResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === GroupsSection.toUpperCase => Eval.now(List(Groups((new GroupsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === BehaviorsSection.toUpperCase => Eval.now(List(Behaviors((new BehaviorsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ChannelsSection.toUpperCase => Eval.now(List(Channels((new ChannelsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ResourcesSection.toUpperCase => Eval.now(List(Resources((new ResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
       //the ambiguity comes from distinguishing key: value pairs as designating states or messages under the entry agent
       //if an agent contains the keyword Behavior under its name then it means that there is the single state for this agent
       //otherwise it is a sequence of states each defining its own behavior
-      case cv: String => Eval.now(List(Agent(cv, (new StatesResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String => Eval.now(List(Agent(cv.trim, (new StatesResourcesProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 

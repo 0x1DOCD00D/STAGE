@@ -11,13 +11,34 @@ package SlanIR
 
 import HelperUtils.CreateLogger
 import Translator.SlanConstruct.SlanError
+import cats.Semigroup
+import cats.data.{NonEmptyList, ValidatedNel}
+import cats.instances.string.*
+import cats.syntax.all.catsSyntaxSemigroup
 import org.slf4j.Logger
 
 given logger:Logger = CreateLogger(classOf[SlanEntity])
+given slanErrorSemigroup: Semigroup[SlanError] = Semigroup.instance[SlanError] { (e1, e2) =>
+  SlanError(e1.errorMessage |+| e2.errorMessage)
+}
 
+type SlanEntityValidated = [T] =>> ValidatedNel[SlanError, T]
 type ValueInResource = [V] =>> EntityId | V
 type EntityId = String
+type CollectionOfEntities = List[EntityId]
+type Likelihood = Double
+type PdfGenerator = Generator | Likelihood
+type AgentId = String
+type StateId = String
+type CorrelationId = String
 type Cardinality = Int | EntityId
 type SlanEntityInstance = (SlanEntity, Cardinality)
 type EntityOrError = [E] =>> E | SlanError
 
+type MessageTriple = (EntityId, Option[EntityId], Option[List[Resource]])
+type MessagePair = (EntityId, Option[EntityId])
+type MessageTripleCollection = List[MessageTriple]
+type CollectionOfMessages = List[Message]
+
+type ResourceTuple = (EntityId, Option[String], Option[List[Resource]], Option[List[ValueInResource[Long]]])
+type ResourceTupleCollection = List[ResourceTuple]

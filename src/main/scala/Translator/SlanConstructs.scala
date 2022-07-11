@@ -48,7 +48,7 @@ enum SlanConstruct:
 
   case StateProbabilitySwitch(stateId: StateReference, probSource: SlanValue)
 
-  case SlanError(errorMessage: String)
+  case SlanError(errorMessage: String = "")
 
   case IncorrectYamlType(typeName: String)
 

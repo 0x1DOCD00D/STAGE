@@ -18,7 +18,7 @@ import cats.Eval
 class GroupDesignatorsProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-            case (gName: String, behId: String) => Eval.now(List(GroupDesignators(gName, Option(behId))))
+            case (gName: String, behId: String) => Eval.now(List(GroupDesignators(gName.trim, Option(behId.trim))))
             case unknown => Eval.now(List(YamlKeyIsMissing(unknown.getClass().toString + ": " + unknown.toString)))
           }
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)

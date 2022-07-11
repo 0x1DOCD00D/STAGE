@@ -21,8 +21,8 @@ import cats.kernel.Eq
 class MessageInheritanceKeyProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
-      case (msgId: String, parent: String) => Eval.now(List(MessageDeclaration(msgId,Some(parent))))
-      case (msgId: String, None) => Eval.now(List(MessageDeclaration(msgId,None)))
+      case (msgId: String, parent: String) => Eval.now(List(MessageDeclaration(msgId.trim,Some(parent.trim))))
+      case (msgId: String, None) => Eval.now(List(MessageDeclaration(msgId.trim,None)))
       case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass.toString + ": " + unknown.toString)))
     }
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass.toString)).constructSlanRecord)

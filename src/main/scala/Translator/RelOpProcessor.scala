@@ -20,12 +20,11 @@ import cats.{Eq, Eval}
 class RelOpProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry === LessThen => Eval.now(List(ROPLess((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry === LessEqual => Eval.now(List(ROPLessEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry === GreaterEqual => Eval.now(List(ROPGreaterEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry === GreaterThen => Eval.now(List(ROPGreater((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry === EqualTo
-      => Eval.now(List(ROPEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim === LessThen => Eval.now(List(ROPLess((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim === LessEqual => Eval.now(List(ROPLessEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim === GreaterEqual => Eval.now(List(ROPGreaterEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim === GreaterThen => Eval.now(List(ROPGreater((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim === EqualTo => Eval.now(List(ROPEqual((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
 

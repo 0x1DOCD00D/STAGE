@@ -36,7 +36,7 @@ class StateProcessor extends GenericProcessor {
       }
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
-    case behaviorRef: String => Eval.now(List(StateBehavior(Some(behaviorRef), None)))
+    case behaviorRef: String => Eval.now(List(StateBehavior(Some(behaviorRef.trim), None)))
 
     case None => Eval.now(List())
 

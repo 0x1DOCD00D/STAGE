@@ -22,7 +22,7 @@ class Channel2AgentProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       case channel: String => convertJ2S(v(1)) match {
-        case agent: String => Eval.now(List(Channel2Agent(channel, agent)))
+        case agent: String => Eval.now(List(Channel2Agent(channel.trim, agent.trim)))
         case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
       }
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))

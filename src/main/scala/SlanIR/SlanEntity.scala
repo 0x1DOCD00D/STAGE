@@ -20,6 +20,7 @@ trait SlanEntity(val name: EntityId)
 class EntityBookkeeper[T <: SlanEntity : ClassTag]:
   private val EntityTable: Map[EntityId, T] = Map()
   
+  def size = EntityTable.size
   def contains(id: EntityId): Boolean = EntityTable.contains(id)
   def get(id: EntityId): Option[T] = EntityTable.get(id)
   def set(id: EntityId, obj: T): EntityOrError[T] =

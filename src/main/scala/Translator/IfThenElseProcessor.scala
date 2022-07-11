@@ -21,9 +21,9 @@ import cats.kernel.Eq
 class IfThenElseProcessor extends GenericProcessor :
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case entry: String if entry.toUpperCase === THEN.toUpperCase => Eval.now(List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === ELSE.toUpperCase => Eval.now(List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
-      case entry: String if entry.toUpperCase === ELSEIF.toUpperCase => Eval.now(List(ElseIf((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === THEN.toUpperCase => Eval.now(List(Then((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ELSE.toUpperCase => Eval.now(List(Else((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case entry: String if entry.trim.toUpperCase === ELSEIF.toUpperCase => Eval.now(List(ElseIf((new BehaviorActionsProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
     }
 
