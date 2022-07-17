@@ -23,7 +23,6 @@ given slanErrorSemigroup: Semigroup[SlanError] = Semigroup.instance[SlanError] {
 }
 
 type SlanEntityValidated = [T] =>> ValidatedNel[SlanError, T]
-type ValueInResource = [V] =>> EntityId | V
 type EntityId = String
 type CollectionOfEntities = List[EntityId]
 type Likelihood = Double
@@ -39,6 +38,3 @@ type MessageTriple = (EntityId, Option[EntityId], Option[List[Resource]])
 type MessagePair = (EntityId, Option[EntityId])
 type MessageTripleCollection = List[MessageTriple]
 type CollectionOfMessages = List[Message]
-
-type ResourceTuple = (EntityId, Option[String], Option[List[Resource]], Option[List[ValueInResource[Long]]])
-type ResourceTupleCollection = List[ResourceTuple]

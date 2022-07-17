@@ -1,7 +1,7 @@
 Messages:
   Message Name:
-    Field Name:
-      Uniform: [1, 200]
+    ? Uniform: Field Name
+    : [1, 200]
     ? queue: someBasicResourceListOfValues
     : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list
     Some Fixed Value: 100

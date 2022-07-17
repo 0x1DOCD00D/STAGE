@@ -34,6 +34,8 @@ enum SlanConstruct:
 
   case Resources(models: SlanConstructs)
 
+  case Fields(models: SlanConstructs)
+
   case Behaviors(models: SlanConstructs)
 
   case Channels(models: SlanConstructs)
@@ -151,7 +153,7 @@ enum SlanConstruct:
   case Channel(id: ChannelReference, behaviors: SlanConstructs)
   
   case Resource(id: SlanConstruct, attributes: SlanConstructs)
-  
+
   case ResourceTag(id: ResourceReference, storageType: StorageTypeReference)
   
   case ResourcePeriodicGenerator(resourceTypes: SlanConstructs)
