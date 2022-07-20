@@ -10,6 +10,7 @@
 package SlanIR
 
 import HelperUtils.CreateLogger
+import Translator.SlanAbstractions.StorageTypeReference
 import Translator.SlanConstruct.SlanError
 import cats.Semigroup
 import cats.data.{NonEmptyList, ValidatedNel}

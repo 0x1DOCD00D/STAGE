@@ -18,8 +18,17 @@ import cats.implicits.*
 import cats.syntax.*
 import cats.{Eq, Semigroup}
 
-object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]):
-  override def apply(resourceOrValsSpec: SlanConstructs): SlanEntityValidated[Option[List[Resource] | List[StoredValue]]] =
+/*
+* This function is called to process a list of resources as SlanConstructs from multiple locations.
+* The primary location is the list of global resources under Agents/Resources key path. All top level
+* resources under this path should be added to the resources table in the object Resource and each top-level
+* resource is uniquely identified by its name. Resources, however, can also be defined as fields in messages,
+* local resources in agents and as the constituents of the other composite resources, which are not added
+* to the global resource tables and their references are local. Therefore, top level resources are processed
+* in the object Resource whereas local resources are processed by this function.
+* */
+object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]]):
+  override def apply(resourceOrValsSpec: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]] =
     if incorrectResourceValueCollection(resourceOrValsSpec) || notAllResourceAttributesAreValues(resourceOrValsSpec) then
       IncorrectParameter("attributes should contain either nested resources or values only").invalidNel
     else
@@ -27,17 +36,17 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
 
   private def incorrectResourceValueCollection(resourceSpec: SlanConstructs): Boolean =
     resourceSpec.exists(_.isInstanceOf[Translator.SlanConstruct.Resource]) &&
-    resourceSpec.filter(_.isInstanceOf[Translator.SlanConstruct.Resource]).length =!= resourceSpec.length
+    resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) =!= resourceSpec.length
 
   private def notAllResourceAttributesAreValues(resourceSpec: SlanConstructs): Boolean =
-    resourceSpec.filter(_.isInstanceOf[Translator.SlanConstruct.SlanValue]).length +
-      resourceSpec.filter(_.isInstanceOf[Translator.SlanConstruct.SlanKeyValue]).length +
-      resourceSpec.filter(_.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue]).length
+    resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanValue]) +
+      resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanKeyValue]) +
+      resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue])
       =!= resourceSpec.length
 
 
-  private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[Resource] | List[StoredValue]]] =
-    if resourcesOrValues.filter(_.isInstanceOf[Translator.SlanConstruct.Resource]).length === resourcesOrValues.length then
+  private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]] =
+    if resourcesOrValues.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) === resourcesOrValues.length then
       obtainResources(resourcesOrValues.asInstanceOf[List[Translator.SlanConstruct.Resource]]).validNel
     else
       obtainResourceValues(resourcesOrValues).validNel
@@ -52,18 +61,14 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
   private def constructValue(resValue: Translator.SlanConstruct.SlanKeyNoValue): StoredValue =
     StoredValue((resValue.key, PDFs.PdfStreamGenerator.probabilityRange(1)))
 
-  private def constructResource(resource: Translator.SlanConstruct.Resource): Resource =
+  private def constructResource(resource: Translator.SlanConstruct.Resource): ResourceRecord =
     val tag = resource.id.asInstanceOf[Translator.SlanConstruct.ResourceTag]
-    val entityId = tag.id
-    val storage = tag.storageType
-    val attrs = SlanResources2IR(resource.attributes)
-    ???
-//    Resource(tag.id, tag.storageType, attrs)
+    ResourceRecord(tag.id, tag.storageType, SlanResources2IR(resource.attributes))
 
-  private def obtainResources(collOfResources: List[Translator.SlanConstruct.Resource]): Option[List[Resource]] =
+  private def obtainResources(collOfResources: List[Translator.SlanConstruct.Resource]): Option[List[ResourceRecord]] =
     collOfResources match
-      case resource :: theRestOfColl => Option(constructResource(resource) :: obtainResources(theRestOfColl).getOrElse(Nil))
-      case Nil => None
+      case resource :: theRestOfColl => Option(constructResource(resource) :: obtainResources(theRestOfColl).getOrElse(List()))
+      case List() => None
 
   private def obtainResourceValues(attributes: SlanConstructs): Option[List[StoredValue]] =
     attributes match

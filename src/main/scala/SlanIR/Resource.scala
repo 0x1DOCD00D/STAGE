@@ -10,22 +10,25 @@
 package SlanIR
 
 import HelperUtils.CreateLogger
-import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, IncorrectParameter, MissingDefinition}
+import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, IncorrectParameter, IncorrectSlanSpecStructure, MissingDefinition}
+import HelperUtils.ExtentionMethods.*
 import SlanIR.{EntityId, EntityOrError}
-import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes}
+import Translator.SlanAbstractions.{ResourceReference, SlanConstructs, StorageTypeReference, YamlPrimitiveTypes}
 import Translator.SlanConstruct.SlanError
 import cats.data.Validated
 import cats.data.Validated.{Invalid, Valid}
-import org.slf4j.Logger
 import cats.implicits.*
 import cats.kernel.Eq
 import cats.kernel.Eq.catsKernelEqForOption
 import cats.syntax.*
 import cats.syntax.eq.catsSyntaxEq
+import org.slf4j.Logger
 
 import scala.collection.mutable.Map
 
 trait Resource extends SlanEntity
+
+case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]) extends SlanEntity(id), Resource
 
 case class ProducerConsumer(id: EntityId, storage: Option[ResourceStorage], compositesOrValues: Option[List[Resource] | List[StoredValue]]) extends SlanEntity(id), Resource
 
@@ -38,39 +41,55 @@ object Resource:
   def apply(id: EntityId): Option[Resource] = bookkeeper.get(id)
 
   /*
-  * Resources can be defined under the section Resources or as fields in a message. In both
-  * cases they are wrapped in the case class Resources at the top level. However, for each
+  * Resources can be defined under the section Resources or as Fields in a message. In both
+  * cases they are wrapped either in the case classes Resources or Fields at the top level. However, for each
   * resource attributes can be defined as either values or nested resources, not both at the same time.
   * Therefore, if the check of the parameter translated reveals that it contains List(Resources(_var_))
-  * then the content of _var_ is of the type List[Translator.SlanConstruct.Resource]. Otherwise, it is expected
-  * that the list of SlanConstruct is the list of resource attributes, i.e.,
+  * then the content of _var_ is of the type List[Translator.SlanConstruct.Resource] that contains globally
+  * defined resources under Agents.Resources. Otherwise, it is expected that the list of SlanConstruct is the list
+  * of message fields or resource attributes, i.e., a composite resource contains nested resources. Global resources
+  * are entered into the bookkeeper table whereas local resources are stored in the corresponding SLAN IR data type.
   * */
-  def apply(translated: SlanConstructs) =
-    checkForMessagesCaseClass(translated) match
-      case Valid(msgs) => println(SlanMessages2IR(msgs))
-      case _ => println("error")
-    ()
+  def apply(translated: SlanConstructs): SlanEntityValidated[Int] =
+    checkForResourcesCaseClass(translated).andThen(resources => SlanResources2IR(resources)).andThen(rr => constructResources(rr))
 
-  private def checkForMessagesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    Validated.condNel(translated.exists(_.isInstanceOf[Translator.SlanConstruct.Messages]), translated.filter(entity => entity.isInstanceOf[Translator.SlanConstruct.Messages]), MissingDefinition("case class Messages"))
+  private def checkForResourcesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
+    val filteredResources = translated.filter(entity => entity.isInstanceOf[Translator.SlanConstruct.Resources])
+    Validated.condNel(filteredResources.containsHeadOnly, filteredResources, IncorrectSlanSpecStructure("global entry Resources"))
 
-  def apply(id: EntityId, storageOrPdf: Option[String], compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]): SlanEntityValidated[Boolean] =
+  private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue]]): SlanEntityValidated[Int] =
+    resources match
+      case Some(v) if v.isInstanceOf[List[_]] => resourcesRecordProcessor(v)
+      case Some(e) => IncorrectParameter(e.toString).invalidNel
+      case None => IncorrectParameter("no resources specified").invalidNel
+
+  private def resourcesRecordProcessor(rrlst: List[Resource] | List[StoredValue]): SlanEntityValidated[Int] =
+    if rrlst.count(elem => elem.isInstanceOf[ResourceRecord]) =!= rrlst.length then
+      IncorrectParameter("only top level resources must be specified, not their values").invalidNel
+    else
+      rrlst.foreach {
+        rr =>
+          val rrObj = rr.asInstanceOf[ResourceRecord]
+          resourceRecordProcessor(rrObj.id, rrObj.storage, rrObj.compositesOrValues).andThen(r => insertIntoGlobalResourceTable(r))
+      }
+      Validated.Valid(bookkeeper.size)
+
+  private def resourceRecordProcessor(id: EntityId, storageOrPdf: Option[String], compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]): SlanEntityValidated[Resource] =
     compositesOrValues match
       case Invalid(e) => e.invalid
       case Valid(cov) =>
         storageOrPdf match
-          case None => bookkeeper.set(id, ProducerConsumer(id, None, cov))
-                        true.valid
+          case None => ProducerConsumer(id, None, cov).valid
           case Some(sp) =>
             ResourceStorage(sp) match
                  case ResourceStorage.UNRECOGNIZED =>
                     if PDFs.PdfStreamGenerator.listOfSupportedDistributions.contains(sp.toUpperCase) then
                       if cov.isEmpty then
-                        bookkeeper.set(id, Generator(id, sp.toUpperCase))
-                        true.valid
+                        Generator(id, sp.toUpperCase).valid
                       else
                         IncorrectParameter(s"PDF generator $storageOrPdf cannot be combined with stored values or other resources").invalidNel
                     else
                       IncorrectParameter(s"$storageOrPdf in resource definition").invalidNel
-                 case rs => bookkeeper.set(id, ProducerConsumer(id, Option(rs), cov))
-                            true.valid
+                 case rs => ProducerConsumer(id, Option(rs), cov).valid
+
+  private def insertIntoGlobalResourceTable(rs: Resource) = bookkeeper.set(rs.name.trim, rs).valid

@@ -71,6 +71,11 @@ object ErrorWarningMessages:
     logger.error(errorMsg)
     SlanError(errorMsg)
 
+  def IncorrectSlanSpecStructure(exceptionMessage: String)(using logger: Logger): SlanError =
+    val errorMsg = s"Incorrect spec structure with $exceptionMessage"
+    logger.error(errorMsg)
+    SlanError(errorMsg)
+  
   def EmptyWarning(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Empty value: $exceptionMessage"
     logger.warn(errorMsg)
