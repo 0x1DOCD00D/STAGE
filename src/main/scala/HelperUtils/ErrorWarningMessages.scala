@@ -92,7 +92,7 @@ object ErrorWarningMessages:
     SlanError(errorMsg)
   
   def IncorrectParameter(exceptionMessage: String)(using logger: Logger): SlanError =
-    val errorMsg = s"Incorrect parameter $exceptionMessage is given"
+    val errorMsg = s"Incorrect parameter is given: $exceptionMessage"
     logger.error(errorMsg)
     SlanError(errorMsg)
 

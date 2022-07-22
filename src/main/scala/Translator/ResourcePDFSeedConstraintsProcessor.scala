@@ -21,7 +21,8 @@ class ResourcePDFSeedConstraintsProcessor extends GenericProcessor:
       case (seed:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(PdfSeed(seed)) ::: List(SlanValue(value)))
       case (seed:YamlPrimitiveTypes, constraints:Map[_,_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
       case (seed:YamlPrimitiveTypes, constraints:List[_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
-      case (None, value:Map[_,_]) => Eval.now(List())
+      case (None, constraints:Map[_,_]) => Eval.now((new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
+      case (None, constraints:List[_]) => Eval.now((new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
       case _ => Eval.now(List())
     }
     case simpleValue: YamlPrimitiveTypes => Eval.now(List(SlanValue(simpleValue)))

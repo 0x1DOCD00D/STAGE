@@ -30,15 +30,15 @@ enum SlanConstruct:
 
   case Models(models: SlanConstructs)
 
-  case Groups(models: SlanConstructs)
+  case Groups(content: SlanConstructs)
 
-  case Resources(models: SlanConstructs)
+  case Resources(lstOfResources: SlanConstructs)
 
-  case Fields(models: SlanConstructs)
+  case Fields(content: SlanConstructs)
 
-  case Behaviors(models: SlanConstructs)
+  case Behaviors(content: SlanConstructs)
 
-  case Channels(models: SlanConstructs)
+  case Channels(content: SlanConstructs)
 
   case Agent(id: AgentReference, states: SlanConstructs)
   

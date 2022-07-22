@@ -1,4 +1,4 @@
 Agents:
   Resources:
     ? Uniform: SomeUniformGenerator
-    : null
+    : null # no seed, no bounds, no constrains, numbers are generated from minus to plus infinity

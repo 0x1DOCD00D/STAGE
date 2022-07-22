@@ -12,15 +12,17 @@ package SlanIR
 import HelperUtils.ErrorWarningMessages.DuplicateDefinition
 import SlanIR.EntityId
 
+import scala.collection.mutable
 import scala.collection.mutable.Map
 import scala.reflect.{ClassTag, classTag}
 
 trait SlanEntity(val name: EntityId)
 
 class EntityBookkeeper[T <: SlanEntity : ClassTag]:
-  private val EntityTable: Map[EntityId, T] = Map()
-  
-  def size = EntityTable.size
+  private val EntityTable: mutable.Map[EntityId, T] = mutable.Map()
+
+  override def toString: _root_.java.lang.String = EntityTable.mkString("[", "; ", "]")
+  def size: Int = EntityTable.size
   def contains(id: EntityId): Boolean = EntityTable.contains(id)
   def get(id: EntityId): Option[T] = EntityTable.get(id)
   def set(id: EntityId, obj: T): EntityOrError[T] =

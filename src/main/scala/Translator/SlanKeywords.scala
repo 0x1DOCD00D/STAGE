@@ -91,7 +91,7 @@ object SlanKeywords:
   val Fn_Leave: String = FnPrefix + "leave"
 
   val QUEUE = "queue"
-  val MAP = "list"
+  val MAP = "map"
   val STACK = "stack"
   val LIST = "list"
   val JAR = "jar"

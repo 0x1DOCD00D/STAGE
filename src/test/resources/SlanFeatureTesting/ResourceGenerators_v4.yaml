@@ -1,0 +1,7 @@
+Agents:
+  Resources:
+    ? Uniform: SomeUniformGenerator
+    :
+      ? [ 1, totalMessages ] #parameters of the pdf, can be null
+      :
+        null: [ ">": 0.1, "<": 0.8 ] # seed is null

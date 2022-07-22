@@ -14,7 +14,7 @@ import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, IncorrectParameter
 import HelperUtils.ExtentionMethods.*
 import SlanIR.{EntityId, EntityOrError}
 import Translator.SlanAbstractions.{ResourceReference, SlanConstructs, StorageTypeReference, YamlPrimitiveTypes}
-import Translator.SlanConstruct.SlanError
+import Translator.SlanConstruct.{Resource, ResourcePeriodicGenerator, ResourceProbability}
 import cats.data.Validated
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.*
@@ -55,7 +55,7 @@ object Resource:
 
   private def checkForResourcesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val filteredResources = translated.filter(entity => entity.isInstanceOf[Translator.SlanConstruct.Resources])
-    Validated.condNel(filteredResources.containsHeadOnly, filteredResources, IncorrectSlanSpecStructure("global entry Resources"))
+    Validated.condNel(filteredResources.containsHeadOnly, filteredResources.head.asInstanceOf[Translator.SlanConstruct.Resources].lstOfResources, IncorrectSlanSpecStructure("global entry Resources"))
 
   private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue]]): SlanEntityValidated[Int] =
     resources match
@@ -83,7 +83,7 @@ object Resource:
           case Some(sp) =>
             ResourceStorage(sp) match
                  case ResourceStorage.UNRECOGNIZED =>
-                    if PDFs.PdfStreamGenerator.listOfSupportedDistributions.contains(sp.toUpperCase) then
+                    if PDFs.PdfStreamGenerator.listOfSupportedDistributions.count(dist => dist === sp.toUpperCase) === 1 then
                       if cov.isEmpty then
                         Generator(id, sp.toUpperCase).valid
                       else
@@ -93,3 +93,26 @@ object Resource:
                  case rs => ProducerConsumer(id, Option(rs), cov).valid
 
   private def insertIntoGlobalResourceTable(rs: Resource) = bookkeeper.set(rs.name.trim, rs).valid
+
+  @main def runResources(): Unit =
+    import Translator.SlanConstruct.{Agents, Resource, ResourceTag, Resources, SlanError, SlanValue}
+    val resExample = List(Agents(List(Resources(
+      List(
+        Translator.SlanConstruct.Resource(ResourceTag("Coordinates",None),
+          List(Translator.SlanConstruct.Resource(ResourceTag("x",None),List()),
+            Translator.SlanConstruct.Resource(ResourceTag("y",None),List()))),
+        Translator.SlanConstruct.Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),
+          List(Translator.SlanConstruct.Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates"))))),
+          Translator.SlanConstruct.Resource(ResourceTag("generatorOfMessagesXYZ",None),
+          List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(true)),
+            ResourceProbability("MessageY",SlanValue(0.6)),
+            ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
+      )
+    ))))
+    resExample.headOption match
+      case None => ()
+      case Some(agents) if agents.isInstanceOf[Agents] =>
+        val slanconstructs = agents.asInstanceOf[Agents].agents
+        println(SlanIR.Resource(slanconstructs))
+        println(bookkeeper.toString)
+      case _ => ()

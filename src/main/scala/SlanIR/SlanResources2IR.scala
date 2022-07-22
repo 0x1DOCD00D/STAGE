@@ -39,10 +39,11 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
     resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) =!= resourceSpec.length
 
   private def notAllResourceAttributesAreValues(resourceSpec: SlanConstructs): Boolean =
-    resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanValue]) +
+    val allValues = resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanValue]) +
       resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanKeyValue]) +
       resourceSpec.count(_.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue])
-      =!= resourceSpec.length
+    if allValues > 0 && allValues =!= resourceSpec.length then true
+    else false
 
 
   private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]] =

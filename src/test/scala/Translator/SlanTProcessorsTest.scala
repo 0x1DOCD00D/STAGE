@@ -59,6 +59,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val resource_generator_v1 = "SlanFeatureTesting/ResourceGenerators_v1.yaml"
   val resource_generator_v2 = "SlanFeatureTesting/ResourceGenerators_v2.yaml"
   val resource_generator_v3 = "SlanFeatureTesting/ResourceGenerators_v3.yaml"
+  val resource_generator_v4 = "SlanFeatureTesting/ResourceGenerators_v4.yaml"
   val resources_v0 = "SlanFeatureTesting/Resources_v0.yaml"
   val resources_v1 = "SlanFeatureTesting/Resources_v1.yaml"
   val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
@@ -289,6 +290,10 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a simple resource spec with a fixed value" in {
+  /*
+    Resources:
+      autoInitializedPrimitiveResource: 10 # this resource is initialized with a single value
+  */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("autoInitializedPrimitiveResource",None),
         List(SlanValue(10))))))))
@@ -297,6 +302,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a simple resource spec with a randomly generated value" in {
+  /*
+    Resources:
+      autoInitializedPrimitiveResource: # this resource is initialized with a single random value
+        Uniform: [0,1]
+  */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("autoInitializedPrimitiveResource",None),
         List(
@@ -307,6 +317,12 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite key and a randomly generated value" in {
+    /*
+      Resources:
+        ? list: autoInitializedPrimitiveListResource
+        : # this resource is initialized with a stream of random values
+          aUniformGeneratorReference
+    */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
         List(SlanValue("aUniformGeneratorReference")))
@@ -316,6 +332,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite key and a list of fixed values" in {
+  /*
+    Resources:
+      ? queue: someBasicResourceListOfValues
+      : [1,10,100] # this is a primitive mutable uninitialized resource that can hold many values in a list
+  * */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),
         List(SlanValue(1), SlanValue(10), SlanValue(100)))
@@ -325,6 +346,17 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite key whose attributes include a composite and a simple resources" in {
+  /*
+    Resources:
+    # this is a composite resource named compositeResource that contains a list of primitive resources
+    # named someBasicResource1V and this list is initialized with two resources one holding the value
+    # 100 and the other 1000. The resource compositeResource has a resource named valueHolder4compositeResource
+    # that holds the value 1. In this general case we have different cardinalities for the contained objects.
+      compositeResource:
+        ? list: someBasicResource1V
+        : [ 100, 1000 ]
+        valueHolder4compositeResource: 1
+  */
     val expected = List(Agents(List(Resources(List(Resource(ResourceTag("compositeResource",None),
       List(Resource(ResourceTag("someBasicResource1V",Some("list")),
         List(SlanValue(100), SlanValue(1000))),
@@ -334,6 +366,16 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite resource map whose key is some id and the value is a composite list" in {
+  /*
+    Resources:
+    # this is a composite resource map named compositeResourceMap that maps some identifies to a list of primitive resources
+    # named someBasicResource1V and this list is empty.
+      ? map: compositeResourceMap
+      :
+        instanceID:
+          ? list: someBasicResource1V
+          : null
+  */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResourceMap",Some("map")),
         List(Resource(ResourceTag("instanceID",None),
@@ -344,6 +386,17 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a resource spec with a composite resource map whose key is some id and the value is a composite object" in {
+  /*
+    Resources:
+    # this is a composite resource map named compositeResourceMap that maps some identifies to a list of primitive resources
+    # named someBasicResource1V and this list is empty.
+      ? map: compositeResourceMap
+      :
+        instanceID:
+          CPU: 100
+          RAM: 0
+          NetworkBandwidth: 10000
+  */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("compositeResourceMap",Some("map")),
         List(Resource(ResourceTag("instanceID",None),
@@ -355,6 +408,14 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a complex resource spec for generating random distributions" in {
+  /*
+    Resources:
+      ? Uniform: SomeUniformGenerator
+      :
+        ? [ 1, totalMessages ] #parameters of the pdf, can be null
+        :
+          200: [ ">": 0.1, "<": 0.8 ] # seed can be null: [constraints can be null]
+  */
     val expected = List(Agents(List(Resources(List(
         Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
           List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
@@ -365,23 +426,62 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   }
 
   "translate a complex resource spec for generating a unique random integer starting with one" in {
-    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))))))
+  /*
+    Resources:
+      ? Uniform: SomeUniformGenerator
+      :
+        ? [ 1, null ] # no upper bound
+        : null # no constraints
+  */
+    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+      List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v1).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec for generating a unique random integer without any constraints" in {
-    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),List()))))))
+  /*
+    Resources:
+      ? Uniform: SomeUniformGenerator
+      : null # no seed, no bounds, no constrains, numbers are generated from minus to plus infinity
+  */
+    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+      List()))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v2).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
   "translate a complex resource spec for generating a unique random integer with a seed only" in {
+    /*
+      Resources:
+        ? Uniform: SomeUniformGenerator
+        :
+          null: # no bounds for the generated numbers
+            200: null # only the seed is provided, no constraints
+    */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
         List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))
     )))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v3).getPath
+    translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
+  }
+
+  "translate a complex resource spec for generating a unique random integer without a seed and with constraints" in {
+    /*
+      Resources:
+        ? Uniform: SomeUniformGenerator
+        :
+          ? [ 1, totalMessages ] #parameters of the pdf, can be null
+          :
+            null: [ ">": 0.1, "<": 0.8 ] # seed is null
+    */
+    val expected = List(Agents(
+      List(Resources(
+        List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+          List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
+            ResourcePDFConstraintsAndSeed(List(SlanKeyValue(">",0.1), SlanKeyValue("<",0.8))))))))))
+    val path = getClass.getClassLoader.getResource(resource_generator_v4).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
