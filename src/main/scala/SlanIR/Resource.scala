@@ -32,7 +32,7 @@ case class ResourceRecord(id: EntityId, storage: StorageTypeReference, composite
 
 case class ProducerConsumer(id: EntityId, storage: Option[ResourceStorage], compositesOrValues: Option[List[Resource] | List[StoredValue]]) extends SlanEntity(id), Resource
 
-case class Generator(id: EntityId, pdf: String) extends SlanEntity(id), Resource
+case class Generator(id: EntityId, pdf: String, seed: Option[Long], from: Option[Double], to: Option[Double]) extends SlanEntity(id), Resource
 
 case class StoredValue(content: (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes)
 
@@ -85,7 +85,7 @@ object Resource:
                  case ResourceStorage.UNRECOGNIZED =>
                     if PDFs.PdfStreamGenerator.listOfSupportedDistributions.count(dist => dist === sp.toUpperCase) === 1 then
                       if cov.isEmpty then
-                        Generator(id, sp.toUpperCase).valid
+                        Generator(id, sp.toUpperCase, None, None, None).valid
                       else
                         IncorrectParameter(s"PDF generator $storageOrPdf cannot be combined with stored values or other resources").invalidNel
                     else

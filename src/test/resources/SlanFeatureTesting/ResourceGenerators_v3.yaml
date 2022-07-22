@@ -2,5 +2,6 @@ Agents:
   Resources:
     ? Uniform: SomeUniformGenerator
     :
-      null: # no bounds for the generated numbers
+      ? null
+      : # no bounds for the generated numbers
         200: null # only the seed is provided, no constraints

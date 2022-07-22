@@ -434,7 +434,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         : null # no constraints
   */
     val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
-      List(ResourcePDFParameters(List(SlanValue(1), SlanValue("None"))))))))))
+      List(ResourcePDFParameters(List(SlanValue(1))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v1).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }

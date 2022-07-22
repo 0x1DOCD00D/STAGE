@@ -27,9 +27,9 @@ class ResourceStructureProcessor extends GenericProcessor :
       case (key:String, None) =>Eval.now(List(Resource(
         ResourceTag(key.trim, None), List()
       )))
-      case (key: List[_], value:Map[_,_]) => Eval.now(List(ResourcePDFParameters(key.map(aV => SlanValue(convertJ2S(aV).toString))))
+      case (key: List[_], value:Map[_,_]) => Eval.now(List(ResourcePDFParameters((new ResourceStructureProcessor).commandProcessor(convertJ2S(key)).value))
       :::  List(ResourcePDFConstraintsAndSeed((new ResourcePDFSeedConstraintsProcessor).commandProcessor(convertJ2S(value)).value)))
-      case (key: List[_], None) => Eval.now(List(ResourcePDFParameters(key.map(aV => SlanValue(convertJ2S(aV).toString))))
+      case (key: List[_], None) => Eval.now(List(ResourcePDFParameters((new ResourceStructureProcessor).commandProcessor(convertJ2S(key)).value))
         :::  List())
       case _ => (new ResourcesProcessor).commandProcessor(convertJ2S(v))
     }
