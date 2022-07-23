@@ -443,7 +443,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   /*
     Resources:
       ? Uniform: SomeUniformGenerator
-      : null # no seed, no bounds, no constrains, numbers are generated from minus to plus infinity
+      : null # no seed, no bounds, no constrains, numbers are generated from minus to plus infinity and this is not a generator
   */
     val expected = List(Agents(List(Resources(List(Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
       List()))))))
@@ -456,13 +456,12 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Resources:
         ? Uniform: SomeUniformGenerator
         :
-          null: # no bounds for the generated numbers
+          null: # no parameters for the generated numbers - this is a mistake, these parameters must be provided
             200: null # only the seed is provided, no constraints
     */
     val expected = List(Agents(List(Resources(List(
       Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
-        List(Resource(SlanNoValue,List(SlanKeyNoValue(200)))
-    )))))))
+        List(UnknownConstruct("class scala.collection.immutable.Map$Map1","class java.lang.String","Map(200 -> null)"))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v3).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }

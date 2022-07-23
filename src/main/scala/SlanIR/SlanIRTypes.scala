@@ -25,6 +25,7 @@ given slanErrorSemigroup: Semigroup[SlanError] = Semigroup.instance[SlanError] {
 
 type SlanEntityValidated = [T] =>> ValidatedNel[SlanError, T]
 type EntityId = String
+type PdfName = String
 type CollectionOfEntities = List[EntityId]
 type Likelihood = Double
 type PdfGenerator = Generator | Likelihood

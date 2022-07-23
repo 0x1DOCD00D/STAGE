@@ -27,9 +27,10 @@ import cats.{Eq, Semigroup}
 * to the global resource tables and their references are local. Therefore, top level resources are processed
 * in the object Resource whereas local resources are processed by this function.
 * */
-object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]]):
-  override def apply(resourceOrValsSpec: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]] =
-    if incorrectResourceValueCollection(resourceOrValsSpec) || notAllResourceAttributesAreValues(resourceOrValsSpec) then
+object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]]):
+  override def apply(resourceOrValsSpec: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]] =
+    if resourceOrValsSpec.length === 0 then None.valid
+    else if (incorrectResourceValueCollection(resourceOrValsSpec) || notAllResourceAttributesAreValues(resourceOrValsSpec)) && !pdfInfoIsPresent(resourceOrValsSpec) then
       IncorrectParameter("attributes should contain either nested resources or values only").invalidNel
     else
       processResources(resourceOrValsSpec)
@@ -45,10 +46,15 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
     if allValues > 0 && allValues =!= resourceSpec.length then true
     else false
 
+  private def pdfInfoIsPresent(resourceSpec: SlanConstructs): Boolean =
+    resourceSpec.exists(_.isInstanceOf[Translator.SlanConstruct.ResourcePDFParameters]) ||
+      resourceSpec.exists(_.isInstanceOf[Translator.SlanConstruct.ResourcePDFConstraintsAndSeed])
 
-  private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue]]] =
+  private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]] =
     if resourcesOrValues.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) === resourcesOrValues.length then
       obtainResources(resourcesOrValues.asInstanceOf[List[Translator.SlanConstruct.Resource]]).validNel
+    else if pdfInfoIsPresent(resourcesOrValues) then
+      obtainPdfValues(resourcesOrValues).validNel
     else
       obtainResourceValues(resourcesOrValues).validNel
 
@@ -72,6 +78,13 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
       case List() => None
 
   private def obtainResourceValues(attributes: SlanConstructs): Option[List[StoredValue]] =
+    attributes match
+      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanValue]) :: obtainResourceValues(tl).getOrElse(Nil))
+      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyValue]) :: obtainResourceValues(tl).getOrElse(Nil))
+      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyNoValue]) :: obtainResourceValues(tl).getOrElse(Nil))
+      case _ => None
+
+  private def obtainPdfValues(attributes: SlanConstructs): Option[List[StoredValue]] =
     attributes match
       case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanValue]) :: obtainResourceValues(tl).getOrElse(Nil))
       case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyValue]) :: obtainResourceValues(tl).getOrElse(Nil))

@@ -9,7 +9,7 @@
 
 package Translator
 
-import HelperUtils.ErrorWarningMessages.{SlanUnexpectedTypeFound, YamlKeyIsNotString}
+import HelperUtils.ErrorWarningMessages.{IncorrectParameter, SlanUnexpectedTypeFound, YamlKeyIsNotString}
 import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.SlantParser.convertJ2S
@@ -22,11 +22,17 @@ class ResourcesProcessor extends GenericProcessor {
     case v: (_, _) => convertJ2S(v(0)) match {
       case arr: List[_] => Eval.now(List(ResourcePeriodicGenerator((new ResourceGenerationProcessor).commandProcessor(convertJ2S(v(0))).value
         ::: (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case None => Eval.now(new UnknownEntryProcessor(convertJ2S(v(1)).toString, Some(convertJ2S(v(1)).getClass().toString)).constructSlanRecord)
       case _ => Eval.now(List(Resource(
-        if convertJ2S(v(0)) != None then (new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).value.head
-            else SlanNoValue, (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1))).value)))
+        (new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).value.head, (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1))).value)))
     }
 
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }
+
+/*
+case _ => Eval.now(List(Resource(
+  if convertJ2S(v(0)) != None then (new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).value.head
+  else SlanNoValue, (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1))).value)))
+*/

@@ -21,6 +21,7 @@ import scala.reflect.{ClassTag, classTag}
 def lookup[T <: SlanEntity : ClassTag](id: EntityId): Option[T] =
   classTag[T].runtimeClass.getName match
     case entity if entity.contains(Message.getClass.getName) => Message(id).asInstanceOf
-    case entity if entity.contains(ProducerConsumer.getClass.getName) => Resource(id).asInstanceOf
+    case entity if entity.contains(BasicProducerConsumer.getClass.getName) => Resource(id).asInstanceOf
+    case entity if entity.contains(ProducerConsumerComposite.getClass.getName) => Resource(id).asInstanceOf
     case entity if entity.contains(Generator.getClass.getName) => Resource(id).asInstanceOf
     case _ => None

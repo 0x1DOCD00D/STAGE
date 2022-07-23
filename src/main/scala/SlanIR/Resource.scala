@@ -28,13 +28,17 @@ import scala.collection.mutable.Map
 
 trait Resource extends SlanEntity
 
-case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]) extends SlanEntity(id), Resource
+case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), Resource
 
-case class ProducerConsumer(id: EntityId, storage: Option[ResourceStorage], compositesOrValues: Option[List[Resource] | List[StoredValue]]) extends SlanEntity(id), Resource
+case class BasicProducerConsumer(id: EntityId, storage: Option[ResourceStorage], initValues: Option[List[StoredValue]]) extends SlanEntity(id), Resource
 
-case class Generator(id: EntityId, pdf: String, seed: Option[Long], from: Option[Double], to: Option[Double]) extends SlanEntity(id), Resource
+case class ProducerConsumerComposite(id: EntityId, storage: Option[ResourceStorage], composites: Option[List[Resource]]) extends SlanEntity(id), Resource
+
+case class Generator(id: EntityId, pdf: PdfName, pdfParms: PdfParameters) extends SlanEntity(id), Resource
 
 case class StoredValue(content: (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes)
+
+case class PdfParameters(seed: Option[Long], parameters: Option[List[Double]], from: Option[Double], to: Option[Double])
 
 object Resource:
   private val bookkeeper = new EntityBookkeeper[Resource]
@@ -57,13 +61,13 @@ object Resource:
     val filteredResources = translated.filter(entity => entity.isInstanceOf[Translator.SlanConstruct.Resources])
     Validated.condNel(filteredResources.containsHeadOnly, filteredResources.head.asInstanceOf[Translator.SlanConstruct.Resources].lstOfResources, IncorrectSlanSpecStructure("global entry Resources"))
 
-  private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue]]): SlanEntityValidated[Int] =
+  private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Int] =
     resources match
       case Some(v) if v.isInstanceOf[List[_]] => resourcesRecordProcessor(v)
       case Some(e) => IncorrectParameter(e.toString).invalidNel
       case None => IncorrectParameter("no resources specified").invalidNel
 
-  private def resourcesRecordProcessor(rrlst: List[Resource] | List[StoredValue]): SlanEntityValidated[Int] =
+  private def resourcesRecordProcessor(rrlst: List[Resource] | List[StoredValue] | List[PdfParameters]): SlanEntityValidated[Int] =
     if rrlst.count(elem => elem.isInstanceOf[ResourceRecord]) =!= rrlst.length then
       IncorrectParameter("only top level resources must be specified, not their values").invalidNel
     else
@@ -74,23 +78,23 @@ object Resource:
       }
       Validated.Valid(bookkeeper.size)
 
-  private def resourceRecordProcessor(id: EntityId, storageOrPdf: Option[String], compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue]]]): SlanEntityValidated[Resource] =
+  private def resourceRecordProcessor(id: EntityId, storageOrPdf: Option[String], compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue] | List[PdfParameters]]]): SlanEntityValidated[Resource] =
     compositesOrValues match
       case Invalid(e) => e.invalid
       case Valid(cov) =>
         storageOrPdf match
-          case None => ProducerConsumer(id, None, cov).valid
+          case None => BasicProducerConsumer(id, None, None).valid
           case Some(sp) =>
             ResourceStorage(sp) match
                  case ResourceStorage.UNRECOGNIZED =>
                     if PDFs.PdfStreamGenerator.listOfSupportedDistributions.count(dist => dist === sp.toUpperCase) === 1 then
                       if cov.isEmpty then
-                        Generator(id, sp.toUpperCase, None, None, None).valid
+                        Generator(id, sp.toUpperCase, PdfParameters(None,None,None,None)).valid
                       else
                         IncorrectParameter(s"PDF generator $storageOrPdf cannot be combined with stored values or other resources").invalidNel
                     else
                       IncorrectParameter(s"$storageOrPdf in resource definition").invalidNel
-                 case rs => ProducerConsumer(id, Option(rs), cov).valid
+                 case rs => BasicProducerConsumer(id, Option(rs), None).valid
 
   private def insertIntoGlobalResourceTable(rs: Resource) = bookkeeper.set(rs.name.trim, rs).valid
 
