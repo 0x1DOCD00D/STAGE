@@ -514,13 +514,13 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     Resources:
       ? Discrete: SomeValuesGenerator #this random generator produces a stream of 1,2 and 3s with different probabilities
       :
-        ? [ 1: 0.2, 2: totalMessages, 3: 0.01 ] #parameters of the pdf, can be null
+        ? [ 1: 0.2, 2: someGeneratedProbabilityValue, 3: 0.01 ] #parameters of the pdf, can be null
         :
           seedRandom: null
   */
     val expected = List(Agents(List(Resources(
       List(Resource(ResourceTag("SomeValuesGenerator",Some("Discrete")),
-        List(ResourcePDFParameters(List(SlanKeyValue(1,0.2), SlanKeyValue(2,"totalMessages"), SlanKeyValue(3,0.01))),
+        List(ResourcePDFParameters(List(SlanKeyValue(1,0.2), SlanKeyValue(2,"someGeneratedProbabilityValue"), SlanKeyValue(3,0.01))),
           ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v6).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
