@@ -1,0 +1,7 @@
+Agents:
+  Resources:
+    ? Discrete: SomeValuesGenerator #this random generator produces a stream of 1,2 and 3s with different probabilities
+    :
+      ? [ 1: 0.2, 2: totalMessages, 3: 0.01 ] #parameters of the pdf, can be null
+      :
+        seedRandom:

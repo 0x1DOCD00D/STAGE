@@ -60,6 +60,8 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val resource_generator_v2 = "SlanFeatureTesting/ResourceGenerators_v2.yaml"
   val resource_generator_v3 = "SlanFeatureTesting/ResourceGenerators_v3.yaml"
   val resource_generator_v4 = "SlanFeatureTesting/ResourceGenerators_v4.yaml"
+  val resource_generator_v5 = "SlanFeatureTesting/ResourceGenerators_v5.yaml"
+  val resource_generator_v6 = "SlanFeatureTesting/ResourceGenerators_v6.yaml"
   val resources_v0 = "SlanFeatureTesting/Resources_v0.yaml"
   val resources_v1 = "SlanFeatureTesting/Resources_v1.yaml"
   val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
@@ -439,7 +441,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
-  "translate a complex resource spec for generating a unique random integer without any constraints" in {
+  "translate a complex resource spec as a resource instead of a generator of the unique random integers without any constraints" in {
   /*
     Resources:
       ? Uniform: SomeUniformGenerator
@@ -481,6 +483,46 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
             ResourcePDFConstraintsAndSeed(List(SlanKeyValue(">",0.1), SlanKeyValue("<",0.8))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v4).getPath
+    translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
+  }
+
+  "translate a complex structured resource spec with a nested random number generator" in {
+    /*
+    Resources:
+      ? list: autoInitializedPrimitiveListResource
+      :
+        nestedResource: [1,10,100]
+        ? Uniform: SomeUniformGenerator
+        :
+          ? [ 1, totalMessages ] #parameters of the pdf, can be null
+          :
+            null: [ ">": 0.1, "<": 0.8 ] # seed is null
+        */
+    val expected = List(Agents(List(Resources(
+      List(
+        Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
+          List(Resource(ResourceTag("nestedResource",None),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+            Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+              List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
+                ResourcePDFConstraintsAndSeed(List(SlanKeyValue(">",0.1), SlanKeyValue("<",0.8))))))))))))
+    val path = getClass.getClassLoader.getResource(resource_generator_v5).getPath
+    translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
+  }
+
+  "translate a spec for a random number generator with given probabilities" in {
+   /*
+    Resources:
+      ? Discrete: SomeValuesGenerator #this random generator produces a stream of 1,2 and 3s with different probabilities
+      :
+        ? [ 1: 0.2, 2: totalMessages, 3: 0.01 ] #parameters of the pdf, can be null
+        :
+          seedRandom: null
+  */
+    val expected = List(Agents(List(Resources(
+      List(Resource(ResourceTag("SomeValuesGenerator",Some("Discrete")),
+        List(ResourcePDFParameters(List(SlanKeyValue(1,0.2), SlanKeyValue(2,"totalMessages"), SlanKeyValue(3,0.01))),
+          ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))))))))
+    val path = getClass.getClassLoader.getResource(resource_generator_v6).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
@@ -753,7 +795,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
-
+  
   "translate a simulation of the social media company" in {
     val expected = List(Agents(List(Resources(List(
     /*

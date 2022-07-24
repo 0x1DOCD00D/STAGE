@@ -18,6 +18,7 @@ import cats.Eval
 class ResourcePDFSeedConstraintsProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
+      case (seed:YamlPrimitiveTypes, None) => Eval.now(List(PdfSeed(seed)))
       case (seed:YamlPrimitiveTypes, value:YamlPrimitiveTypes) => Eval.now(List(PdfSeed(seed)) ::: List(SlanValue(value)))
       case (seed:YamlPrimitiveTypes, constraints:Map[_,_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
       case (seed:YamlPrimitiveTypes, constraints:List[_]) => Eval.now(List(PdfSeed(seed)) ::: (new ResourcePDFConstraintProcessor).commandProcessor(convertJ2S(constraints)).value)
