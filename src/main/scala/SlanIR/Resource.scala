@@ -14,31 +14,30 @@ import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, IncorrectParameter
 import HelperUtils.ExtentionMethods.*
 import SlanIR.{EntityId, EntityOrError}
 import Translator.SlanAbstractions.{ResourceReference, SlanConstructs, StorageTypeReference, YamlPrimitiveTypes}
-import Translator.SlanConstruct.{Resource, ResourcePeriodicGenerator, ResourceProbability}
+import Translator.SlanConstruct.*
 import cats.data.Validated
 import cats.data.Validated.{Invalid, Valid}
 import cats.implicits.*
+import cats.instances.option.*
 import cats.kernel.Eq
 import cats.kernel.Eq.catsKernelEqForOption
 import cats.syntax.*
 import cats.syntax.eq.catsSyntaxEq
 import org.slf4j.Logger
 
-import scala.collection.mutable.Map
-
 trait Resource extends SlanEntity
 
 case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), Resource
 
-case class BasicProducerConsumer(id: EntityId, storage: Option[ResourceStorage], initValues: Option[List[StoredValue]]) extends SlanEntity(id), Resource
+case class BasicProducerConsumer(id: EntityId, storage: Option[ResourceStorage], initValues: ResourceValues) extends SlanEntity(id), Resource
 
-case class ProducerConsumerComposite(id: EntityId, storage: Option[ResourceStorage], composites: Option[List[Resource]]) extends SlanEntity(id), Resource
+case class ProducerConsumerComposite(id: EntityId, storage: Option[ResourceStorage], composites: List[SlanEntityValidated[Resource]]) extends SlanEntity(id), Resource
 
 case class Generator(id: EntityId, pdf: PdfName, pdfParms: PdfParameters) extends SlanEntity(id), Resource
 
 case class StoredValue(content: (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes)
 
-case class PdfParameters(seed: Option[Long], parameters: Option[List[Double]], from: Option[Double], to: Option[Double])
+case class PdfParameters(seed: Option[YamlPrimitiveTypes], parameters: Option[List[StoredValue]], fromTo: Option[List[StoredValue]])
 
 object Resource:
   private val bookkeeper = new EntityBookkeeper[Resource]
@@ -74,45 +73,75 @@ object Resource:
       rrlst.foreach {
         rr =>
           val rrObj = rr.asInstanceOf[ResourceRecord]
-          resourceRecordProcessor(rrObj.id, rrObj.storage, rrObj.compositesOrValues).andThen(r => insertIntoGlobalResourceTable(r))
+          rrObj.compositesOrValues match
+            case Invalid(e) => e.invalid
+            case Valid(cov) =>  identificationOfEntity(rrObj.id, rrObj.storage, cov).andThen(r => insertIntoGlobalResourceTable(r))
       }
       Validated.Valid(bookkeeper.size)
 
-  private def resourceRecordProcessor(id: EntityId, storageOrPdf: Option[String], compositesOrValues: SlanEntityValidated[Option[List[Resource] | List[StoredValue] | List[PdfParameters]]]): SlanEntityValidated[Resource] =
-    compositesOrValues match
-      case Invalid(e) => e.invalid
-      case Valid(cov) =>
-        storageOrPdf match
-          case None => BasicProducerConsumer(id, None, None).valid
-          case Some(sp) =>
-            ResourceStorage(sp) match
-                 case ResourceStorage.UNRECOGNIZED =>
-                    if PDFs.PdfStreamGenerator.listOfSupportedDistributions.count(dist => dist === sp.toUpperCase) === 1 then
-                      if cov.isEmpty then
-                        Generator(id, sp.toUpperCase, PdfParameters(None,None,None,None)).valid
-                      else
-                        IncorrectParameter(s"PDF generator $storageOrPdf cannot be combined with stored values or other resources").invalidNel
-                    else
-                      IncorrectParameter(s"$storageOrPdf in resource definition").invalidNel
-                 case rs => BasicProducerConsumer(id, Option(rs), None).valid
+  private def identificationOfEntity(id: EntityId, storeId: Option[String], cov: Option[List[Resource] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Resource] = ResourceStorage(storeId) match
+    case ResourceStorage.SLANDISTRIBUTION =>
+      cov match
+        case None => IncorrectParameter(s"PDF generator $storeId does not contains parameters").invalidNel
+        case Some(lst) if lst.isInstanceOf[List[_]] =>
+          val pdfParms = lst.asInstanceOf[List[PdfParameters]]
+          if pdfParms.containsHeadOnly then
+            Generator(id, storeId.get, pdfParms.head).valid
+          else IncorrectParameter(s"PDF generator $storeId has incorrect parameters: ${pdfParms.mkString("; ")}").invalidNel
+        case spec => IncorrectParameter(s"PDF generator $storeId contains incorrect spec: ${spec.toString}").invalidNel
 
-  private def insertIntoGlobalResourceTable(rs: Resource) = bookkeeper.set(rs.name.trim, rs).valid
+    case ResourceStorage.UNRECOGNIZED => IncorrectParameter(s"$storeId in resource definition").invalidNel
+
+    case rs => cov match
+      case None => BasicProducerConsumer(id, Option(rs), List()).validNel
+      case Some(lst) if lst.isInstanceOf[List[_]] =>
+        if lst.count(elem=>elem.isInstanceOf[StoredValue]) === lst.length then
+          BasicProducerConsumer(id, Option(rs), processContainerOfValues(lst.asInstanceOf[List[StoredValue]])).validNel
+        else if lst.count(elem=>elem.isInstanceOf[ResourceRecord]) === lst.length then ProducerConsumerComposite(id, Option(rs), processCompositeNestedResources(lst.asInstanceOf[List[ResourceRecord]])).validNel
+        else IncorrectSlanSpecStructure(lst.toString).invalidNel
+      case unknown => IncorrectSlanSpecStructure(unknown.toString).invalidNel
+
+  private def processCompositeNestedResources(lst: List[ResourceRecord] | List[StoredValue]): List[SlanEntityValidated[Resource]] =
+    require(lst.count(elem=>elem.isInstanceOf[ResourceRecord]) === lst.length)
+    lst.foldLeft(List[SlanEntityValidated[Resource]]()) {
+      (acc, elem) =>
+        elem match
+          case ResourceRecord(id, store, covValidated) => covValidated match
+            case Invalid(e) => e.invalid :: acc
+            case Valid(v) =>
+              v match
+                case None => acc
+                case Some(rr) =>
+                  if rr.count(elem=>elem.isInstanceOf[ResourceRecord]) === rr.length then
+                    processCompositeNestedResources(rr.asInstanceOf[List[ResourceRecord]]) ::: acc
+                  else if rr.count(elem=>elem.isInstanceOf[StoredValue]) === rr.length then
+                    BasicProducerConsumer(id, Option(ResourceStorage(store)), processContainerOfValues(rr.asInstanceOf[List[StoredValue]])).validNel :: acc
+                  else
+                    IncorrectSlanSpecStructure(lst.toString).invalidNel :: acc
+          case spec => IncorrectSlanSpecStructure(spec.toString).invalidNel :: acc
+    }
+  private def processContainerOfValues(lst: List[StoredValue]): ResourceValues =
+    require(lst.count(elem=>elem.isInstanceOf[StoredValue]) === lst.length)
+    lst.foldLeft(List[ResourceValueType]())((acc, elem) => elem.content :: acc)
+
+  private def insertIntoGlobalResourceTable(rs: Resource) = bookkeeper.set(rs.name.trim, rs).validNel
 
   @main def runResources(): Unit =
     import Translator.SlanConstruct.{Agents, Resource, ResourceTag, Resources, SlanError, SlanValue}
-    val resExample = List(Agents(List(Resources(
-      List(
-        Translator.SlanConstruct.Resource(ResourceTag("Coordinates",None),
-          List(Translator.SlanConstruct.Resource(ResourceTag("x",None),List()),
-            Translator.SlanConstruct.Resource(ResourceTag("y",None),List()))),
-        Translator.SlanConstruct.Resource(ResourceTag("mapOfAgentCoordinates",Some("map")),
-          List(Translator.SlanConstruct.Resource(ResourceTag("Pedestrian",None),List(SlanValue("Coordinates"))))),
-          Translator.SlanConstruct.Resource(ResourceTag("generatorOfMessagesXYZ",None),
-          List(ResourcePeriodicGenerator(List(ResourceProbability("MessageX",SlanValue(true)),
-            ResourceProbability("MessageY",SlanValue(0.6)),
-            ResourceProbability("MessageZ",SlanValue("somePdfGenerator")), SlanValue("pdfgenerator")))))
-      )
-    ))))
+    val resExample = List(Agents(List(Resources(List(
+      Translator.SlanConstruct.Resource(ResourceTag("SomeUniformGenerator",Some("UniformRealDistribution")),
+      List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
+        ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8))))),
+      Translator.SlanConstruct.Resource(ResourceTag("OtherUniformGenerator",Some("UniformRealDistribution")),
+        List(ResourcePDFParameters(List(SlanValue(1))))),
+      Translator.SlanConstruct.Resource(ResourceTag("autoInitializedPrimitiveListResource",Some("list")),
+        List(SlanValue("aUniformGeneratorReference"))),
+      Translator.SlanConstruct.Resource(ResourceTag("compositeResource",None),
+        List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V",Some("list")),
+          List(SlanValue(100), SlanValue(1000))),
+          Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1)))))
+    )))))
+
     resExample.headOption match
       case None => ()
       case Some(agents) if agents.isInstanceOf[Agents] =>

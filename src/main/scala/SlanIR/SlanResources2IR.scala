@@ -11,7 +11,7 @@ package SlanIR
 
 import HelperUtils.ErrorWarningMessages.{IncorrectParameter, WrongCardinality}
 import HelperUtils.ExtentionMethods.*
-import Translator.SlanAbstractions.SlanConstructs
+import Translator.SlanAbstractions.{SlanConstructs, YamlPrimitiveTypes}
 import Translator.SlanConstruct.SlanError
 import cats.data.Validated
 import cats.implicits.*
@@ -54,10 +54,10 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
     if resourcesOrValues.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) === resourcesOrValues.length then
       obtainResources(resourcesOrValues.asInstanceOf[List[Translator.SlanConstruct.Resource]]).validNel
     else if pdfInfoIsPresent(resourcesOrValues) then
-      obtainPdfValues(resourcesOrValues).validNel
+//      it means that the resource tag has already been processed and attributes of this resource generator are processed
+      obtainPdfValues(resourcesOrValues)
     else
       obtainResourceValues(resourcesOrValues).validNel
-
 
   private def constructValue(resValue: Translator.SlanConstruct.SlanValue): StoredValue =
     StoredValue(resValue.value)
@@ -84,9 +84,24 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
       case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyNoValue]) :: obtainResourceValues(tl).getOrElse(Nil))
       case _ => None
 
-  private def obtainPdfValues(attributes: SlanConstructs): Option[List[StoredValue]] =
-    attributes match
-      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanValue]) :: obtainResourceValues(tl).getOrElse(Nil))
-      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyValue]) :: obtainResourceValues(tl).getOrElse(Nil))
-      case hd :: tl if hd.isInstanceOf[Translator.SlanConstruct.SlanKeyNoValue] => Option(constructValue(hd.asInstanceOf[Translator.SlanConstruct.SlanKeyNoValue]) :: obtainResourceValues(tl).getOrElse(Nil))
-      case _ => None
+  private def obtainPdfValues(attributes: SlanConstructs): SlanEntityValidated[Option[List[PdfParameters]]] =
+    var seed: Option[YamlPrimitiveTypes] = None
+    val pdfParms = attributes.filter(parms => parms.isInstanceOf[Translator.SlanConstruct.ResourcePDFParameters])
+    if pdfParms.containsHeadOnly then
+      val listOfParms = obtainResourceValues(pdfParms.head.asInstanceOf[Translator.SlanConstruct.ResourcePDFParameters].params)
+      val pdfConstraintsSeed = attributes.filter(cas => cas.isInstanceOf[Translator.SlanConstruct.ResourcePDFConstraintsAndSeed])
+      if pdfConstraintsSeed.containsHeadOnly then
+        val lstConstraints = pdfConstraintsSeed.head.asInstanceOf[Translator.SlanConstruct.ResourcePDFConstraintsAndSeed].constraints
+        val seedEntry = lstConstraints.filter(pdfseed => pdfseed.isInstanceOf[Translator.SlanConstruct.PdfSeed])
+        if seedEntry.containsHeadOnly then
+          seed = Option(seedEntry.head.asInstanceOf[Translator.SlanConstruct.PdfSeed].seed)
+          val fromTo = obtainResourceValues(lstConstraints.filterNot(seedelem => seedelem.isInstanceOf[Translator.SlanConstruct.PdfSeed]))
+          Option(List(PdfParameters(seed, listOfParms, fromTo))).validNel
+        else
+          IncorrectParameter(s"at most one seed can be specified for a PDF, instead: ${seedEntry.length} values are specified").invalidNel
+      else if pdfConstraintsSeed.length > 1 then
+        IncorrectParameter(s"at most one set of PDF constraints can be specified, instead: ${pdfConstraintsSeed.length} sets are specified").invalidNel
+      else
+        Option(List(PdfParameters(seed, listOfParms, None))).validNel
+    else
+      IncorrectParameter(s"only one set of PDF parameters is needed, instead: ${pdfParms.length} sets are specified").invalidNel

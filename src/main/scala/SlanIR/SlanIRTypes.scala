@@ -10,7 +10,7 @@
 package SlanIR
 
 import HelperUtils.CreateLogger
-import Translator.SlanAbstractions.StorageTypeReference
+import Translator.SlanAbstractions.{StorageTypeReference, YamlPrimitiveTypes}
 import Translator.SlanConstruct.SlanError
 import cats.Semigroup
 import cats.data.{NonEmptyList, ValidatedNel}
@@ -40,3 +40,5 @@ type MessageTriple = (EntityId, Option[EntityId], Option[List[Resource]])
 type MessagePair = (EntityId, Option[EntityId])
 type MessageTripleCollection = List[MessageTriple]
 type CollectionOfMessages = List[Message]
+type ResourceValueType = (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes
+type ResourceValues = List[ResourceValueType]

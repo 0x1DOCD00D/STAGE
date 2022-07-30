@@ -17,3 +17,7 @@ object ExtentionMethods:
   extension [T](p: List[T])
     def containsHeadOnly: Boolean =
       p.length === 1
+
+  extension (p: Int)
+    def existsOne: Boolean =
+      p === 1

@@ -1,6 +1,6 @@
 Agents:
   Resources:
-    ? Uniform: SomeUniformGenerator
+    ? UniformRealDistribution: SomeUniformGenerator
     :
       ? [ 1, totalMessages ] #parameters of the pdf, can be null
       :

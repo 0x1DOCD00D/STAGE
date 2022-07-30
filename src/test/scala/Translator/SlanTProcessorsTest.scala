@@ -17,6 +17,7 @@ import cats.Eval
 import cats.effect.IO
 import cats.effect.kernel.Outcome.{Canceled, Errored, Succeeded}
 import cats.effect.testing.scalatest.AsyncIOSpec
+import org.apache.commons.math3.distribution.UniformRealDistribution
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.freespec.AsyncFreeSpec
 import org.scalatest.matchers.should.Matchers
@@ -62,6 +63,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val resource_generator_v4 = "SlanFeatureTesting/ResourceGenerators_v4.yaml"
   val resource_generator_v5 = "SlanFeatureTesting/ResourceGenerators_v5.yaml"
   val resource_generator_v6 = "SlanFeatureTesting/ResourceGenerators_v6.yaml"
+  val resource_generator_v7 = "SlanFeatureTesting/ResourceGenerators_v7.yaml"
   val resources_v0 = "SlanFeatureTesting/Resources_v0.yaml"
   val resources_v1 = "SlanFeatureTesting/Resources_v1.yaml"
   val resources_v2 = "SlanFeatureTesting/Resources_v2.yaml"
@@ -359,10 +361,13 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         : [ 100, 1000 ]
         valueHolder4compositeResource: 1
   */
-    val expected = List(Agents(List(Resources(List(Resource(ResourceTag("compositeResource",None),
+    val expected = List(Agents(List(Resources(List(
+      Resource(ResourceTag("compositeResource",None),
       List(Resource(ResourceTag("someBasicResource1V",Some("list")),
         List(SlanValue(100), SlanValue(1000))),
-        Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1))))))))))
+        Resource(ResourceTag("valueHolder4compositeResource",None),List(SlanValue(1))))
+    )
+    )))))
     val path = getClass.getClassLoader.getResource(resources_v4).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -419,7 +424,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
           200: [ ">": 0.1, "<": 0.8 ] # seed can be null: [constraints can be null]
   */
     val expected = List(Agents(List(Resources(List(
-        Resource(ResourceTag("SomeUniformGenerator",Some("Uniform")),
+        Resource(ResourceTag("SomeUniformGenerator",Some("UniformRealDistribution")),
           List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
             ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8)))))
     )))))
@@ -523,6 +528,30 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         List(ResourcePDFParameters(List(SlanKeyValue(1,0.2), SlanKeyValue(2,"someGeneratedProbabilityValue"), SlanKeyValue(3,0.01))),
           ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))))))))
     val path = getClass.getClassLoader.getResource(resource_generator_v6).getPath
+    translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
+  }
+
+  "translate a complex resource spec for generating random distributions that includes multiple entries" in {
+    /*
+      Resources:
+        ? Uniform: SomeUniformGenerator
+        :
+          ? [ 1, 2 ]
+          :
+            200: [ ">": 0.1, "<": 0.8 ]
+          ? [ 2, 3 ]
+          :
+            200: [ ">": 0.1, "<": 0.8 ]
+     */
+    val expected = List(Agents(List(Resources(List(
+      Resource(ResourceTag("SomeUniformGenerator",Some("UniformRealDistribution")),
+//        attributes
+        List(ResourcePDFParameters(List(SlanValue(1), SlanValue(2))),
+          ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8))),
+          ResourcePDFParameters(List(SlanValue(2), SlanValue(3))),
+          ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">",0.1), SlanKeyValue("<",0.8)))
+        )))))))
+    val path = getClass.getClassLoader.getResource(resource_generator_v7).getPath
     translateSlanProgram(path).asserting(_.toString() shouldBe expected.toString())
   }
 
