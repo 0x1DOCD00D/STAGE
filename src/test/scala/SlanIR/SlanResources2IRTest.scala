@@ -13,7 +13,7 @@ import HelperUtils.ErrorWarningMessages.SlanProcessingFailure
 import Translator.SlanAbstractions.{BehaviorReference, SlanConstructs, StateReference, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.{SlanTranslator, SlantParser}
-import cats.data.Validated.Valid
+import cats.data.Validated.{Invalid, Valid}
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -33,6 +33,9 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         List(ResourcePDFParameters(List(SlanValue(1))))),
       Translator.SlanConstruct.Resource(ResourceTag("autoInitializedPrimitiveListResource", Some("list")),
         List(SlanValue("aUniformGeneratorReference"))),
+      Translator.SlanConstruct.Resource(ResourceTag("SomeValuesGenerator", Some("EnumIntDistribution")),
+        List(ResourcePDFParameters(List(SlanKeyValue(1, 0.2), SlanKeyValue(2, "someGeneratedProbabilityValue"), SlanKeyValue(3, 0.01))),
+          ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))),
       Translator.SlanConstruct.Resource(ResourceTag("compositeResource", None),
         List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V", Some("list")),
           List(SlanValue(100), SlanValue(1000))),
@@ -40,10 +43,10 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
     )))))
 
     val res = resExample.headOption match
-      case None => ()
+      case None => Invalid(0)
       case Some(agents) if agents.isInstanceOf[Agents] =>
         val slanconstructs = agents.asInstanceOf[Agents].agents
         SlanIR.Resource(slanconstructs)
-      case _ => ()
-    res shouldBe Valid(4)
+      case _ => Invalid(1)
+    res shouldBe Valid(10)
   }
