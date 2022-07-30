@@ -13,6 +13,7 @@ import HelperUtils.ErrorWarningMessages.SlanProcessingFailure
 import Translator.SlanAbstractions.{BehaviorReference, SlanConstructs, StateReference, YamlTypes}
 import Translator.SlanConstruct.*
 import Translator.{SlanTranslator, SlantParser}
+import cats.data.Validated.Valid
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -22,6 +23,27 @@ import scala.util.{Failure, Success, Try}
 class SlanResources2IRTest extends AnyFlatSpec with Matchers:
   behavior of "the case class resources translator to the resources IR representation"
 
-  it should "translate an empty message to an empty list" in {
-    1 shouldBe 1
+  it should "translate an example set of resources to its IR representation" in {
+    import Translator.SlanConstruct.{Agents, Resource, ResourceTag, Resources, SlanError, SlanValue}
+    val resExample = List(Agents(List(Resources(List(
+      Translator.SlanConstruct.Resource(ResourceTag("SomeUniformGenerator", Some("UniformRealDistribution")),
+        List(ResourcePDFParameters(List(SlanValue(1), SlanValue("totalMessages"))),
+          ResourcePDFConstraintsAndSeed(List(PdfSeed(200), SlanKeyValue(">", 0.1), SlanKeyValue("<", 0.8))))),
+      Translator.SlanConstruct.Resource(ResourceTag("OtherUniformGenerator", Some("UniformRealDistribution")),
+        List(ResourcePDFParameters(List(SlanValue(1))))),
+      Translator.SlanConstruct.Resource(ResourceTag("autoInitializedPrimitiveListResource", Some("list")),
+        List(SlanValue("aUniformGeneratorReference"))),
+      Translator.SlanConstruct.Resource(ResourceTag("compositeResource", None),
+        List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V", Some("list")),
+          List(SlanValue(100), SlanValue(1000))),
+          Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource", None), List(SlanValue(1)))))
+    )))))
+
+    val res = resExample.headOption match
+      case None => ()
+      case Some(agents) if agents.isInstanceOf[Agents] =>
+        val slanconstructs = agents.asInstanceOf[Agents].agents
+        SlanIR.Resource(slanconstructs)
+      case _ => ()
+    res shouldBe Valid(4)
   }
