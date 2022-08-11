@@ -30,7 +30,7 @@ given logger: Logger = CreateLogger(classOf[PdfStreamGenerator.type])
 
 object PdfStreamGenerator extends RandomGeneratorType:
   val probabilityRange:(Double, Double) = (0d, 1.0d)
-  private val strEnumIntDistribution = "EnumIntDistribution"
+  private val strEnumIntDistribution = "EnumIntDistribution".toUpperCase
   private val suffixDistribution = "istribution"
   private val strBetaDistribution = (BetaD.toString() + suffixDistribution).toUpperCase
   private val strBinomialDistribution = (BinomialD.toString() + suffixDistribution).toUpperCase

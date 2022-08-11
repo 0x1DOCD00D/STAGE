@@ -48,5 +48,5 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         val slanconstructs = agents.asInstanceOf[Agents].agents
         SlanIR.Resource(slanconstructs)
       case _ => Invalid(1)
-    res shouldBe Valid(10)
+    res shouldBe Valid(5)
   }
