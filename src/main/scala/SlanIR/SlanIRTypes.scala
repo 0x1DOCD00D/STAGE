@@ -18,9 +18,10 @@ import cats.instances.string.*
 import cats.syntax.all.catsSyntaxSemigroup
 import org.slf4j.Logger
 
+val ErrorMsgSeparator = "|;|"
 given logger:Logger = CreateLogger(classOf[SlanEntity])
 given slanErrorSemigroup: Semigroup[SlanError] = Semigroup.instance[SlanError] { (e1, e2) =>
-  SlanError(e1.errorMessage |+| e2.errorMessage)
+  SlanError(e1.errorMessage |+| ErrorMsgSeparator |+| e2.errorMessage |+| ErrorMsgSeparator)
 }
 
 type SlanEntityValidated = [T] =>> ValidatedNel[SlanError, T]
@@ -36,9 +37,9 @@ type Cardinality = Int | EntityId
 type SlanEntityInstance = (SlanEntity, Cardinality)
 type EntityOrError = [E] =>> E | SlanError
 
-type MessageTriple = (EntityId, Option[EntityId], Option[List[Resource]])
+type MessageTriple = (EntityId, Option[EntityId], Option[List[ResourceIR]])
 type MessagePair = (EntityId, Option[EntityId])
 type MessageTripleCollection = List[MessageTriple]
-type CollectionOfMessages = List[Message]
+type CollectionOfMessages = List[MessageIR]
 type ResourceValueType = (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes
 type ResourceValues = List[ResourceValueType]

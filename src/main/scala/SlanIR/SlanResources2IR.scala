@@ -28,6 +28,7 @@ import cats.{Eq, Semigroup}
 * in the object Resource whereas local resources are processed by this function.
 * */
 object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]]):
+//  it is called recursively on the list of resources following the recursive definition of the data type Resources and the attributes of each resource.
   override def apply(resourceOrValsSpec: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]] =
     if resourceOrValsSpec.length === 0 then None.valid
     else if (incorrectResourceValueCollection(resourceOrValsSpec) || notAllResourceAttributesAreValues(resourceOrValsSpec)) && !pdfInfoIsPresent(resourceOrValsSpec) then
@@ -51,6 +52,7 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
       resourceSpec.exists(_.isInstanceOf[Translator.SlanConstruct.ResourcePDFConstraintsAndSeed])
 
   private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]] =
+//
     if resourcesOrValues.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) === resourcesOrValues.length then
       obtainResources(resourcesOrValues.asInstanceOf[List[Translator.SlanConstruct.Resource]]).validNel
     else if pdfInfoIsPresent(resourcesOrValues) then

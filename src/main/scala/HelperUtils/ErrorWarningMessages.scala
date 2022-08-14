@@ -80,7 +80,17 @@ object ErrorWarningMessages:
     val errorMsg = s"Empty value: $exceptionMessage"
     logger.warn(errorMsg)
     SlanError(errorMsg)
-  
+
+  def InfoAboutValues(attrName: String, itsValue: Any)(using logger: Logger): String =
+    val infoMsg = s"$attrName => ${itsValue.toString}"
+    logger.info(infoMsg)
+    infoMsg
+
+  def InfoAboutValues(attrName: String, itsValue: Any, closing: String)(using logger: Logger): String =
+    val infoMsg = s"$attrName => ${itsValue.toString} $closing"
+    logger.info(infoMsg)
+    infoMsg
+
   def DuplicateDefinition(exceptionMessage: String)(using logger: Logger): SlanError =
     val errorMsg = s"Definition $exceptionMessage is already specified"
     logger.error(errorMsg)

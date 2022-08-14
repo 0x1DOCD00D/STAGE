@@ -21,7 +21,7 @@ trait SlanEntity(val name: EntityId)
 class EntityBookkeeper[T <: SlanEntity : ClassTag]:
   private val EntityTable: mutable.Map[EntityId, T] = mutable.Map()
 
-  override def toString: _root_.java.lang.String = EntityTable.mkString("[", "; ", "]")
+  override def toString: _root_.java.lang.String = EntityTable.toList.mkString("[", "; ", "]")
   def size: Int = EntityTable.size
   def contains(id: EntityId): Boolean = EntityTable.contains(id)
   def get(id: EntityId): Option[T] = EntityTable.get(id)
@@ -31,4 +31,7 @@ class EntityBookkeeper[T <: SlanEntity : ClassTag]:
     else
       EntityTable += id -> obj
       obj
-
+  def clear: Int =
+    val sz = EntityTable.size
+    EntityTable.clear()
+    sz
