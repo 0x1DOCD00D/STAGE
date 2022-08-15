@@ -9,6 +9,4 @@
 
 package SlanIR
 
-class Agent {
-
-}
+case class ModelIR()

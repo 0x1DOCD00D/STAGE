@@ -9,4 +9,4 @@
 
 package SlanIR
 
-case class Model ()
+case class GroupIR()

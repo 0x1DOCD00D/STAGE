@@ -14,6 +14,7 @@ import HelperUtils.ErrorWarningMessages.*
 import HelperUtils.ExtentionMethods.*
 import SlanIR.{EntityId, EntityOrError}
 import Translator.SlanAbstractions.{ResourceReference, SlanConstructs, StorageTypeReference, YamlPrimitiveTypes}
+import Translator.SlanConstruct
 import Translator.SlanConstruct.*
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.{Validated, ValidatedNel}
@@ -57,17 +58,39 @@ object ResourceIR:
   * */
   def apply(translated: SlanConstructs): SlanEntityValidated[Int] =
     InfoAboutValues("cleared resources table ", bookkeeper.clear, "entries")
-
-    checkForResourcesCaseClass(translated).andThen(resources => SlanResources2IR(resources)).andThen(rr => constructResources(rr))
-
+    checkForResourcesCaseClass(translated)
+      .andThen(resources => checkForListOfResources(resources))
+      .andThen(resources => checkResourceTagStructure(resources))
+      .andThen(resources => checkDuplicateResources(resources))
+      .andThen(resources => SlanResources2IR(resources)).andThen(rr => constructResources(rr))
   private def checkForResourcesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val filteredResources = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Resources])
     Validated.condNel(filteredResources.containsHeadOnly, filteredResources.head.asInstanceOf[Translator.SlanConstruct.Resources].lstOfResources, IncorrectSlanSpecStructure("global entry Resources"))
 
+  private def checkForListOfResources(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
+    val onlyResources: SlanConstructs = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Resource])
+    Validated.condNel(translated.length === onlyResources.length, translated, IncorrectParameter(s"Other structures than Resource are present"))
+
+  private def checkResourceTagStructure(resources: SlanConstructs): SlanEntityValidated[SlanConstructs] =
+    val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
+    val rtags: List[ResourceTag] = allResources.flatMap(r => r.id match {
+      case tag: SlanConstruct.ResourceTag => Some(tag)
+      case _ => None
+    })
+    Validated.condNel(rtags.length === allResources.length, resources, IncorrectParameter(s"Some resources do not contain tag identification"))
+
+  private def checkDuplicateResources(resources: SlanConstructs): SlanEntityValidated[SlanConstructs] =
+    val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
+    val ids: CollectionOfEntities = allResources.map(r => r.id.asInstanceOf[ResourceTag].id)
+    Validated.condNel(ids.distinct.length === ids.length, resources,
+      DuplicateDefinition(s"Resources ${
+        ids.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
+      }"))
+
   private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Int] =
     resources match
       case Some(rrlst) if rrlst.isInstanceOf[List[_]] =>
-        if rrlst.count(_.isInstanceOf[ResourceRecord]) =!= rrlst.length then
+        if rrlst.count(e => e.isInstanceOf[ResourceRecord]) =!= rrlst.length then
           IncorrectParameter("only top level resources must be specified, not their values").invalidNel
         else
           resourcesRecordProcessor(rrlst.asInstanceOf[List[ResourceRecord]])
@@ -77,10 +100,9 @@ object ResourceIR:
   private def resourcesRecordProcessor(rrlst: List[ResourceRecord]): SlanEntityValidated[Int] =
     rrlst.foreach {
       rr =>
-        val rrObj = rr.asInstanceOf[ResourceRecord]
-        rrObj.compositesOrValues match
+        rr.compositesOrValues match
           case Invalid(e) => e.invalid
-          case Valid(cov) =>  identificationOfEntity(rrObj.id, rrObj.storage, cov).andThen(r => insertIntoGlobalResourceTable(r))
+          case Valid(cov) =>  identificationOfEntity(rr.id, rr.storage, cov).andThen(r => insertIntoGlobalResourceTable(r))
     }
     Validated.Valid(bookkeeper.size)
 
@@ -123,7 +145,7 @@ object ResourceIR:
                     BasicProducerConsumer(id, Option(ResourceStorage(store)), processContainerOfValues(rr.asInstanceOf[List[StoredValue]])).validNel :: acc
                   else
                     IncorrectSlanSpecStructure(lst.toString).invalidNel :: acc
-          case spec => IncorrectSlanSpecStructure(spec.toString).invalidNel :: acc
+          case _ => IncorrectSlanSpecStructure(elem.toString).invalidNel :: acc
     }
   private def processContainerOfValues(lst: List[StoredValue]): ResourceValues =
     require(lst.count(elem=>elem.isInstanceOf[StoredValue]) === lst.length)

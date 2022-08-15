@@ -9,4 +9,4 @@
 
 package SlanIR
 
-case class Group ()
+case class AgentIR ()

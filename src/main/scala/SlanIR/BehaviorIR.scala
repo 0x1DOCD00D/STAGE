@@ -50,12 +50,12 @@ case class Fn_Remove(structure4Removal: ResourceIR, specificValues2remove: Optio
 * a stream of lists where each list contains tuples whose first element designates SlanEntity to generate and
 * the second element specifies the number of these SlanEntities to generate. Output the list of created entities.
 * */
-case class Fn_Create(generator: Generator | List[(MessageIR, Long)] | List[(Agent, Long)]) extends SlanFunction
+case class Fn_Create(generator: Generator | List[(MessageIR, Long)] | List[(AgentIR, Long)]) extends SlanFunction
 /*
 * The specified entity is destroyed, e.g., an agent is removed from the simulation. Returns the id of tne
 * destroyed entity.
 * */
-case class Fn_Destroy(entity: Agent) extends SlanFunction
+case class Fn_Destroy(entity: AgentIR) extends SlanFunction
 
 /*
 * Sending messages is done by placing the messages specified in the input parameter list
@@ -86,8 +86,8 @@ case class Fn_Invoke(endpoint: ResourceIR, parameters: ResourceIR) extends SlanF
 * Agents can join or leave a group dynamically based on some logic implemented
 * as part of the behavior. Each group keeps a track of its members.
 * */
-case class Fn_Join(group: Group, agents: List[Agent]) extends SlanFunction
-case class Fn_Leave(group: Group, agents: List[Agent]) extends SlanFunction
+case class Fn_Join(group: GroupIR, agents: List[AgentIR]) extends SlanFunction
+case class Fn_Leave(group: GroupIR, agents: List[AgentIR]) extends SlanFunction
 
 /*
 * These are arithmetic expression functions that return the result of the arithmetic operation.

@@ -9,4 +9,4 @@
 
 package SlanIR
 
-case class Channel ()
+case class ChannelIR()
