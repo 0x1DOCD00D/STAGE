@@ -66,19 +66,28 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         val slanconstructs = agents.asInstanceOf[Agents].agents
         SlanIR.ResourceIR(slanconstructs)
       case _ => Invalid(1)
-    res shouldBe Valid(5)
-  }
-
-  it should "translate an example set of resources to its IR representation and return the resource table as a string" in {
-    SlanIR.ResourceIR.resourceTable shouldBe "[" +
-      "(autoInitializedPrimitiveListResource,BasicProducerConsumer(autoInitializedPrimitiveListResource,Some(SLANLIST),List(aUniformGeneratorReference))); " +
-      "(SomeValuesGenerator,Generator(SomeValuesGenerator,EnumIntDistribution,PdfParameters(Some(seedRandom),Some(List(StoredValue((1,0.2)), StoredValue((2,someGeneratedProbabilityValue)), StoredValue((3,0.01)))),None))); " +
-      "(compositeResource,ProducerConsumerComposite(compositeResource,Some(SLANNOTHING),List(" +
-          "Valid(BasicProducerConsumer(valueHolder4compositeResource,Some(SLANNOTHING),List(1))), " +
-          "Valid(BasicProducerConsumer(someBasicResource1V,Some(SLANLIST),List(1000, 100)))))); " +
-      "(OtherUniformGenerator,Generator(OtherUniformGenerator,UniformRealDistribution,PdfParameters(None,Some(List(StoredValue(1))),None))); " +
-      "(SomeUniformGenerator,Generator(SomeUniformGenerator,UniformRealDistribution,PdfParameters(Some(200),Some(List(StoredValue(1), StoredValue(totalMessages))),Some(List(StoredValue((>,0.1)), StoredValue((<,0.8)))))))" +
-      "]"
+    res shouldBe Valid(Map(
+      "compositeResource" ->
+        ResourceRecord("compositeResource",None,Valid(Some(List(
+          ResourceRecord("someBasicResource1V",Some("list"),Valid(Some(List(
+            StoredValue(100), StoredValue(1000))))),
+          ResourceRecord("valueHolder4compositeResource",None,Valid(Some(List(
+            StoredValue(1))))))))),
+      "OtherUniformGenerator" ->
+        ResourceRecord("OtherUniformGenerator",Some("UniformRealDistribution"),Valid(Some(List(
+          PdfParameters(None,Some(List(
+            StoredValue(1))),None))))),
+      "autoInitializedPrimitiveListResource" ->
+        ResourceRecord("autoInitializedPrimitiveListResource",Some("list"),Valid(Some(List(
+          StoredValue("aUniformGeneratorReference"))))),
+      "SomeValuesGenerator" ->
+        ResourceRecord("SomeValuesGenerator",Some("EnumIntDistribution"),Valid(Some(List(
+          PdfParameters(Some("seedRandom"),Some(List(StoredValue((1,0.2)), StoredValue((2,"someGeneratedProbabilityValue")), StoredValue((3,0.01)))),None))))),
+      "SomeUniformGenerator" ->
+        ResourceRecord("SomeUniformGenerator",Some("UniformRealDistribution"),Valid(Some(List(
+          PdfParameters(Some(200),Some(List(StoredValue(1), StoredValue("totalMessages"))),
+            Some(List(StoredValue((">",0.1)), StoredValue(("<",0.8)))))))))
+    ))
   }
 
   it should "return an error of the missing resources entry" in {
@@ -111,12 +120,23 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
       case Some(agents) =>
         val slanconstructs = agents.asInstanceOf[Agents].agents
         SlanIR.ResourceIR(slanconstructs) match
-          case Invalid(err) => err.head
+          case Invalid(err) => Map()
           case Valid(x) => x
-    res shouldBe 1
+    res shouldBe Map(
+      "SomeValuesGenerator1" ->
+        ResourceRecord("SomeValuesGenerator1",Some("EnumIntDistribution"),
+          Valid(Some(List(
+            PdfParameters(Some("seedRandom"),
+              Some(List(StoredValue((1,0.2)),
+                StoredValue((2,"someGeneratedProbabilityValue")),
+                StoredValue((3,0.01)))),None))))),
+      "compositeResource1" ->
+        ResourceRecord("compositeResource1",None,
+          Invalid(cats.data.NonEmptyList(
+            SlanError("Incorrect parameter is given: attributes should contain either nested resources or values only"),List()))))
   }
 
-  it should "return an error for missing resource tag entries" in {
+  it should "return an error for mixing composite embedded resources with values" in {
     val errorMixedResourcesValuesEntry = List(Agents(List(Resources(
       List(
         Translator.SlanConstruct.Resource(null,
@@ -138,5 +158,5 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         SlanIR.ResourceIR(slanconstructs) match
           case Invalid(err) => err.head
           case _ => Invalid(0)
-    res shouldBe SlanError("Incorrect parameter is given: Other structures than Resource are present")
+    res shouldBe SlanError("Incorrect parameter is given:  other data structures than Resource are present")
   }
