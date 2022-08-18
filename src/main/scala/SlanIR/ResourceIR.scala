@@ -28,11 +28,13 @@ import org.slf4j.Logger
 
 trait ResourceIR extends SlanEntity
 
+case class BadResource(id: EntityId, reason: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), ResourceIR
+
 case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), ResourceIR
 
-case class BasicProducerConsumer(id: EntityId, storage: Option[ResourceStorage], initValues: ResourceValues) extends SlanEntity(id), ResourceIR
+case class BasicProducerConsumer(id: EntityId, storage: Int, initValues: ResourceValues) extends SlanEntity(id), ResourceIR
 
-case class ProducerConsumerComposite(id: EntityId, storage: Option[ResourceStorage], composites: List[SlanEntityValidated[ResourceIR]]) extends SlanEntity(id), ResourceIR
+case class ProducerConsumerComposite(id: EntityId, storage: Int, composites: List[SlanEntityValidated[ResourceIR]]) extends SlanEntity(id), ResourceIR
 
 case class Generator(id: EntityId, pdf: PdfName, pdfParms: PdfParameters) extends SlanEntity(id), ResourceIR
 
@@ -51,7 +53,7 @@ object ResourceIR:
   * of message fields or resource attributes, i.e., a composite resource contains nested resources. Global resources
   * are entered into the bookkeeper table whereas local resources are stored in the corresponding SLAN IR data type.
   * */
-  def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, ResourceRecord]] =
+  def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, ResourceIR]] =
     checkForResourcesCaseClass(translated)
       .andThen(resources => checkForListOfResources(resources))
       .andThen(resources => checkResourceTagStructure(resources))
@@ -83,52 +85,43 @@ object ResourceIR:
         ids.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
       }"))
 
-  private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Map[EntityId, ResourceRecord]] =
+  private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Map[EntityId, ResourceIR]] =
     resources match
       case Some(rrlst) if rrlst.isInstanceOf[List[_]] =>
         if rrlst.count(e => e.isInstanceOf[ResourceRecord]) =!= rrlst.length then
           IncorrectParameter("only top level resources must be specified, not their values").invalidNel
         else
-          rrlst.asInstanceOf[List[ResourceRecord]].foldLeft(Map[EntityId, ResourceRecord]()){
+          rrlst.asInstanceOf[List[ResourceRecord]].foldLeft(Map[EntityId, ResourceIR]()){
             (map, entry) =>
-              map + (entry.id -> entry)
+              map ++ identificationOfEntity(entry)
           }.valid
 
       case Some(e) => IncorrectParameter(e.toString).invalidNel
       case None => IncorrectParameter("resources are not specified").invalidNel
 
-  /*
+  private def identificationOfEntity(resourceEntity: ResourceRecord): Map[EntityId, ResourceIR] = resourceEntity.compositesOrValues match
+      case Invalid(e) => Map(resourceEntity.id -> BadResource(resourceEntity.id, resourceEntity.compositesOrValues))
+      case Valid(cov) => ResourceStorage(resourceEntity.storage) match
+        case ResourceStorage.SLANDISTRIBUTION =>
+          cov match
+            case None => Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectParameter(s"PDF generator ${resourceEntity.storage} does not contains parameters").invalidNel))
+            case Some(lst) if lst.isInstanceOf[List[_]] =>
+              val pdfParms = lst.asInstanceOf[List[PdfParameters]]
+              if pdfParms.containsHeadOnly then
+                Map(resourceEntity.id-> Generator(resourceEntity.id, resourceEntity.storage.get, pdfParms.head))
+              else Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectParameter(s"PDF generator ${resourceEntity.storage} has incorrect parameters: ${pdfParms.mkString("; ")}").invalidNel))
+            case spec => Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectParameter(s"PDF generator ${resourceEntity.storage} contains incorrect spec: ${spec.toString}").invalidNel))
 
-  private def resourcesRecordProcessor(rrlst: List[ResourceRecord]): SlanEntityValidated[List[ResourceIR]] =
-    val res:SlanEntityValidated[List[ResourceIR]] = rrlst.map(rr => {
-      rr.compositesOrValues match
-        case Invalid(e) => e.invalid
-        case Valid(cov) => identificationOfEntity(rr.id, rr.storage, cov)//.andThen(r => insertIntoGlobalResourceTable(r))
-    })
-    res
-*/
+        case ResourceStorage.UNRECOGNIZED => Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectParameter(s"${resourceEntity.storage} in resource ${resourceEntity.id}").invalidNel))
 
-  private def identificationOfEntity(id: EntityId, storeId: Option[String], cov: Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[ResourceIR] = ResourceStorage(storeId) match
-    case ResourceStorage.SLANDISTRIBUTION =>
-      cov match
-        case None => IncorrectParameter(s"PDF generator $storeId does not contains parameters").invalidNel
-        case Some(lst) if lst.isInstanceOf[List[_]] =>
-          val pdfParms = lst.asInstanceOf[List[PdfParameters]]
-          if pdfParms.containsHeadOnly then
-            Generator(id, storeId.get, pdfParms.head).valid
-          else IncorrectParameter(s"PDF generator $storeId has incorrect parameters: ${pdfParms.mkString("; ")}").invalidNel
-        case spec => IncorrectParameter(s"PDF generator $storeId contains incorrect spec: ${spec.toString}").invalidNel
-
-    case ResourceStorage.UNRECOGNIZED => IncorrectParameter(s"$storeId in resource $id").invalidNel
-
-    case rs => cov match
-      case None => BasicProducerConsumer(id, Option(rs), List()).validNel
-      case Some(lst) if lst.isInstanceOf[List[_]] =>
-        if lst.count(elem=>elem.isInstanceOf[StoredValue]) === lst.length then
-          BasicProducerConsumer(id, Option(rs), processContainerOfValues(lst.asInstanceOf[List[StoredValue]])).validNel
-        else if lst.count(elem=>elem.isInstanceOf[ResourceRecord]) === lst.length then ProducerConsumerComposite(id, Option(rs), processCompositeNestedResources(lst.asInstanceOf[List[ResourceRecord]])).validNel
-        else IncorrectSlanSpecStructure(lst.toString).invalidNel
-      case unknown => IncorrectSlanSpecStructure(unknown.toString).invalidNel
+        case rs => cov match
+          case None => Map(resourceEntity.id -> BasicProducerConsumer(resourceEntity.id, rs.id, List()))
+          case Some(lst) if lst.isInstanceOf[List[_]] =>
+            if lst.count(elem=>elem.isInstanceOf[StoredValue]) === lst.length then
+              Map(resourceEntity.id -> BasicProducerConsumer(resourceEntity.id, rs.id, processContainerOfValues(lst.asInstanceOf[List[StoredValue]])))
+            else if lst.count(elem=>elem.isInstanceOf[ResourceRecord]) === lst.length then Map(resourceEntity.id -> ProducerConsumerComposite(resourceEntity.id, rs.id, processCompositeNestedResources(lst.asInstanceOf[List[ResourceRecord]])))
+            else Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectSlanSpecStructure(lst.toString).invalidNel))
+          case unknown => Map(resourceEntity.id -> BadResource(resourceEntity.id, IncorrectSlanSpecStructure(unknown.toString).invalidNel))
 
   private def processCompositeNestedResources(lst: List[ResourceRecord] | List[StoredValue]): List[SlanEntityValidated[ResourceIR]] =
     require(lst.count(elem=>elem.isInstanceOf[ResourceRecord]) === lst.length)
@@ -144,7 +137,7 @@ object ResourceIR:
                   if rr.count(elem=>elem.isInstanceOf[ResourceRecord]) === rr.length then
                     processCompositeNestedResources(rr.asInstanceOf[List[ResourceRecord]]) ::: acc
                   else if rr.count(elem=>elem.isInstanceOf[StoredValue]) === rr.length then
-                    BasicProducerConsumer(id, Option(ResourceStorage(store)), processContainerOfValues(rr.asInstanceOf[List[StoredValue]])).validNel :: acc
+                    BasicProducerConsumer(id, ResourceStorage(store).id, processContainerOfValues(rr.asInstanceOf[List[StoredValue]])).validNel :: acc
                   else
                     IncorrectSlanSpecStructure(lst.toString).invalidNel :: acc
           case _ => IncorrectSlanSpecStructure(elem.toString).invalidNel :: acc

@@ -12,6 +12,7 @@ package PDFs
 import HelperUtils.ErrorWarningMessages.LogGenericMessage
 import HelperUtils.Parameters.config
 import HelperUtils.{CreateLogger, ObtainConfigReference}
+import SlanIR.ResourceStorage.{SLANDISTRIBUTION, UNRECOGNIZED}
 import Translator.SlantParser
 import cats.implicits.*
 import cats.kernel.Eq

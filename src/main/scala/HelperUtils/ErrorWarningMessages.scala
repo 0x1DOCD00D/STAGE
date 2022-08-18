@@ -86,6 +86,11 @@ object ErrorWarningMessages:
     logger.info(infoMsg)
     infoMsg
 
+  def UnrecoverableError(attrName: String, itsValue: Any)(using logger: Logger): String =
+    val errorMsg = s"$attrName => ${itsValue.toString}"
+    logger.error(errorMsg)
+    errorMsg
+
   def InfoAboutValues(attrName: String, itsValue: Any, closing: String)(using logger: Logger): String =
     val infoMsg = s"$attrName => ${itsValue.toString} $closing"
     logger.info(infoMsg)

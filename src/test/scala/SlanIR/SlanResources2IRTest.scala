@@ -68,25 +68,20 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
       case _ => Invalid(1)
     res shouldBe Valid(Map(
       "compositeResource" ->
-        ResourceRecord("compositeResource",None,Valid(Some(List(
-          ResourceRecord("someBasicResource1V",Some("list"),Valid(Some(List(
-            StoredValue(100), StoredValue(1000))))),
-          ResourceRecord("valueHolder4compositeResource",None,Valid(Some(List(
-            StoredValue(1))))))))),
-      "OtherUniformGenerator" ->
-        ResourceRecord("OtherUniformGenerator",Some("UniformRealDistribution"),Valid(Some(List(
-          PdfParameters(None,Some(List(
-            StoredValue(1))),None))))),
-      "autoInitializedPrimitiveListResource" ->
-        ResourceRecord("autoInitializedPrimitiveListResource",Some("list"),Valid(Some(List(
-          StoredValue("aUniformGeneratorReference"))))),
-      "SomeValuesGenerator" ->
-        ResourceRecord("SomeValuesGenerator",Some("EnumIntDistribution"),Valid(Some(List(
-          PdfParameters(Some("seedRandom"),Some(List(StoredValue((1,0.2)), StoredValue((2,"someGeneratedProbabilityValue")), StoredValue((3,0.01)))),None))))),
-      "SomeUniformGenerator" ->
-        ResourceRecord("SomeUniformGenerator",Some("UniformRealDistribution"),Valid(Some(List(
-          PdfParameters(Some(200),Some(List(StoredValue(1), StoredValue("totalMessages"))),
-            Some(List(StoredValue((">",0.1)), StoredValue(("<",0.8)))))))))
+        ProducerConsumerComposite("compositeResource",0,List(
+          Valid(BasicProducerConsumer("valueHolder4compositeResource",0,List(1))),
+          Valid(BasicProducerConsumer("someBasicResource1V",3,List(1000, 100))))),
+      "OtherUniformGenerator" -> Generator("OtherUniformGenerator","UniformRealDistribution",
+        PdfParameters(None,Some(List(StoredValue(1))),None)),
+      "autoInitializedPrimitiveListResource" -> BasicProducerConsumer("autoInitializedPrimitiveListResource",3,List("aUniformGeneratorReference")),
+      "SomeValuesGenerator" -> Generator("SomeValuesGenerator","EnumIntDistribution",
+        PdfParameters(Some("seedRandom"),Some(
+          List(StoredValue((1,0.2)),
+            StoredValue((2,"someGeneratedProbabilityValue")),
+            StoredValue((3,0.01)))),None)),
+      "SomeUniformGenerator" -> Generator("SomeUniformGenerator","UniformRealDistribution",
+        PdfParameters(Some(200),Some(List(StoredValue(1), StoredValue("totalMessages"))),
+          Some(List(StoredValue((">",0.1)), StoredValue(("<",0.8))))))
     ))
   }
 
@@ -123,17 +118,10 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
           case Invalid(err) => Map()
           case Valid(x) => x
     res shouldBe Map(
-      "SomeValuesGenerator1" ->
-        ResourceRecord("SomeValuesGenerator1",Some("EnumIntDistribution"),
-          Valid(Some(List(
-            PdfParameters(Some("seedRandom"),
-              Some(List(StoredValue((1,0.2)),
-                StoredValue((2,"someGeneratedProbabilityValue")),
-                StoredValue((3,0.01)))),None))))),
-      "compositeResource1" ->
-        ResourceRecord("compositeResource1",None,
-          Invalid(cats.data.NonEmptyList(
-            SlanError("Incorrect parameter is given: attributes should contain either nested resources or values only"),List()))))
+      "SomeValuesGenerator1" -> Generator("SomeValuesGenerator1","EnumIntDistribution",
+        PdfParameters(Some("seedRandom"),Some(List(StoredValue((1,0.2)), StoredValue((2,"someGeneratedProbabilityValue")), StoredValue((3,0.01)))),None)),
+      "compositeResource1" -> BadResource("compositeResource1",Invalid(NonEmptyList(
+        SlanError("Incorrect parameter is given: attributes should contain either nested resources or values only"), List()))))
   }
 
   it should "return an error for mixing composite embedded resources with values" in {
