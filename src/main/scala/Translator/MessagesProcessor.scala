@@ -20,7 +20,7 @@ import cats.kernel.Eq
 class MessagesProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
-      case cv: String => Eval.now(List(Message(List(MessageDeclaration(cv.trim, None)), List(Fields((new MessageFieldsProcessor).commandProcessor(convertJ2S(v(1))).value)))))
+      case cv: String => Eval.now(List(Message(List(MessageDeclaration(cv.trim, None)), List(Resources((new MessageFieldsProcessor).commandProcessor(convertJ2S(v(1))).value)))))
       case kv: Map[_, _] => Eval.now(List(Message((new MessageInheritanceKeyProcessor).commandProcessor(convertJ2S(kv)).value, List(Resources((new MessageFieldsProcessor).commandProcessor(convertJ2S(v(1))).value)))))
       case None => Eval.now(List(YamlKeyIsMissing(convertJ2S(v(1).toString).toString)))
       case unknown => Eval.now(List(YamlUnexpectedTypeFound(unknown.getClass().toString + ": " + unknown.toString)))

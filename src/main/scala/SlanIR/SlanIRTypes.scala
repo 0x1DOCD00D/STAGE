@@ -36,10 +36,5 @@ type CorrelationId = String
 type Cardinality = Int | EntityId
 type SlanEntityInstance = (SlanEntity, Cardinality)
 type EntityOrError = [E] =>> E | SlanError
-
-type MessageTriple = (EntityId, Option[EntityId], Option[List[ResourceIR]])
-type MessagePair = (EntityId, Option[EntityId])
-type MessageTripleCollection = List[MessageTriple]
-type CollectionOfMessages = List[MessageIR]
 type ResourceValueType = (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes
 type ResourceValues = List[ResourceValueType]

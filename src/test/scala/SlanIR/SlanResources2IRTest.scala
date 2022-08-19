@@ -22,7 +22,7 @@ import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.util.{Failure, Success, Try}
 
 class SlanResources2IRTest extends AnyFlatSpec with Matchers:
-  behavior of "the case class resources translator to the resources IR representation"
+  behavior of "the resources translator to the resources IR representation"
   import Translator.SlanConstruct.{Agents, Resource, ResourceTag, Resources, SlanError, SlanValue}
 
   val resourcesEntry: List[SlanConstruct] = List(Agents(List(Resources(List(
@@ -59,7 +59,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource", None), List(SlanValue(1)))))
   )))
 
-  it should "translate an example set of resources to its IR representation and return the number of valid entries" in {
+  it should "translate a list of resources to their IR representations" in {
     val res = resourcesEntry.headOption match
       case None => Invalid(0)
       case Some(agents) if agents.isInstanceOf[Agents] =>
@@ -85,7 +85,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
     ))
   }
 
-  it should "return an error of the missing resources entry" in {
+  it should "return an error of the missing entry Resources" in {
     val res = missingResourcesEntry.headOption match
       case None => Invalid(0)
       case Some(agents) =>
@@ -96,7 +96,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
     res shouldBe SlanError("Incorrect spec structure with global entry Resources")
   }
 
-  it should "issue an error message and return only one correct resource entry" in {
+  it should "construct a resource table with one bad composite resource where a value is specified with contained resources" in {
     val errorMixedResourcesValuesEntry = List(Agents(List(Resources(
       List(
       Translator.SlanConstruct.Resource(ResourceTag("SomeValuesGenerator1", Some("EnumIntDistribution")),
@@ -106,6 +106,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V", Some("list")),
           List(SlanValue(100), SlanValue(1000))),
           Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource", None), List(SlanValue(1))),
+          //mixing a value in the composite resource container
           SlanValue("aUniformGeneratorReference")
         ))
     )
@@ -124,7 +125,31 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         SlanError("Incorrect parameter is given: attributes should contain either nested resources or values only"), List()))))
   }
 
-  it should "return an error for mixing composite embedded resources with values" in {
+  it should "return an error for specifying null as a resource tag" in {
+    val errorMixedResourcesValuesEntry = List(Agents(List(Resources(
+      List(
+        Translator.SlanConstruct.Resource(null,
+          List(ResourcePDFParameters(List(SlanKeyValue(1, 0.2), SlanKeyValue(2, "someGeneratedProbabilityValue"), SlanKeyValue(3, 0.01))),
+            ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))),
+        Translator.SlanConstruct.Resource(ResourceTag("compositeResource1", None),
+          List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V", Some("list")),
+            List(SlanValue(100), SlanValue(1000))),
+            Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource", None), List(SlanValue(1)))
+          ))
+      )
+    ))))
+    val res = errorMixedResourcesValuesEntry.headOption match
+      case None => Invalid(0)
+      case Some(agents) =>
+        val slanconstructs = agents.asInstanceOf[Agents].agents
+        SlanIR.ResourceIR(slanconstructs) match
+          case Invalid(err) => err.head
+          case _ => Invalid(0)
+    res shouldBe SlanError("Incorrect parameter is given: some resources do not contain tag identification")
+  }
+
+
+  it should "return an error for mixing resources with values at the top level" in {
     val errorMixedResourcesValuesEntry = List(Agents(List(Resources(
       List(
         Translator.SlanConstruct.Resource(null,
@@ -147,4 +172,26 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
           case Invalid(err) => err.head
           case _ => Invalid(0)
     res shouldBe SlanError("Incorrect parameter is given:  other data structures than Resource are present")
+  }
+
+  it should "return an error when duplicate resource names are given at the top level" in {
+    val errorMixedResourcesValuesEntry = List(Agents(List(Resources(
+      List(
+        Translator.SlanConstruct.Resource(ResourceTag("compositeResource1", Some("EnumIntDistribution")),
+          List(ResourcePDFParameters(List(SlanKeyValue(1, 0.2), SlanKeyValue(2, "someGeneratedProbabilityValue"), SlanKeyValue(3, 0.01))),
+            ResourcePDFConstraintsAndSeed(List(PdfSeed("seedRandom"))))),
+        Translator.SlanConstruct.Resource(ResourceTag("compositeResource1", None),
+          List(Translator.SlanConstruct.Resource(ResourceTag("someBasicResource1V", Some("list")),
+            List(Translator.SlanConstruct.Resource(ResourceTag("valueHolder4compositeResource", None), List(SlanValue(1))))
+          ))
+      )
+    )))))
+    val res = errorMixedResourcesValuesEntry.headOption match
+      case None => Invalid(0)
+      case Some(agents) =>
+        val slanconstructs = agents.asInstanceOf[Agents].agents
+        SlanIR.ResourceIR(slanconstructs) match
+          case Invalid(err) => err.head
+          case _ => Invalid(0)
+    res shouldBe SlanError("Definition resources compositeResource1 is already specified")
   }

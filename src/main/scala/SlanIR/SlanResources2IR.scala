@@ -52,7 +52,6 @@ object SlanResources2IR extends (SlanConstructs => SlanEntityValidated[Option[Li
       resourceSpec.exists(_.isInstanceOf[Translator.SlanConstruct.ResourcePDFConstraintsAndSeed])
 
   private def processResources(resourcesOrValues: SlanConstructs): SlanEntityValidated[Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]] =
-//
     if resourcesOrValues.count(_.isInstanceOf[Translator.SlanConstruct.Resource]) === resourcesOrValues.length then
       obtainResources(resourcesOrValues.asInstanceOf[List[Translator.SlanConstruct.Resource]]).validNel
     else if pdfInfoIsPresent(resourcesOrValues) then

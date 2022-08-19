@@ -71,8 +71,10 @@ object ResourceIR:
   private def checkResourceTagStructure(resources: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
     val rtags: List[ResourceTag] = allResources.flatMap(r => r.id match {
-      case tag: SlanConstruct.ResourceTag => Some(tag)
-      case _ => IncorrectParameter(s"no tag for ${r.toString}")
+      case null => IncorrectParameter(s"null tag for ${r.toString} is not permitted")
+                   None
+      case tag: SlanConstruct.ResourceTag => Option(tag)
+      case _ => IncorrectParameter(s"tag for ${r.toString}")
                 None
     })
     Validated.condNel(rtags.length === allResources.length, resources, IncorrectParameter(s"some resources do not contain tag identification"))
@@ -81,7 +83,7 @@ object ResourceIR:
     val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
     val ids: CollectionOfEntities = allResources.map(r => r.id.asInstanceOf[ResourceTag].id)
     Validated.condNel(ids.distinct.length === ids.length, resources,
-      DuplicateDefinition(s"Resources ${
+      DuplicateDefinition(s"resources ${
         ids.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
       }"))
 

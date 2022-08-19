@@ -34,8 +34,6 @@ enum SlanConstruct:
 
   case Resources(lstOfResources: SlanConstructs)
 
-  case Fields(content: SlanConstructs)
-
   case Behaviors(content: SlanConstructs)
 
   case Channels(content: SlanConstructs)
