@@ -158,7 +158,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
 
     "translate a behavior spec with local resources in an agent" in {
       val expected = List(Agents(List(
-        Agent("Agent Name X",List(LocalResources(List(SlanValue("resource1"), SlanValue("resource2"))),
+        Agent("Agent Name X",List(Resources(List(SlanValue("resource1"), SlanValue("resource2"))),
           State(None,List(StateBehavior(Some("GenerateMessages X, W, and U"),None),
             StateBehavior(Some("GenerateMessages P or Q"),Some("State X")))),
           State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None)))))
@@ -1093,7 +1093,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       */
       Agent("Person",
         List(State(None,List(StateBehavior(Some("...Post2Friends"),Some("respond2Messages")))),
-          LocalResources(List(SlanKeyValue("goodWill",100))),
+          Resources(List(SlanKeyValue("goodWill",100))),
           State(Some("offended"),List(StateBehavior(Some("HandleFriendRequests"),Some("respond2Messages")),
             StateBehavior(Some("HandleSupport"),Some("respond2Messages")))),
           State(Some("happy"),List(StateBehavior(Some("HandleFriendRequests"),None),

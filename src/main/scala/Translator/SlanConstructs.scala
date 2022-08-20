@@ -136,8 +136,6 @@ enum SlanConstruct:
   
   case GoTo(state: StateReference)
   
-  case LocalResources(localResourceList: SlanConstructs)
-  
   case Group(id: SlanConstructs, members: SlanConstructs)
 
   case GroupDesignators(id: GroupReference, behaviorRef: BehaviorReference)
