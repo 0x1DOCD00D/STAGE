@@ -23,8 +23,8 @@ import cats.syntax.*
 import cats.syntax.validated.*
 import cats.{Eq, Semigroup}
 
-case class MessageIR(id: MessageReference, parent: Option[MessageReference | MessageIR], fields: SlanEntityValidated[Map[MessageReference, ResourceIR]]) extends SlanEntity(id):
-  def withParent(parent: Option[MessageIR]): MessageIR = MessageIR(id, parent, fields)
+case class MessageIR(id: MessageReference, parent: Option[MessageReference | MessageIR] | SlanError, fields: SlanEntityValidated[Map[MessageReference, ResourceIR]]) extends SlanEntity(id):
+  def withParent(parent: Option[MessageIR] | SlanError): MessageIR = MessageIR(id, parent, fields)
 
 object MessageIR:
   private def checkForMessagesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
@@ -70,32 +70,3 @@ object MessageIR:
       .andThen(msgs => checkDuplicateMessages(msgs))
       .andThen(msgs => checkOrphanedParents(msgs))
       .andThen(msgs => SlanMessages2IR(msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]))
-
-/*
-  @main def runMsgs =
-    import Translator.SlanConstruct.*
-    val msg1 = List(Messages(List(
-      Message(List(MessageDeclaration("Message Name", None)),
-        List(Resources(List(Resource(ResourceTag("Recursive Field", None), List(Resource(ResourceTag("Message Name", None), List(SlanValue(3))))),
-          Resource(ResourceTag("someBasicResourceListOfValues", Some("queue")), List(SlanValue(1), SlanValue(10), SlanValue(100))),
-          Resource(ResourceTag("Some Fixed Value", None), List(SlanValue(100))),
-          Resource(ResourceTag("Another Recursive Field", None),
-            List(Resource(ResourceTag("Message Name", None), List(SlanValue(10))))),
-          Resource(ResourceTag("Field Name", None), List(SlanValue("generatorUniformPdf"))))))))))
-
-    val msg2 = List(Messages(List(
-      Message(List(MessageDeclaration("Message Name", None)), List(Resources(
-        List(Resource(ResourceTag("Field Name", Some("list")), List(SlanValue(1), SlanValue(200))),
-          Resource(ResourceTag("someBasicResourceListOfValues", Some("queue")), List(SlanValue(1), SlanValue(10), SlanValue(100))),
-          Resource(ResourceTag("Some Fixed Value", None), List(SlanValue(100))))))),
-      Message(List(MessageDeclaration("Derived Message", Some("Message Name"))),
-        List(Resources(List(Resource(ResourceTag("FieldX", None),
-          List(Resource(ResourceTag("Discrete", None), List(SlanKeyValue(1, 0.3), SlanKeyValue(2, 0.5), SlanKeyValue(3, 0.6)))))))))
-    )))
-
-
-    val r1  = MessageIR(msg1)
-    val r2  = MessageIR(msg2)
-    println(r1)
-    println("------------------------------")
-    println(r2)*/
