@@ -9,7 +9,9 @@
 
 package SlanIR
 
-import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, EmptyWarning, MissingDefinition}
+import HelperUtils.ErrorWarningMessages.{DuplicateDefinition, EmptyWarning, MissingDefinition, SeriousInternalError}
+import Translator.SlanAbstractions.{BehaviorReference, SlanConstructs}
+import cats.syntax.all.catsSyntaxValidatedId
 
 trait SlanExpression
 trait SlanRelationalExpression extends SlanExpression
@@ -27,7 +29,7 @@ case class GREATER(left: SlanExpression, right: SlanExpression) extends SlanRela
 case class GREATEROREQUAL(left: SlanExpression, right: SlanExpression) extends SlanRelationalExpression
 case class NOTEQUAL(left: SlanExpression, right: SlanExpression) extends SlanRelationalExpression
 
-case class Correlation(id: CorrelationId) extends SlanEntity(id) with SlanExpression
+case class Correlation(id: CorrelationId) extends SlanEntity(Option(id)) with SlanExpression
 
 trait SlanFunction extends SlanExpression
 /*
@@ -100,18 +102,8 @@ case class Fn_Dec(operand: SlanExpression)
 case class Fn_Sub(operand1: SlanExpression, operand2: SlanExpression)
 case class Fn_Div(operand1: SlanExpression, operand2: SlanExpression)
 
-case class Behavior(id: EntityId, messagesResponses: List[(MessageIR, List[SlanExpression])]) extends SlanEntity(id)
+case class BehaviorIR(id: EntityId, messagesResponses: List[(MessageIR, List[SlanExpression])]) extends SlanEntity(Option(id))
 
-object Behavior:
-  private val bookkeeper = new EntityBookkeeper[Behavior]
-  def apply(id: EntityId): Option[Behavior] = bookkeeper.get(id)
-/*
+object BehaviorIR:
+  def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, BehaviorIR]] = SeriousInternalError("not implemented").invalidNel
 
-  def apply(id: EntityId, triggeredByMsgs: List[(Message, List[SlanExpression])]): EntityOrError[Behavior] =
-    if bookkeeper.contains(id) then
-      DuplicateDefinition(s"behavior $id")
-    else if triggeredByMsgs.isEmpty then
-      EmptyWarning(s"behavior $id is not defined")
-    else
-      bookkeeper.set(id, Behavior(id, triggeredByMsgs))
-*/

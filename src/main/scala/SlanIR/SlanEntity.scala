@@ -16,7 +16,7 @@ import scala.collection.mutable
 import scala.collection.mutable.Map
 import scala.reflect.{ClassTag, classTag}
 
-trait SlanEntity(val name: EntityId)
+trait SlanEntity(val name: Option[EntityId])
 
 class EntityBookkeeper[T <: SlanEntity : ClassTag]:
   private val EntityTable: mutable.Map[EntityId, T] = mutable.Map()
@@ -25,12 +25,15 @@ class EntityBookkeeper[T <: SlanEntity : ClassTag]:
   def size: Int = EntityTable.size
   def contains(id: EntityId): Boolean = EntityTable.contains(id)
   def get(id: EntityId): Option[T] = EntityTable.get(id)
-  def set(id: EntityId, obj: T): EntityOrError[T] =
-    if EntityTable.contains(id) then
-      DuplicateDefinition(s"[${classTag[T].runtimeClass.getName}] $id")
+  def set(id: EntityId, obj: T): Option[T] =
+    if id.isBlank then None
+    else if EntityTable.contains(id) then
+      EntityTable(id) = obj
+//      DuplicateDefinition(s"[${classTag[T].runtimeClass.getName}] $id")
     else
       EntityTable += id -> obj
-      obj
+    get(id)
+
   def clear: Int =
     val sz = EntityTable.size
     EntityTable.clear()

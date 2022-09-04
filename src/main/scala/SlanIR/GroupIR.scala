@@ -9,4 +9,11 @@
 
 package SlanIR
 
+import HelperUtils.ErrorWarningMessages.SeriousInternalError
+import Translator.SlanAbstractions.{GroupReference, SlanConstructs}
+import cats.syntax.all.catsSyntaxValidatedId
+
 case class GroupIR()
+
+object GroupIR:
+  def apply(translated: SlanConstructs): SlanEntityValidated[Map[GroupReference, GroupIR]] = SeriousInternalError("not implemented").invalidNel

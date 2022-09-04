@@ -9,4 +9,11 @@
 
 package SlanIR
 
+import HelperUtils.ErrorWarningMessages.SeriousInternalError
+import Translator.SlanAbstractions.{ModelReference, SlanConstructs}
+import cats.syntax.all.catsSyntaxValidatedId
 case class ModelIR()
+
+object ModelIR:
+  def apply(translated: SlanConstructs): SlanEntityValidated[Map[ModelReference, ModelIR]] = SeriousInternalError("not implemented").invalidNel
+

@@ -28,15 +28,15 @@ import org.slf4j.Logger
 
 trait ResourceIR extends SlanEntity
 
-case class BadResource(id: EntityId, reason: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), ResourceIR
+case class BadResource(id: EntityId, reason: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(Option(id)), ResourceIR
 
-case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(id), ResourceIR
+case class ResourceRecord(id: EntityId, storage: StorageTypeReference, compositesOrValues: SlanEntityValidated[Option[List[ResourceIR] | List[StoredValue] | List[PdfParameters]]]) extends SlanEntity(Option(id)), ResourceIR
 
-case class BasicProducerConsumer(id: EntityId, storage: Int, initValues: ResourceValues) extends SlanEntity(id), ResourceIR
+case class BasicProducerConsumer(id: EntityId, storage: Int, initValues: ResourceValues) extends SlanEntity(Option(id)), ResourceIR
 
-case class ProducerConsumerComposite(id: EntityId, storage: Int, composites: List[SlanEntityValidated[ResourceIR]]) extends SlanEntity(id), ResourceIR
+case class ProducerConsumerComposite(id: EntityId, storage: Int, composites: List[SlanEntityValidated[ResourceIR]]) extends SlanEntity(Option(id)), ResourceIR
 
-case class Generator(id: EntityId, pdf: PdfName, pdfParms: PdfParameters) extends SlanEntity(id), ResourceIR
+case class Generator(id: EntityId, pdf: PdfName, pdfParms: PdfParameters) extends SlanEntity(Option(id)), ResourceIR
 
 case class StoredValue(content: (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlPrimitiveTypes)
 

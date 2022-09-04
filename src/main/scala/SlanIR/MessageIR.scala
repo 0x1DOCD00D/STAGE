@@ -23,8 +23,8 @@ import cats.syntax.*
 import cats.syntax.validated.*
 import cats.{Eq, Semigroup}
 
-case class MessageIR(id: MessageReference, parent: Option[MessageReference | MessageIR] | SlanError, fields: SlanEntityValidated[Map[MessageReference, ResourceIR]]) extends SlanEntity(id):
-  def withParent(parent: Option[MessageIR] | SlanError): MessageIR = MessageIR(id, parent, fields)
+case class MessageIR(id: MessageReference, parent: Option[MessageReference | MessageIR] | SlanError, fields: SlanEntityValidated[Map[MessageReference, ResourceIR]]) extends SlanEntity(Option(id)):
+  def withParent(newParent: Option[MessageIR] | SlanError): MessageIR = this.copy(parent = newParent )
 
 object MessageIR:
   private def checkForMessagesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =

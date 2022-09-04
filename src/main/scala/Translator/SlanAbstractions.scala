@@ -20,6 +20,7 @@ object SlanAbstractions:
   type BehaviorReference = Option[String]
   type BehaviorMandatoryReference = String
   type StateReference = Option[String]
+  type StateMandatoryReference = String
   type MessageReference = String
   type ModelReference = String
   type ModelGraphReference = String

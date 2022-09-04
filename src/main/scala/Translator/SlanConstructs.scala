@@ -38,7 +38,7 @@ enum SlanConstruct:
 
   case Channels(content: SlanConstructs)
 
-  case Agent(id: AgentReference, states: SlanConstructs)
+  case Agent(id: AgentReference, statesAndResources: SlanConstructs)
   
   case State(id: StateReference, behavior: SlanConstructs)
 

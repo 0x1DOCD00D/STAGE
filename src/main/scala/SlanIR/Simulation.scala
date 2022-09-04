@@ -9,4 +9,4 @@
 
 package SlanIR
 
-case class Simulation (id: EntityId, models: List[ModelIR]) extends SlanEntity(id)
+case class Simulation (id: EntityId, models: List[ModelIR]) extends SlanEntity(Option(id))
