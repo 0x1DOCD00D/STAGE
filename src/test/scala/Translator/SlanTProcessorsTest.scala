@@ -628,18 +628,27 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
-  "translate a message spec with multiple fields" in {
-    val expected = List(Messages(List(
-      Message(List(MessageDeclaration("Message Name",None)),
-        List(Resources(List(Resource(ResourceTag("Recursive Field",None),List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
-          Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
-          Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))),
-          Resource(ResourceTag("Another Recursive Field",None),
-            List(Resource(ResourceTag("Message Name",None),List(SlanValue(10))))),
-          Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf"))))))))))
-    val path = getClass.getClassLoader.getResource(messageYaml).getPath
+  "translate a channel spec with multiple behaviors written in the block style" in {
+    val expected = List(Agents(List(Channels(List(
+      Channel("Sensors2CloudChannel",
+        List(
+          SlanValue("behaviorAttached2Channel"), SlanValue("otherBehaviorAttached2Channel"), SlanValue("moreBehaviors"), SlanValue("someWierdBehavior"))))))))
+    val path = getClass.getClassLoader.getResource(channelYaml_v2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
+
+  "translate a message spec with multiple fields" in {
+      val expected = List(Messages(List(
+        Message(List(MessageDeclaration("Message Name",None)),
+          List(Resources(List(Resource(ResourceTag("Recursive Field",None),List(Resource(ResourceTag("Message Name",None),List(SlanValue(3))))),
+            Resource(ResourceTag("someBasicResourceListOfValues",Some("queue")),List(SlanValue(1), SlanValue(10), SlanValue(100))),
+            Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))),
+            Resource(ResourceTag("Another Recursive Field",None),
+              List(Resource(ResourceTag("Message Name",None),List(SlanValue(10))))),
+            Resource(ResourceTag("Field Name",None),List(SlanValue("generatorUniformPdf"))))))))))
+      val path = getClass.getClassLoader.getResource(messageYaml).getPath
+      translateSlanProgram(path).asserting(_ shouldBe expected)
+    }
 
   "translate a derived message spec" in {
     val expected = List(Messages(List(
