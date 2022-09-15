@@ -32,6 +32,8 @@ val scalaReflectVersion = "2.13.8"
 val typesafeScalaLogging = "3.9.4"
 val protobufVersion = "1.0.1"
 val catsScalatestEffects = "1.4.0"
+val apacheSSHVersion = "2.9.1"
+val apacheRngVersion = "1.3"
 
 resolvers += ("Apache Snapshots" at "http://repository.apache.org/content/repositories/snapshots").withAllowInsecureProtocol(true)
 resolvers += ("Apache repo" at "https://repository.apache.org/").withAllowInsecureProtocol(true)
@@ -50,7 +52,8 @@ lazy val root = (project in file("."))
       "com.typesafe" % "config" % typesafeConfigVersion,
       "commons-io" % "commons-io" % apacheCommonIOVersion,
       "org.apache.commons" % "commons-math3" % apacheCommonMathVersion,
-      "org.apache.commons" % "commons-rng-simple" % "1.3",
+      "org.apache.commons" % "commons-rng-simple" % apacheRngVersion,
+      "org.apache.sshd" % "sshd-core" % apacheSSHVersion,
       "org.typelevel" %% "cats-core" % catsVersion,
       "org.typelevel" %% "cats-laws" % catsVersion % Test,
       "org.typelevel" %% "cats-effect" % catsEffectVersion,

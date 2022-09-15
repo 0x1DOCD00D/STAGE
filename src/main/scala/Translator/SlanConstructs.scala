@@ -188,6 +188,8 @@ enum SlanConstruct:
 
   case ResourceConstructors(ingesters: SlanConstructs)
 
+  case JsonLoader(resourceName: ResourceReference, json: SlanConstructs)
+  
   case TableLoader(resourceName: ResourceReference, table: SlanConstructs)
 
   case ResourceCsvTable(table: SlanConstructs)

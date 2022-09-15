@@ -42,7 +42,7 @@ case class StoredValue(content: (YamlPrimitiveTypes, YamlPrimitiveTypes) | YamlP
 
 case class PdfParameters(seed: Option[YamlPrimitiveTypes], parameters: Option[List[StoredValue]], fromTo: Option[List[StoredValue]])
 
-object ResourceIR:
+object ResourceIR extends UniversalChecks[Resource, Resources]:
   /*
   * Resources can be defined under the section Resources or as Fields in a message. In both
   * cases they are wrapped either in the case classes Resources or Fields at the top level. However, for each
@@ -54,19 +54,11 @@ object ResourceIR:
   * are entered into the bookkeeper table whereas local resources are stored in the corresponding SLAN IR data type.
   * */
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, ResourceIR]] =
-    checkForResourcesCaseClass(translated)
-      .andThen(resources => checkForListOfResources(resources))
+    checkForEncasingClass(translated, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Resources]).asInstanceOf[List[Resources]]}, (rs: Resources)=> rs.lstOfResources.asInstanceOf[List[Resource]] )
+      .andThen(resources => checkForListOfEntities(resources, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Resource]).asInstanceOf[List[Resource]]}))
       .andThen(resources => checkResourceTagStructure(resources))
-      .andThen(resources => checkDuplicateResources(resources))
+      .andThen(resources => checkDuplicateNames(resources, (r: Resource) => {r.id.asInstanceOf[ResourceTag].id}))
       .andThen(resources => SlanResources2IR(resources)).andThen(rr => constructResources(rr))
-
-  private def checkForResourcesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val filteredResources = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Resources])
-    Validated.condNel(filteredResources.containsHeadOnly, filteredResources.head.asInstanceOf[Translator.SlanConstruct.Resources].lstOfResources, IncorrectSlanSpecStructure("global entry Resources"))
-
-  private def checkForListOfResources(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val onlyResources: SlanConstructs = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Resource])
-    Validated.condNel(translated.length === onlyResources.length, translated, IncorrectParameter(s" other data structures than Resource are present"))
 
   private def checkResourceTagStructure(resources: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
@@ -78,14 +70,6 @@ object ResourceIR:
                 None
     })
     Validated.condNel(rtags.length === allResources.length, resources, IncorrectParameter(s"some resources do not contain tag identification"))
-
-  private def checkDuplicateResources(resources: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val allResources = resources.asInstanceOf[List[Translator.SlanConstruct.Resource]]
-    val ids: CollectionOfEntities = allResources.map(r => r.id.asInstanceOf[ResourceTag].id)
-    Validated.condNel(ids.distinct.length === ids.length, resources,
-      DuplicateDefinition(s"resources ${
-        ids.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
-      }"))
 
   private def constructResources(resources: Option[List[ResourceRecord] | List[StoredValue] | List[PdfParameters]]): SlanEntityValidated[Map[EntityId, ResourceIR]] =
     resources match

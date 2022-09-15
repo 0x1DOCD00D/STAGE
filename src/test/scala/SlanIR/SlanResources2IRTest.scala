@@ -93,7 +93,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         SlanIR.ResourceIR(slanconstructs) match
           case Invalid(err) => err.head
           case _ => Invalid(2)
-    res shouldBe SlanError("Incorrect spec structure with global entry Resources")
+    res shouldBe SlanError("Incorrect spec structure with global entry Translator.SlanConstruct$Resource")
   }
 
   it should "construct a resource table with one bad composite resource where a value is specified with contained resources" in {
@@ -171,7 +171,7 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         SlanIR.ResourceIR(slanconstructs) match
           case Invalid(err) => err.head
           case _ => Invalid(0)
-    res shouldBe SlanError("Incorrect parameter is given:  other data structures than Resource are present")
+    res shouldBe SlanError("Incorrect parameter is given:  other data structures than Translator.SlanConstruct$Resource are present")
   }
 
   it should "return an error when duplicate resource names are given at the top level" in {
@@ -193,5 +193,5 @@ class SlanResources2IRTest extends AnyFlatSpec with Matchers:
         SlanIR.ResourceIR(slanconstructs) match
           case Invalid(err) => err.head
           case _ => Invalid(0)
-    res shouldBe SlanError("Definition resources compositeResource1 is already specified")
+    res shouldBe SlanError("Definition Translator.SlanConstruct$Resource: compositeResource1 is already specified")
   }

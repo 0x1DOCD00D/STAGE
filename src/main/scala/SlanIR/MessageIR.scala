@@ -55,13 +55,14 @@ object MessageIR:
         mIds.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
       }"))
 
-  private def checkOrphanedParents(msgs: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val allMsgs = msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]
-    val mIds: List[MessageReference] = allMsgs.map(_.id.head.asInstanceOf[MessageDeclaration].id)
 
-    val parents: List[MessageReference] = allMsgs.flatMap(m=>m.id.head.asInstanceOf[MessageDeclaration].parent)
-    val orphanedParents: List[MessageReference] = parents.filterNot(parent => mIds.contains(parent))
-    Validated.condNel(orphanedParents.isEmpty, msgs, MissingDefinition(s"orphaned parents: [${orphanedParents.mkString(", ")}]"))
+  private def checkOrphanedParents(msgs: SlanConstructs): SlanEntityValidated[SlanConstructs] =
+      val allMsgs = msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]
+      val mIds: List[MessageReference] = allMsgs.map(_.id.head.asInstanceOf[MessageDeclaration].id)
+
+      val parents: List[MessageReference] = allMsgs.flatMap(m=>m.id.head.asInstanceOf[MessageDeclaration].parent)
+      val orphanedParents: List[MessageReference] = parents.filterNot(parent => mIds.contains(parent))
+      Validated.condNel(orphanedParents.isEmpty, msgs, MissingDefinition(s"orphaned parents: [${orphanedParents.mkString(", ")}]"))
 
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, MessageIR]] =
     checkForMessagesCaseClass(translated)
