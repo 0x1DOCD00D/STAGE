@@ -31,7 +31,7 @@ object AgentIR extends UniversalChecks[Agent, Agents]:
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[AgentReference, AgentIR]] =
     checkForEncasingClass(translated, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Agents]).asInstanceOf[List[Agents]]}, (as: Agents)=> as.agents.asInstanceOf[List[Agent]] )
       .andThen(agents => checkForListOfEntities(agents, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Agent]).asInstanceOf[List[Agent]]}))
+      .andThen(agents => checkDuplicateNames(agents, (a: Agent) => {a.id}))
       .andThen(agents => checkForAgentsEntryContent(agents))
       .andThen(agents => checkAgentNames(agents))
-      .andThen(agents => checkDuplicateNames(agents, (a: Agent) => {a.id}))
       .andThen(agents => SlanAgents2IR(agents.asInstanceOf[List[Translator.SlanConstruct.Agent]]))

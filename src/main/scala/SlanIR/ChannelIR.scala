@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,12 +19,12 @@ case class ChannelIR(id: ChannelReference, behaviors: List[BehaviorIR] | List[En
   def withBehavior(newBehavior: List[BehaviorIR]): ChannelIR = this.copy(behaviors = newBehavior )
 
 
-object ChannelIR:
+object ChannelIR extends UniversalChecks[Channel, Channels]:
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[ChannelReference, ChannelIR]] =
     checkForChannelsCaseClass(translated)
-      .andThen(c => checkForListOfChannels(c))
+      .andThen(c => checkForListOfEntities(c, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Channel]).asInstanceOf[List[Channel]]}))
       .andThen(c => checkChannelStructure(c))
-      .andThen(c => checkDuplicateChannels(c))
+      .andThen(c => checkDuplicateNames(c, (aC: Channel) => {aC.id}))
       .andThen(c => SlanChannels2IR(c.asInstanceOf[List[Channel]]))
 
 
@@ -35,21 +35,9 @@ object ChannelIR:
       val filteredChannels = filteredAgents.head.asInstanceOf[Agents].agents.filter(_.isInstanceOf[Channels])
       Validated.condNel(filteredChannels.containsHeadOnly, filteredChannels.head.asInstanceOf[Channels].content, IncorrectSlanSpecStructure("global entry Channels is missing"))
 
-  private def checkForListOfChannels(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val onlyChannels: SlanConstructs = translated.filter(_.isInstanceOf[Channel])
-    Validated.condNel(translated.length === onlyChannels.length, translated, IncorrectParameter(s"other data structures than Channel are present under Channels"))
-
   private def checkChannelStructure(channelz: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val allChannels = channelz.asInstanceOf[List[Channel]]
     val svLst: List[String] = allChannels.flatMap(c =>
       val cb = c.behaviors.filterNot(_.isInstanceOf[SlanValue])
       if cb.nonEmpty then List(s"${c.id}: [${cb.mkString(", ")}]") else None )
     Validated.condNel(svLst.isEmpty, channelz, IncorrectParameter(svLst.mkString(ErrorMsgSeparator)))
-
-  private def checkDuplicateChannels(channelz: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    import cats.syntax.all.catsSyntaxOptionId
-    val cIds: List[ChannelReference] = channelz.asInstanceOf[List[Channel]].map(_.id)
-    Validated.condNel(cIds.distinct.length === cIds.length, channelz,
-    DuplicateDefinition(s"messages ${
-      cIds.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
-    }"))
