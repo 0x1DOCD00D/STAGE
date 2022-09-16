@@ -22,12 +22,12 @@ case class GroupIR(id: GroupReference,
                    agents: SlanEntityValidated[List[(AgentReference, Cardinality)]]) extends SlanEntity(Option(id)):
   def withBehavior(newBehavior: BehaviorIR): GroupIR = this.copy(behavior = Option(newBehavior))
 
-object GroupIR:
+object GroupIR extends UniversalChecks[Group, Groups]:
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[GroupReference, GroupIR]] =
     checkForGroupsCaseClass(translated)
-      .andThen(g => checkForListOfGroups(g))
+      .andThen(g => checkForListOfEntities(g, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Group]).asInstanceOf[List[Group]]}))
       .andThen(g => checkGroupStructure(g))
-      .andThen(g => checkDuplicateGroups(g))
+      .andThen(g => checkDuplicateNames(g, (aG: Group) => {aG.id.head.asInstanceOf[GroupDesignators].id}))
       .andThen(g => SlanGroups2IR(g.asInstanceOf[List[Group]]))
 
 
@@ -37,10 +37,6 @@ object GroupIR:
     else
       val filteredGroups = filteredAgents.head.asInstanceOf[Agents].agents.filter(_.isInstanceOf[Groups])
       Validated.condNel(filteredGroups.containsHeadOnly, filteredGroups.head.asInstanceOf[Groups].content, IncorrectSlanSpecStructure("global entry Groups is missing"))
-
-  private def checkForListOfGroups(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val onlyChannels: SlanConstructs = translated.filter(_.isInstanceOf[Group])
-    Validated.condNel(translated.length === onlyChannels.length, translated, IncorrectParameter(s"other data structures than Group are present under Groups"))
 
   private def checkGroupStructure(groupz: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val allGroups = groupz.asInstanceOf[List[Group]]
@@ -53,11 +49,3 @@ object GroupIR:
       else None
     })
     Validated.condNel(gdecl.length === allGroups.length, allGroups, IncorrectParameter(s"some groups do not contain identifications"))
-
-  private def checkDuplicateGroups(groupz: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    import cats.syntax.all.catsSyntaxOptionId
-    val gIds: List[GroupReference] = groupz.asInstanceOf[List[Group]].map(_.id.head.asInstanceOf[GroupDesignators].id)
-    Validated.condNel(gIds.distinct.length === gIds.length, groupz,
-      DuplicateDefinition(s"groups ${
-        gIds.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
-      }"))
