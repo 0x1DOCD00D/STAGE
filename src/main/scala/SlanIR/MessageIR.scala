@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -14,7 +14,7 @@ import HelperUtils.ExtentionMethods.containsHeadOnly
 import SlanIR.{EntityId, EntityOrError, SlanEntity}
 import Translator.SlanAbstractions.{MessageReference, SlanConstructs}
 import Translator.SlanConstruct
-import Translator.SlanConstruct.{MessageDeclaration, SlanError}
+import Translator.SlanConstruct.{Message, MessageDeclaration, Messages, SlanError}
 import cats.data.Validated.Valid
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits.*
@@ -26,11 +26,7 @@ import cats.{Eq, Semigroup}
 case class MessageIR(id: MessageReference, parent: Option[MessageReference | MessageIR] | SlanError, fields: SlanEntityValidated[Map[MessageReference, ResourceIR]]) extends SlanEntity(Option(id)):
   def withParent(newParent: Option[MessageIR] | SlanError): MessageIR = this.copy(parent = newParent )
 
-object MessageIR:
-  private def checkForMessagesCaseClass(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val filteredMessages = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Messages])
-    Validated.condNel(filteredMessages.containsHeadOnly, filteredMessages.head.asInstanceOf[Translator.SlanConstruct.Messages].messages, IncorrectSlanSpecStructure("global entry Messages is missing"))
-
+object MessageIR extends UniversalChecks[Message, Messages]:
   private def checkForListOfMessages(translated: SlanConstructs): SlanEntityValidated[SlanConstructs] =
     val onlyMessages: SlanConstructs = translated.filter(_.isInstanceOf[Translator.SlanConstruct.Message])
     Validated.condNel(translated.length === onlyMessages.length, translated, IncorrectParameter(s" other data structures than Message are present under Messages"))
@@ -47,15 +43,6 @@ object MessageIR:
     })
     Validated.condNel(mdecl.length === allMsgs.length, allMsgs, IncorrectParameter(s"some messages do not contain tag identification"))
 
-  private def checkDuplicateMessages(msgs: SlanConstructs): SlanEntityValidated[SlanConstructs] =
-    val allMsgs = msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]
-    val mIds: List[MessageReference] = allMsgs.map(_.id.head.asInstanceOf[MessageDeclaration].id)
-    Validated.condNel(mIds.distinct.length === mIds.length, msgs,
-      DuplicateDefinition(s"messages ${
-        mIds.groupBy(identity).collect { case (elem, y: List[_]) => if y.length > 1 then elem.some else None }.flatten.mkString(", ")
-      }"))
-
-
   private def checkOrphanedParents(msgs: SlanConstructs): SlanEntityValidated[SlanConstructs] =
       val allMsgs = msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]
       val mIds: List[MessageReference] = allMsgs.map(_.id.head.asInstanceOf[MessageDeclaration].id)
@@ -65,9 +52,9 @@ object MessageIR:
       Validated.condNel(orphanedParents.isEmpty, msgs, MissingDefinition(s"orphaned parents: [${orphanedParents.mkString(", ")}]"))
 
   def apply(translated: SlanConstructs): SlanEntityValidated[Map[EntityId, MessageIR]] =
-    checkForMessagesCaseClass(translated)
-      .andThen(msgs => checkForListOfMessages(msgs))
+    checkForEncasingClass(translated, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Messages]).asInstanceOf[List[Messages]]}, (m: Messages)=> m.messages.asInstanceOf[List[Message]] )
+      .andThen(msgs => checkForListOfEntities(msgs, (scLst:SlanConstructs)=>{scLst.filter(_.isInstanceOf[Message]).asInstanceOf[List[Message]]}))
       .andThen(msgs => checkMessageStructure(msgs))
-      .andThen(msgs => checkDuplicateMessages(msgs))
+      .andThen(msgs => checkDuplicateNames(msgs, (m: Message) => {m.id.head.asInstanceOf[MessageDeclaration].id}))
       .andThen(msgs => checkOrphanedParents(msgs))
       .andThen(msgs => SlanMessages2IR(msgs.asInstanceOf[List[Translator.SlanConstruct.Message]]))
