@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -79,9 +79,9 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val resources_v10 = "SlanFeatureTesting/Resources_v10.yaml"
   val resources_v11 = "SlanFeatureTesting/Resources_v11.yaml"
   val resources_v12 = "SlanFeatureTesting/Resources_v12.yaml"
-
   val socialMediaCompanySimulation = "Simulations/SocialMediaCompany.yaml"
   val primitiveSimulation = "Simulations/PrimitiveMessageExchange.yaml"
+  val basicSimTemplate = "Simulations/BasicTemplate.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -1269,5 +1269,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         ComputingNodes(List(SlanValue("cancun"), SlanValue("austin"))), AkkaConfigurationParameters(List())))
     )))
     val path = getClass.getClassLoader.getResource(primitiveSimulation).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a basic empty simulation template" in {
+    val expected = List(Agents(List(Groups(List()), Behaviors(List()), Channels(List()), Resources(List()))), Messages(List()), Models(List()))
+    val path = getClass.getClassLoader.getResource(basicSimTemplate).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }

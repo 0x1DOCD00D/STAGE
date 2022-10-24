@@ -1,0 +1,9 @@
+Agents: # an agent represents an entity in a simulation that performs actions and communicates with other agents
+        # by sending and receiving messages. An agent is defined by its unique name.
+  Groups: # an abstraction that represents a logical collection of agents based on some comprehension
+  Behaviors: #each agent can be assigned one or more behaviors which are invoked in response to messages
+  Channels: #a channel is represented by some agent that adds behavior to message transmission
+            #a channel connects agents via some other agents, if any thus creating a path.
+  Resources: # resources exist within agents and behaviors access and manipulate resources.
+Messages: # data structures that agents use to communicate with one another using the simulation runtime
+Models: # a model defines the inputs to agents and how simulation agents are connected in a graph

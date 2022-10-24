@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ class ResourcesProcessor extends GenericProcessor {
       case _ => Eval.now(List(Resource(
         (new ResourceTagProcessor).commandProcessor(convertJ2S(v(0))).value.head, (new ResourceStructureProcessor).commandProcessor(convertJ2S(v(1))).value)))
     }
-
+    case None => Eval.now(List())
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
 }
