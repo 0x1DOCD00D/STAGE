@@ -82,6 +82,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val socialMediaCompanySimulation = "Simulations/SocialMediaCompany.yaml"
   val primitiveSimulation = "Simulations/PrimitiveMessageExchange.yaml"
   val basicSimTemplate = "Simulations/BasicTemplate.yaml"
+  val nothing2DoSimulationWith1Agent = "Simulations/TheSimplestSimulation.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -1275,5 +1276,11 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a basic empty simulation template" in {
     val expected = List(Agents(List(Groups(List()), Behaviors(List()), Channels(List()), Resources(List()))), Messages(List()), Models(List()))
     val path = getClass.getClassLoader.getResource(basicSimTemplate).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one agent" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent",List()))), Models(List(Model("NothingToDoSimulation",List(AgentPopulation("OnlyThisAgent",List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
