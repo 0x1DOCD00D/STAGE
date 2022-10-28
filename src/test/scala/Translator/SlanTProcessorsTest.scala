@@ -86,6 +86,9 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val nothing2DoSimulationWith1Agent_v1 = "Simulations/TheSimplestSimulation_v1.yaml"
   val nothing2DoSimulationWith1Agent_v2 = "Simulations/TheSimplestSimulation_v2.yaml"
   val nothing2DoSimulationWith1Agent_v3 = "Simulations/TheSimplestSimulation_v3.yaml"
+  val nothing2DoSimulationWith1Agent_v4 = "Simulations/TheSimplestSimulation_v4.yaml"
+  val nothing2DoSimulationWith1Agent_v5 = "Simulations/TheSimplestSimulation_v5.yaml"
+  val nothing2DoSimulationWith1Agent_v6 = "Simulations/TheSimplestSimulation_v6.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -1300,8 +1303,27 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
-  "translate a nothing to do simulation with one agent written in the flow style" in {
+  "translate a nothing to do simulation with one agent written in the flow style in square brackets" in {
     val expected = List(Agents(List(Agent("OnlyThisAgent", List()))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
     val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v3).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+
+  "translate a nothing to do simulation with one agent written in the basic flow style" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List()))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v4).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one agent written in the complicated flow style" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v5).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one agent written in the mixec" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v6).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }

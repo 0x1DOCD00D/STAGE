@@ -1,7 +1,7 @@
-[Agents: [OnlyThisAgent],
-  Models: {
+Agents: [OnlyThisAgent]
+
+Models: {
     NothingToDoSimulation: {
       Agents: [OnlyThisAgent: 1]
     }
   }
-]

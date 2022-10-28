@@ -1,0 +1,8 @@
+Agents: {
+  OnlyThisAgent
+}
+
+Models:
+  NothingToDoSimulation: {
+    Agents: [OnlyThisAgent: [1]]
+    }
