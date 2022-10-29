@@ -1,0 +1,8 @@
+Agents:
+  OnlyThisAgent: someBehavior
+  Behaviors: [someBehavior]
+
+Models:
+  NothingToDoSimulation:
+    Agents:
+      OnlyThisAgent: 1

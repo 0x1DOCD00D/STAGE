@@ -90,6 +90,9 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val nothing2DoSimulationWith1Agent_v5 = "Simulations/TheSimplestSimulation_v5.yaml"
   val nothing2DoSimulationWith1Agent_v6 = "Simulations/TheSimplestSimulation_v6.yaml"
   val nothing2DoSimulationWith1Agent_v7 = "Simulations/TheSimplestSimulation_v7.yaml"
+  val nothing2DoSimulationWith1Agent_empty_behavior = "Simulations/TheSimplestSimulation_With_Behavior.yaml"
+  val nothing2DoSimulationWith1Agent_empty_behavior_v1 = "Simulations/TheSimplestSimulation_With_Behavior_v1.yaml"
+  val nothing2DoSimulationWith1Agent_empty_behavior_v2 = "Simulations/TheSimplestSimulation_With_Behavior_v2.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -1332,5 +1335,26 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   "translate a nothing to do simulation with one agent in a wierd style yaml" in {
     val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
     val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v7).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one empty behavior in flow mode" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent",List(State(None,List(StateBehavior(Some("someBehavior"),None))))),
+      Behaviors(List(Behavior("someBehavior",List()))))), Models(List(Model("NothingToDoSimulation",List(AgentPopulation("OnlyThisAgent",List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_empty_behavior).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one empty behavior in block mode" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List(StateBehavior(Some("someBehavior"), None))))),
+      Behaviors(List(Behavior("someBehavior", List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_empty_behavior_v1).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one empty behavior in a mixed mode" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List(StateBehavior(Some("someBehavior"), None))))),
+      Behaviors(List(Behavior("someBehavior", List(MessageResponseBehavior(List(),List()))))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_empty_behavior_v2).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
