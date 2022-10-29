@@ -89,6 +89,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val nothing2DoSimulationWith1Agent_v4 = "Simulations/TheSimplestSimulation_v4.yaml"
   val nothing2DoSimulationWith1Agent_v5 = "Simulations/TheSimplestSimulation_v5.yaml"
   val nothing2DoSimulationWith1Agent_v6 = "Simulations/TheSimplestSimulation_v6.yaml"
+  val nothing2DoSimulationWith1Agent_v7 = "Simulations/TheSimplestSimulation_v7.yaml"
 
   val stringScalarValue = "just one string value"
   val intScalarValue = 1234567
@@ -1322,8 +1323,14 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
-  "translate a nothing to do simulation with one agent written in the mixec" in {
+  "translate a nothing to do simulation with one agent written in the mixed style" in {
     val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
     val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v6).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a nothing to do simulation with one agent in a wierd style yaml" in {
+    val expected = List(Agents(List(Agent("OnlyThisAgent", List(State(None, List()))))), Models(List(Model("NothingToDoSimulation", List(AgentPopulation("OnlyThisAgent", List(SlanValue(1))))))))
+    val path = getClass.getClassLoader.getResource(nothing2DoSimulationWith1Agent_v7).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
