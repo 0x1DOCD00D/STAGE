@@ -24,6 +24,7 @@ import org.scalatest.matchers.should.Matchers
 import scalaz.Lens
 
 import scala.Double.NaN
+import scala.collection.immutable.List
 import scala.io.Source
 import scala.jdk.CollectionConverters.{ListHasAsScala, MapHasAsScala}
 import scala.util.{Failure, Success, Try}
@@ -36,6 +37,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val agentsFull_localResources_Flow = "SlanFeatureTesting/Agents_Full_v4.yaml"
   val agentsFull_probStates = "SlanFeatureTesting/Agents_Full_v5.yaml"
   val agentsFull_smartphone = "SlanFeatureTesting/Agents_Full_v6.yaml"
+  val agentsFull_stateCompSwitch = "SlanFeatureTesting/Agents_Full_v7.yaml"
   val agentsGroups1 = "SlanFeatureTesting/Agents_Groups_v1.yaml"
   val behaviorMessages_flow = "SlanFeatureTesting/Behavior_Messages_KeyFlow.yaml"
   val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
@@ -228,6 +230,15 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       val path = getClass.getClassLoader.getResource(agentsFull_smartphone).getPath
       translateSlanProgram(path).asserting(_ shouldBe expected)
     }
+/*
+
+    "translate a behavior spec with state switches depending on resource values" in {
+      val expected = List(Agents(List()))
+      val path = getClass.getClassLoader.getResource(agentsFull_stateCompSwitch).getPath
+      translateSlanProgram(path).asserting(_ shouldBe expected)
+    }
+*/
+
 
     "translate a group spec" in {
       val expected = List(Agents(List(

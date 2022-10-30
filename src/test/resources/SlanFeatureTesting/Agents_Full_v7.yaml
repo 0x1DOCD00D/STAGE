@@ -1,0 +1,11 @@
+Agents:
+  Agent Name X:
+    null: #this is the initial state
+      Some default behavior and then:
+        ? State A: <=
+        :
+          [someResourceName, someOtherResource]
+    State A:
+      Respond to messages A and Y: State X
+    State X:
+      Spawn Agent Y: null

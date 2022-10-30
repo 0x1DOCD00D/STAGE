@@ -20,9 +20,9 @@ import cats.kernel.Eq
 
 import scala.collection.mutable
 
-class PeriodicBehaviorLookaheadProcessor extends GenericProcessor {
+class CompositeKeyLookaheadProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
-    case v: (_, _) => Eval.now((new PeriodicBehaviorKeyParamsLookaheadProcessor).commandProcessor(convertJ2S(v(0))).value)
+    case v: (_, _) => Eval.now((new ComplexKeyParamsLookaheadProcessor).commandProcessor(convertJ2S(v(0))).value)
     case None => Eval.now(List(SlanValue(false)))
 
     case unknown => Eval.now(List(SlanValue(true)))

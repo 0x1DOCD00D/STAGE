@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,7 +18,7 @@ import cats.Eval
 import cats.implicits.*
 import cats.kernel.Eq
 
-class PeriodicBehaviorKeyParamsLookaheadProcessor extends GenericProcessor {
+class ComplexKeyParamsLookaheadProcessor extends GenericProcessor {
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (timeInterval: YamlPrimitiveTypes, timesX: YamlPrimitiveTypes) => Eval.now(List(SlanValue(true)))

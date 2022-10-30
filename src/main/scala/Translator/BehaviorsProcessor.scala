@@ -21,7 +21,7 @@ class BehaviorsProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
     case v: (_, _) => convertJ2S(v(0)) match {
       case cv: String if convertJ2S(v(1)) == None => Eval.now(List(Behavior(cv.trim, List())))
-      case cv: String if lookAhead4Periodic(convertJ2S(v(1))) => Eval.now(List(PeriodicBehavior(cv.trim, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
+      case cv: String if ComplexKeyLookAhead.lookAhead4ComplexKey(convertJ2S(v(1))) => Eval.now(List(PeriodicBehavior(cv.trim, (new PeriodicBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case cv: String => Eval.now(List(Behavior(cv.trim, (new MessageResponseBehaviorProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case unknown => Eval.now(List(YamlKeyIsNotString(unknown.getClass().toString + ": " + unknown.toString)))
     }
@@ -29,9 +29,3 @@ class BehaviorsProcessor extends GenericProcessor:
     case cv: String => Eval.now(List(Behavior(cv.trim, List())))
     case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
   }
-
-  private def lookAhead4Periodic(yamlObj: YamlTypes): Boolean =
-    (new PeriodicBehaviorLookaheadProcessor).commandProcessor(convertJ2S(yamlObj)).value match
-      case List(SlanValue(true)) => true
-      case List(SlanValue(false)) => false
-      case _ => false
