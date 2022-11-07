@@ -230,15 +230,40 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       val path = getClass.getClassLoader.getResource(agentsFull_smartphone).getPath
       translateSlanProgram(path).asserting(_ shouldBe expected)
     }
-/*
 
     "translate a behavior spec with state switches depending on resource values" in {
-      val expected = List(Agents(List()))
+    /*
+    Agents:
+      Agent Name X:
+        null: #this is the initial state
+          Some default behavior and then:
+            State A:
+              IF:
+                AND:
+                  resourceName1: [">=": 0, <: 1]
+                  resourceName2:
+                    <: 100
+
+        State A:
+          Respond to messages A and Y: State X
+        State X:
+          Spawn Agent Y: null
+    * */
+      val expected = List(Agents(List(Agent("Agent Name X",
+        List(State(None,List(StateProbBehavior(Some("Some default behavior and then"),
+          List(StateConditionalSwitch(Some("State A"),List(IfThenElse(List(
+            And(
+              List(
+                Reference(Some(SlanValue("resourceName1")), Some(List(
+                  Reference(Some(SlanValue(">=")),Some(List(Reference(Some(SlanValue(0)),None)))),
+                  Reference(Some(SlanValue("<")),Some(List(Reference(Some(SlanValue(1)),None))))))),
+                Reference(Some(SlanValue("resourceName2")),
+                  Some(List(Reference(Some(SlanValue("<")),Some(List(Reference(Some(SlanValue(100)),None))))))))))))))))),
+          State(Some("State A"),List(StateBehavior(Some("Respond to messages A and Y"),Some("State X")))),
+          State(Some("State X"),List(StateBehavior(Some("Spawn Agent Y"),None))))))))
       val path = getClass.getClassLoader.getResource(agentsFull_stateCompSwitch).getPath
       translateSlanProgram(path).asserting(_ shouldBe expected)
     }
-*/
-
 
     "translate a group spec" in {
       val expected = List(Agents(List(

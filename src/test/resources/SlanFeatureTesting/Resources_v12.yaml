@@ -1,7 +1,6 @@
 Agents:
   Resources:
     ? map: DopplegangerGAPs
-    :
-      targetGapID:
+    : targetGapID:
         ? list: phishingGaps
         : []

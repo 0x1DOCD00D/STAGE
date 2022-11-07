@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -47,6 +47,8 @@ enum SlanConstruct:
   case StateProbBehavior(behavior: BehaviorReference, switchTo: SlanConstructs)
 
   case StateProbabilitySwitch(stateId: StateReference, probSource: SlanValue)
+  
+  case StateConditionalSwitch(stateId: StateReference, condition: SlanConstructs)
 
   case SlanError(errorMessage: String = "")
 

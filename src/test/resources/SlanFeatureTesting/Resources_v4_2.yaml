@@ -3,8 +3,7 @@ Agents:
     # this is a composite resource map named compositeResourceMap that maps some identifies to a list of primitive resources
     # named someBasicResource1V and this list is empty.
     ? map: compositeResourceMap
-    :
-      instanceID:
+    : instanceID:
         CPU: 100
         RAM: 0
         NetworkBandwidth: 10000

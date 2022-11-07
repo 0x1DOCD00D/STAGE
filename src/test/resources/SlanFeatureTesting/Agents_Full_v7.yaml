@@ -2,9 +2,13 @@ Agents:
   Agent Name X:
     null: #this is the initial state
       Some default behavior and then:
-        ? State A: <=
-        :
-          [someResourceName, someOtherResource]
+        State A:
+          IF:
+            AND:
+              resourceName1: [">=": 0, <: 1]
+              resourceName2:
+                <: 100
+
     State A:
       Respond to messages A and Y: State X
     State X:
