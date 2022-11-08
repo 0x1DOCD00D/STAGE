@@ -43,6 +43,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
   val behaviorMessages_list = "SlanFeatureTesting/Behavior_Messages_KeyList.yaml"
   val behaviorIfThenElse_1 = "SlanFeatureTesting/Behavior_IfThenElse.yaml"
   val behaviorOneMessage = "SlanFeatureTesting/Behavior_One_Message.yaml"
+  val behaviorOneMessageBlock = "SlanFeatureTesting/Behavior_One_Message_Block.yaml"
   val behaviorOneMessageIFTHEN = "SlanFeatureTesting/Behavior_One_Message_IFTHEN.yaml"
   val behaviorNullMessage = "SlanFeatureTesting/Behavior_Default_Null.yaml"
   val behaviorMultipleMessages = "SlanFeatureTesting/Behavior_Multiple_Messages.yaml"
@@ -311,6 +312,16 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
                         List(FnUpdate(List(SlanValue("resourceName2Update"),
                           FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorOneMessage).getPath
+    translateSlanProgram(path).asserting(_ shouldBe expected)
+  }
+
+  "translate a behavior block spec with one message response" in {
+    val expected = List(Agents(List(Behaviors(List(
+      Behavior("Behavior 4 Messages 3",
+        List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
+          List(FnUpdate(List(SlanValue("resourceName2Update"),
+            FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+    val path = getClass.getClassLoader.getResource(behaviorOneMessageBlock).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
