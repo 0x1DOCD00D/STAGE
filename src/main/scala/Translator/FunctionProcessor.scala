@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,6 +37,10 @@ class FunctionProcessor extends GenericProcessor:
       case entry: String if entry.trim.toUpperCase === Fn_Join.toUpperCase => Eval.now(List(FnJoin((new FnMultiplyProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case entry: String if entry.trim.toUpperCase === Fn_Leave.toUpperCase => Eval.now(List(FnLeave((new FnMultiplyProcessor).commandProcessor(convertJ2S(v(1))).value)))
       case entry: YamlPrimitiveTypes => (new ReferenceProcessor).commandProcessor(convertJ2S(v))
+      case None => convertJ2S(v(1)) match {
+        case entry: YamlPrimitiveTypes => Eval.now(List(GlobalReference((new ReferenceProcessor).commandProcessor(convertJ2S(v(1))).value)))
+        case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
+      }
 
       case unknown => Eval.now(new UnknownEntryProcessor(unknown.toString, Some(unknown.getClass().toString)).constructSlanRecord)
     }

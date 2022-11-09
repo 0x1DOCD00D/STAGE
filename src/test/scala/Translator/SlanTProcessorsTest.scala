@@ -344,9 +344,14 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
               Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))),
                 ROPEqual(List(Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
           Then(List(
-            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
-            FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(Reference(Some(SlanValue("MessageY")),Some(List(Reference(Some(SlanValue("field")),None)))), SlanValue("generatorRefId")))))
-          )))))))))))))
+            FnUpdate(List(SlanKeyValue(0,"resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
+            FnUpdate(List(SlanValue("resourceName2Update"),
+              FnMultiply(List(GlobalReference(List(Reference(Some(SlanValue("field")),None))), SlanValue("generatorRefId")))))
+          )),
+          Else(List(
+            FnUpdate(List(Reference(Some(SlanValue("resourceName2Update")),Some(List(Reference(None,None)))),
+              FnMultiply(List(SlanValue(0.5), FnInc(List(SlanValue("resourceName2Update")))))))))
+        )))))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }

@@ -129,7 +129,9 @@ enum SlanConstruct:
   case FnLeave(operands: SlanConstructs)
   
   case Reference(key: Option[SlanConstruct], value: Option[SlanConstructs])
-  
+
+  case GlobalReference(value: SlanConstructs)
+
   case PeriodParameters(timeInterval: SlanValue, iterations: SlanValue)
   
   case Messages2Send(messages: SlanValues)
