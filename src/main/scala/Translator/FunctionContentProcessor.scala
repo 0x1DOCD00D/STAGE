@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022. Mark Grechanik and Lone Star Consulting, Inc. All rights reserved.
+ * Copyright (c) 2021-2022. Mark Grechanik and Grand Models, Inc, formerly Lone Star Consulting, Inc. All rights reserved.
  *
  * Unless required by applicable law or agreed to in writing, software distributed under the
  *  License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -20,9 +20,12 @@ import cats.kernel.Eq
 
 class FunctionContentProcessor extends GenericProcessor:
   override protected def yamlContentProcessor(yamlObj: YamlTypes): Eval[SlanConstructs] = yamlObj match {
+    case simpleOperand: String => Eval.now(List(SlanValue(simpleOperand.trim)))
+    case None => Eval.now(List())
+
     case v: (_, _) => (convertJ2S(v(0)), convertJ2S(v(1))) match {
       case (entry: String, value:String) if entry.trim.toUpperCase === Correlation.toUpperCase => Eval.now(List(CorrelationToken(SlanValue(value))))
-      case _ => (new BehaviorActionsProcessor).commandProcessor(convertJ2S(v))
+      case _ => (new FunctionProcessor).commandProcessor(convertJ2S(v))
     }
 
     case entry: YamlPrimitiveTypes => Eval.now(List(SlanValue(entry)))

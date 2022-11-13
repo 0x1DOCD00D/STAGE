@@ -287,11 +287,18 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     }
   }
 
+  /*
+  Agents:
+    Behaviors:
+      Behavior 4 Messages 1:
+        ? [ MessageX, MessageY,  MessageZ ]:
+          Fn_Update: [ resourceName2Update, Fn_Mult: [ 3.141, generatorRefId ] ]
+  * */
   "translate a behavior spec with multiple messages as the key flow sequence" in {
     val expected = List(Agents(List(Behaviors(List(
       Behavior("Behavior 4 Messages 1",
       List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_flow).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -300,7 +307,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(Behaviors(List(
       Behavior("Behavior 4 Messages 2",
       List(MessageResponseBehavior(List(SlanValue("MessageXX"), SlanValue("MessageYY"), SlanValue("MessageZZ")),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorMessages_list).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -310,7 +317,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Behavior("Behavior 4 Messages 3",
                         List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
                         List(FnUpdate(List(SlanValue("resourceName2Update"),
-                          FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+                          FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorOneMessage).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -320,7 +327,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       Behavior("Behavior 4 Messages 3",
         List(MessageResponseBehavior(List(SlanValue("SomeMessage")),
           List(FnUpdate(List(SlanValue("resourceName2Update"),
-            FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+            FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorOneMessageBlock).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -329,29 +336,64 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
     val expected = List(Agents(List(Behaviors(List(
       Behavior("Default Behavior 4 All Messages",
       List(MessageResponseBehavior(List(),
-        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
+        List(FnUpdate(List(SlanValue("resourceName2Update"), FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorNullMessage).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
 
+  /*
+  Agents:
+    Behaviors:
+      BehaviorIfThenElse:
+        ? [ MessageX, MessageY,  MessageZ ]:
+          If:
+            AND:
+              "<=":
+                - someResource
+                - 3.1415926
+              Not:
+                OR:
+                  - "==":
+                    - someResource
+                    - someOtherResource
+                  - "==":
+                    - Not: someBooleanResource
+                    - false
+            Then:
+              - Fn_Update: [ null: resourceName2Update, Fn_Mult: [3.141, generatorRefId] ]
+              - Fn_Update: [ resourceName2Update, Fn_Mult: [ null: field, generatorRefId ] ]
+            Else:
+              Fn_Update:
+                resourceName2Update:
+                Fn_Mult:
+                  - 0.5
+                  - Fn_Inc: resourceName2Update
+  * */
   "translate an if-then-else behavior" in {
-    val expected = List(Agents(List(Behaviors(List(
-      Behavior("BehaviorIfThenElse",
-      List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-        List(IfThenElse(List(
-          And(List(ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
-            Not(List(
-              Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))),
-                ROPEqual(List(Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
-          Then(List(
-            FnUpdate(List(SlanKeyValue(0,"resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
-            FnUpdate(List(SlanValue("resourceName2Update"),
-              FnMultiply(List(GlobalReference(List(Reference(Some(SlanValue("field")),None))), SlanValue("generatorRefId")))))
-          )),
-          Else(List(
-            FnUpdate(List(Reference(Some(SlanValue("resourceName2Update")),Some(List(Reference(None,None)))),
-              FnMultiply(List(SlanValue(0.5), FnInc(List(SlanValue("resourceName2Update")))))))))
-        )))))))))))
+    val expected = List(Agents(
+      List(Behaviors(
+        List(
+          Behavior("BehaviorIfThenElse",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
+            List(
+              IfThenElse(List(
+              And(List(
+                ROPLessEqual(List(SlanValue("someResource"), SlanValue(3.1415926))),
+                Not(List(Or(List(ROPEqual(List(SlanValue("someResource"), SlanValue("someOtherResource"))),
+                  ROPEqual(List(Not(List(SlanValue("someBooleanResource"))), SlanValue(false))))))))),
+              Then(List(
+                FnUpdate(
+                  List(GlobalReference(List(Reference(Some(SlanValue("resourceName2Update")),None))),
+                    FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))),
+                FnUpdate(List(SlanValue("resourceName2Update"),
+                  FnMult(List(GlobalReference(List(Reference(Some(SlanValue("field")),None))), SlanValue("generatorRefId"))))))),
+                Else(List(
+                  FnUpdate(List(Reference(Some(SlanValue("resourceName2Update")),Some(List(Reference(None,None)))),
+                  FnMult(List(SlanValue(0.5),
+                    FnInc(List(SlanValue("resourceName2Update"))))
+                  )
+                  )
+                  )
+                )))))))))))))
     val path = getClass.getClassLoader.getResource(behaviorIfThenElse_1).getPath
     translateSlanProgram(path).asserting(_ shouldBe expected)
   }
@@ -766,7 +808,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       List(
       Behavior("Behavior 4 Multiple Messages",
         List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))),
+          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))),
           MessageResponseBehavior(List(SlanValue("MessageW")),
             List(FnUpdate(List(SlanValue("resourceName2Update"), Reference(Some(SlanValue("MessageW")),Some(List(Reference(Some(SlanValue("fieldW")),None))))
             )))),
@@ -872,7 +914,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         Groups(List(Group(List(GroupDesignators("Group Name",Some("behavior"))),List(GroupAgent("Agent Name X",List()),
           ResourceReferenceInGroup(List(ResourceConsistencyModelInGroup("Causal","someBasicResourceListOfValues")),List(SlanValue(2))))))),
         Behaviors(List(Behavior("Behavior 4 Messages 1",List(MessageResponseBehavior(List(SlanValue("MessageX"), SlanValue("MessageY"), SlanValue("MessageZ")),
-          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMultiply(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))),
+          List(FnUpdate(List(SlanValue("resourceName2Update"), FnMult(List(SlanValue(3.141), SlanValue("generatorRefId"))))))))))),
         Agent("Agent Name Y",List(State(None,List()))), Channels(List(Channel("TalksT0",List(SlanValue("behaviorAttached2Channel"), SlanValue("moreBehaviors"))))))),
       Messages(List(Message(List(MessageDeclaration("Message Name",None)), List(Resources(
         List(Resource(ResourceTag("Some Fixed Value",None),List(SlanValue(100))))))))),
@@ -1011,7 +1053,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
         List(MessageResponseBehavior(List(SlanValue("Insult")),
           List(FnSend(List(SlanValue("generatorOfInsultResponseMessages"), CorrelationToken(SlanValue("messageResponseCorrID")))),
             FnSend(List(SlanValue("generatorOfInsultResponseMessages"))),
-            FnUpdate(List(SlanValue("goodWill"), FnSubstract(List(SlanValue("goodWill"), SlanValue(0.01))))))))),
+            FnUpdate(List(SlanValue("goodWill"), FnSub(List(SlanValue("goodWill"), SlanValue(0.01))))))))),
 
       /*
           ...PersonLeavesSocialMediaPlatform:
@@ -1038,8 +1080,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
               Then(
                 List(FnForEach(List(FnSelect(List(Reference(Some(SlanValue("TheFriendsGraph")), Some(List(Reference(Some(SlanValue("departureGenerator")),None)))))),
                   FnSend(List(SlanValue("this"), SlanValue("Unfriend"))),
-                  FnRemove(List(SlanValue("this"), SlanValue("TheFriendsGraph"))),
-                  FnDestroy(List(SlanValue("this"))))))))))),
+                  FnTerminate(List()))))))))),
 
       /*
           HandleFriendRequests: #used
@@ -1262,7 +1303,7 @@ class SlanTProcessorsTest extends AsyncFreeSpec with AsyncIOSpec with Matchers:
       List(ROPGreaterEqual(
       List(SlanValue("messageCounter"), SlanValue("maxMessagesThreshold"))),
       Then(List(FnSend(List(SlanValue("IdoNotCareResponse"))),
-      FnDestroy(List(SlanValue("this"))))),
+        FnTerminate(List()))),
       Else(List(FnSend(List(SlanValue("IdoNotCareResponse"))))))))))),
     /*
       Transmissions:

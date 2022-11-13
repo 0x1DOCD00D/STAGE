@@ -16,11 +16,11 @@ Agents:
                   - Not: someBooleanResource
                   - false
           Then:
-            - Fn_Update: [ null: resourceName2Update, Fn_Multiply: [3.141, generatorRefId] ]
-            - Fn_Update: [ resourceName2Update, Fn_Multiply: [ null: field, generatorRefId ] ]
+            - Fn_Update: [ null: resourceName2Update, Fn_Mult: [3.141, generatorRefId] ]
+            - Fn_Update: [ resourceName2Update, Fn_Mult: [ null: field, generatorRefId ] ]
           Else:
             Fn_Update:
               resourceName2Update:
-              Fn_Multiply:
+              Fn_Mult:
                 - 0.5
                 - Fn_Inc: resourceName2Update

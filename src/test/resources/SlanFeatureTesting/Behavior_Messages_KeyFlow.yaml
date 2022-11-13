@@ -2,4 +2,4 @@ Agents:
   Behaviors:
     Behavior 4 Messages 1:
       ? [ MessageX, MessageY,  MessageZ ]:
-        Fn_Update: [ resourceName2Update, Fn_Multiply: [ 3.141, generatorRefId ] ]
+        Fn_Update: [ resourceName2Update, Fn_Mult: [ 3.141, generatorRefId ] ]

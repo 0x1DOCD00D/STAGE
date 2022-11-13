@@ -4,6 +4,6 @@ Agents:
       SomeMessage:
         Fn_Update:
           - resourceName2Update
-          - Fn_Multiply:
+          - Fn_Mult:
             - 3.141
             - generatorRefId

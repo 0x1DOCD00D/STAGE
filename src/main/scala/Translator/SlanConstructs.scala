@@ -108,9 +108,13 @@ enum SlanConstruct:
   
   case FnSend(operands: SlanConstructs)
   
-  case FnSelect(operands: SlanConstructs)
-  
+  case FnInvoke(operands: SlanConstructs)
+
+  case FnTerminate(operands: SlanConstructs)
+
   case FnForEach(operands: SlanConstructs)
+  
+  case FnSelect(operands: SlanConstructs)
   
   case FnAdd(operands: SlanConstructs)
   
@@ -118,12 +122,26 @@ enum SlanConstruct:
   
   case FnDec(operands: SlanConstructs)
   
-  case FnSubstract(operands: SlanConstructs)
+  case FnSub(operands: SlanConstructs)
   
-  case FnMultiply(operands: SlanConstructs)
+  case FnMult(operands: SlanConstructs)
   
-  case FnDivide(operands: SlanConstructs)
-  
+  case FnDiv(operands: SlanConstructs)
+
+  case FnExp(operands: SlanConstructs)
+
+  case FnLog(operands: SlanConstructs)
+
+  case FnMod(operands: SlanConstructs)
+
+  case FnMax(operands: SlanConstructs)
+
+  case FnMin(operands: SlanConstructs)
+
+  case FnAbs(operands: SlanConstructs)
+
+  case FnSqrt(operands: SlanConstructs)
+
   case FnJoin(operands: SlanConstructs)
   
   case FnLeave(operands: SlanConstructs)

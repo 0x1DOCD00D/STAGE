@@ -50,7 +50,7 @@ Agents:
       Insult:
         - Fn_Send: [generatorOfInsultResponseMessages, "~>": messageResponseCorrID]
         - Fn_Send: [generatorOfInsultResponseMessages]
-        - Fn_Update: [goodWill, Fn_Substract: [goodWill, 0.01]]
+        - Fn_Update: [goodWill, Fn_Sub: [goodWill, 0.01]]
 
     HandleSupport:
       StrongSupport:
@@ -102,8 +102,8 @@ Agents:
                 TheFriendsGraph: departureGenerator
                 # for each of the selected nodes perform some operation/function
               Fn_Send: [this, Unfriend]
-              Fn_Remove: [this, TheFriendsGraph]
-              Fn_Destroy: this
+#              Fn_Remove: [this, TheFriendsGraph]
+              Fn_Terminate:
 
 
   Channels:

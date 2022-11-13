@@ -15,7 +15,7 @@ Agents:
             - maxMessagesThreshold
           THEN:
             Fn_Send: IdoNotCareResponse
-            Fn_Destroy: this
+            Fn_Terminate:
           ELSE:
             Fn_Send: IdoNotCareResponse
 
